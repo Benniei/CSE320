@@ -85,12 +85,12 @@ int validargs(int argc, char **argv) {
                     input_flag = 1;
                     // input type pgm (0x1)
                     if(help_strcmp(*(argv + counter + 1), "pgm")){
-                        global_options = global_options + 0x1;
+                        global_options += 0x1;
                         counter += 2;
                     }
                     // input type birp (0x2)
                     else if(help_strcmp(*(argv + counter + 1), "birp")){
-                        global_options = global_options + 0x2;
+                        global_options += 0x2;
                         counter += 2;
                     }
                     // -i specified but there is nothing following -> -1
@@ -103,17 +103,17 @@ int validargs(int argc, char **argv) {
                     output_flag = 1;
                     // output type pgm (0x10)
                     if(help_strcmp(*(argv + counter + 1), "pgm")){
-                        global_options = global_options + 0x10;
+                        global_options += 0x10;
                         counter += 2;
                     }
                     // output type birp (0x20)
                     else if(help_strcmp(*(argv + counter + 1), "birp")){
-                        global_options = global_options + 0x20;
+                        global_options += 0x20;
                         counter += 2;
                     }
                     // output type ascii (0x30)
                     else if(help_strcmp(*(argv + counter + 1), "ascii")){
-                        global_options = global_options + 0x30;
+                        global_options += 0x30;
                         counter += 2;
                     }
                     // -o specified but there is nothing following -> -1
@@ -123,21 +123,31 @@ int validargs(int argc, char **argv) {
                 }
             }
 
-            //TODO: check the counter
+            // checks args counter
+            if(counter == argc){
+                // default
+                if(input_flag == 0){
+                global_options += 0x2;
+                }
+                if(output_flag == 0){
+                    global_options += 0x20;
+                }
+                return 0;
+            }
 
-            //second check for input output
+            // second check for input output
             if(help_strcmp(*(argv + counter), "-i") || help_strcmp(*(argv + counter), "-o")){
                 // equals to -i and no input previously
                 if(help_strcmp(*(argv + counter), "-i") && (input_flag == 0)){
                     input_flag = 1;
                     // input type pgm (0x1)
                     if(help_strcmp(*(argv + counter + 1), "pgm")){
-                        global_options = global_options + 0x1;
+                        global_options += 0x1;
                         counter += 2;
                     }
                     // input type birp (0x2)
                     else if(help_strcmp(*(argv + counter + 1), "birp")){
-                        global_options = global_options + 0x2;
+                        global_options += 0x2;
                         counter += 2;
                     }
                     // -i specified but there is nothing following -> -1
@@ -150,17 +160,17 @@ int validargs(int argc, char **argv) {
                     output_flag = 1;
                     // output type pgm (0x10)
                     if(help_strcmp(*(argv + counter + 1), "pgm")){
-                        global_options = global_options + 0x10;
+                        global_options += 0x10;
                         counter += 2;
                     }
                     // output type birp (0x20)
                     else if(help_strcmp(*(argv + counter + 1), "birp")){
-                        global_options = global_options + 0x20;
+                        global_options += 0x20;
                         counter += 2;
                     }
                     // output type ascii (0x30)
                     else if(help_strcmp(*(argv + counter + 1), "ascii")){
-                        global_options = global_options + 0x30;
+                        global_options += 0x30;
                         counter += 2;
                     }
                     // -o specified but there is nothing following -> -1
@@ -169,14 +179,45 @@ int validargs(int argc, char **argv) {
                     }
                 }
             }
-            //TODO: check the counter
-            //TODO: check the flags for input and output for defaults
 
+            // check the flags for input and output for defaults
+            if(input_flag == 0){
+                global_options += 0x2;
+            }
+            if(output_flag == 0){
+                global_options += 0x20;
+            }
+            // check the counter
+            if(counter == argc){
+                return 0;
+            }
             //TODO: checks for other operations
+            // -n -> negative
+            if(help_strcmp(*(argv + counter), "-n")){
 
-            printf("\n 0x%x \n", global_options);
+            }
+            // -t -> threshold
+            else if(help_strcmp(*(argv + counter), "-t")){
 
+            }
+            // -z -> zoom negative
+            else if(help_strcmp(*(argv + counter), "-z")){
+
+            }
+            // -Z -> zoom positive
+            else if(help_strcmp(*(argv + counter), "-Z")){
+
+            }
+            // -r rotate
+            else if(help_strcmp(*(argv + counter), "-r")){
+
+            }
         }
     }
+    //TODO: IMPLEMENT BIN/BIRP
+    else{
+
+    }
+    return 0; //testing purpose
     return -1;
 }
