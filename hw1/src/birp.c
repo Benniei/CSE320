@@ -69,6 +69,8 @@ int validargs(int argc, char **argv) {
     int counter = 1; //counts the arguments used up
     int input_flag = 0; //sees if there is an input
     int output_flag = 0; //sees if there is an output
+    global_options = 0; //initilize global variable
+
     if(argc > 1){
 
         //checks for help flag
@@ -123,6 +125,7 @@ int validargs(int argc, char **argv) {
                 }
             }
 
+
             // checks args counter
             if(counter == argc){
                 // default
@@ -156,7 +159,7 @@ int validargs(int argc, char **argv) {
                     }
                 }
                 // equals to -o and no output previously
-                else if(help_strcmp(*(argv + counter), "-o") && (output_flag = 0)){
+                else if(help_strcmp(*(argv + counter), "-o") && (output_flag == 0)){
                     output_flag = 1;
                     // output type pgm (0x10)
                     if(help_strcmp(*(argv + counter + 1), "pgm")){
@@ -191,33 +194,75 @@ int validargs(int argc, char **argv) {
             if(counter == argc){
                 return 0;
             }
-            //TODO: checks for other operations
+
+            //checks for other operations
             // -n -> negative
-            if(help_strcmp(*(argv + counter), "-n")){
-
+            if(global_options == 0x22){
+                if(help_strcmp(*(argv + counter), "-n")){
+                    global_options += 0x100;
+                    counter++;
+                    //complete
+                }
+                // -t -> threshold
+                else if(help_strcmp(*(argv + counter), "-t")){
+                    global_options += 0x200;
+                    counter++; //need another increment to account for argument
+                    int value = help_strtoint(*(argv + counter)); //check value
+                    printf("\n Value t: %d \n", value);
+                    if(value >= 0 && value <= 255){
+                        value = value << 16;
+                        global_options += value;
+                        counter++;
+                        //complete (untested)
+                    }
+                    else{
+                        return -1;
+                    }
+                }
+                // -z -> zoom negative
+                else if(help_strcmp(*(argv + counter), "-z")){
+                    global_options += 0x300;
+                    counter++; //need another increment to account for argument
+                    int value = help_strtoint(*(argv + counter)); //might need to change some bits
+                    if(value >= 0 && value <= 16){
+                        value *= -1; //negative value
+                        value = value << 16; //shift bits to the left
+                        value = value & 0x00ff0000; // and bits to get rid of things on the left
+                        global_options += value;
+                        counter++;
+                    }
+                    else{
+                        return -1;
+                    }
+                }
+                // -Z -> zoom positive
+                else if(help_strcmp(*(argv + counter), "-Z")){
+                    global_options += 0x300;
+                    counter++; //need another increment to account for argument
+                    int value = help_strtoint(*(argv + counter));
+                    if(value >= 0 && value <= 16){
+                        value = value << 16;
+                        global_options += value;
+                        counter++;
+                    }
+                }
+                // -r rotate
+                else if(help_strcmp(*(argv + counter), "-r")){
+                    global_options += 0x400;
+                    counter++;
+                    //complete
+                }
             }
-            // -t -> threshold
-            else if(help_strcmp(*(argv + counter), "-t")){
-
-            }
-            // -z -> zoom negative
-            else if(help_strcmp(*(argv + counter), "-z")){
-
-            }
-            // -Z -> zoom positive
-            else if(help_strcmp(*(argv + counter), "-Z")){
-
-            }
-            // -r rotate
-            else if(help_strcmp(*(argv + counter), "-r")){
-
+            //check if there are any arguments left (should not be any)
+            if(counter == argc){
+                return 0;
             }
         }
     }
     //TODO: IMPLEMENT BIN/BIRP
     else{
-
+        global_options += 0x22;
+        return 0;
     }
-    return 0; //testing purpose
     return -1;
 }
