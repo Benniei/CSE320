@@ -25,6 +25,42 @@ int birp_to_birp(FILE *in, FILE *out) {
 
 int pgm_to_ascii(FILE *in, FILE *out) {
     // TO BE IMPLEMENTED
+
+    int wp = 0;
+    int hp = 0;
+    unsigned char *raster = raster_data;
+    size_t size = RASTER_SIZE_MAX;
+
+    int res = img_read_pgm(in, &wp, &hp, raster, size);
+//    printf("\nWP: %d\n", wp);
+//    printf("HP: %d\n", hp);
+//    printf("Raster: %d\n", *raster);
+
+    if(res == 0){
+        for(int j = 0; j < hp; j++){
+            for(int i = 0; i < wp; i++){
+                int a = *raster++;
+                if(a >= 0 && a <= 63){
+                    fputc(' ', out);
+                    printf(" ");
+                }
+                else if(a >= 64 && a <= 127){
+                    fputc('.', out);
+                    printf(".");
+                }
+                else if(a >= 128 && a <= 191){
+                    fputc('*', out);
+                    printf("*");
+                }
+                else if(a >= 192 && a <= 255){
+                    fputc('@', out);
+                    printf("@");
+                }
+            }
+            printf("\n");
+        }
+        return 0;
+    }
     return -1;
 }
 
@@ -50,21 +86,6 @@ int birp_to_ascii(FILE *in, FILE *out) {
  */
 int validargs(int argc, char **argv) {
     // TO BE IMPLEMENTED
-
-    //test code
-    // test();
-
-    // printf("%s \n", *argv);
-    // printf("%s \n", *(argv + 1));
-    // printf("%i \n", argc);
-    // char* one = "hello";
-    // char* two = "yello";
-    // if(help_strcmp("hello", "yello") < 0){
-    //     test();
-    // }
-    // else{
-    //     printf("not it");
-    // }
 
     int counter = 1; //counts the arguments used up
     int input_flag = 0; //sees if there is an input

@@ -23,7 +23,29 @@ int main(int argc, char **argv)
     if(global_options & HELP_OPTION)
         USAGE(*argv, EXIT_SUCCESS);
     // TO BE IMPLEMENTED
-    printf("\n 0x%x \n", global_options);
+    printf("\n Global Options: 0x%x \n", global_options);
+
+    int command_options = global_options & 0xff; // gets the type to convert to
+
+    printf("\n Command Options: 0x%x \n", command_options);
+    if(command_options == 0x11){ // pgm to pgm
+    	// do not see the option?
+    }
+    else if(command_options == 0x21){ // pgm to birp
+
+    }
+    else if(command_options == 0x31){ // pgm to ascii
+    	pgm_to_ascii(stdin, stdout);
+    }
+    else if(command_options == 0x12){ // birp to pgm
+
+    }
+    else if(command_options == 0x22){ // birp to birp
+
+    }
+    else if(command_options == 0x32){ // birp to ascii
+
+    }
     return EXIT_FAILURE;
 }
 
