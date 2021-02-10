@@ -42,23 +42,20 @@ int pgm_to_ascii(FILE *in, FILE *out) {
                 int a = *raster++;
                 if(a >= 0 && a <= 63){
                     fputc(' ', out);
-                    printf(" ");
                 }
                 else if(a >= 64 && a <= 127){
                     fputc('.', out);
-                    printf(".");
                 }
                 else if(a >= 128 && a <= 191){
                     fputc('*', out);
-                    printf("*");
                 }
                 else if(a >= 192 && a <= 255){
                     fputc('@', out);
-                    printf("@");
                 }
             }
-            printf("\n");
+            fputc('\n', out);
         }
+        fputc('\n', out);
         return 0;
     }
     return -1;
