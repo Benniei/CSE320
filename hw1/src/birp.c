@@ -277,7 +277,7 @@ int validargs(int argc, char **argv) {
             }
         }
     }
-    //TODO: IMPLEMENT BIN/BIRP
+    //default for no arguments
     else{
         global_options += 0x22;
         return 0;
