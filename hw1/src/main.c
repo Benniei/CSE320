@@ -23,11 +23,12 @@ int main(int argc, char **argv)
     if(global_options & HELP_OPTION)
         USAGE(*argv, EXIT_SUCCESS);
     // TO BE IMPLEMENTED
-    //printf("Global Options: 0x%x", global_options);
+    //printf("Global Options: 0x%x\n", global_options);
 
     int command_options = global_options & 0xff; // gets the type to convert to
 
-    //printf("\nCommand Options: 0x%x \n", command_options);
+    //printf("Command Options: 0x%x\n", command_options);
+
     if(command_options == 0x11){ // pgm to pgm
     	// do not see the option?
     }
