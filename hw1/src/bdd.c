@@ -3,6 +3,7 @@
 
 #include "bdd.h"
 #include "debug.h"
+#include "help.h"
 
 /*
  * Macros that take a pointer to a BDD node and obtain pointers to its left
@@ -28,8 +29,29 @@ int bdd_lookup(int level, int left, int right) {
     if(left == right){
         return left;
     }
+    struct bdd_node c = {level + '@', left, right};
+    int test = help_hashfunction(c);
+    printf("%d\n", test);
     //check hashtable for entry
-    //if not found in hash table, store in table and into hash table
+    int hash_index = help_hashfunction(c);
+    int inc = hash_index;
+    int found = 0; //flag
+    do{
+        if(compare_bdd(**(bdd_hash_map + inc), c)){
+            found = 1;
+        }
+        if(inc == BDD_HASH_SIZE)
+            inc = 0;
+        else
+            inc++;
+    }while(found == 0 && *(bdd_hash_map + inc) != NULL && hash_index != inc);
+
+    if(found){
+        //return the index where it is found
+    }
+    else{
+        //insert into table and hashtable
+    }
     return -1;
 }
 

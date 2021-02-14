@@ -28,16 +28,22 @@ int help_strtoint(char *number){
 }
 
 void help_inittonull(int size, BDD_NODE **a){
-	int i;
 	for(int i = 0; i < size; i++){
 		*(a + i) = NULL;
 	}
 }
 
+int compare_bdd(struct bdd_node a, struct bdd_node c){
+	if((a.level == c.level) && (a.left == c.left) && (a.right == a.left)){
+		return 1;
+	}
+	return 0;
+}
+
 int help_hashfunction(struct bdd_node c){
 	int index = (int)(c.level) + c.left + c.right;
 	int multiply = 5;
-	index *= index * multiply;
+	index *= multiply;
 	index = index % BDD_HASH_SIZE;
 	return index;
 }

@@ -29,6 +29,8 @@ int main(int argc, char **argv)
 
     //printf("Command Options: 0x%x\n", command_options);
 
+    bdd_lookup(1, 4, 8);
+
     if(command_options == 0x11){ // pgm to pgm
     	// do not see the option?
     }
