@@ -25,6 +25,11 @@
  */
 int bdd_lookup(int level, int left, int right) {
     // TO BE IMPLEMENTED
+    if(left == right){
+        return left;
+    }
+    //check hashtable for entry
+    //if not found in hash table, store in table and into hash table
     return -1;
 }
 
