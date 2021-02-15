@@ -30,32 +30,36 @@ int bdd_lookup(int level, int left, int right) {
         return left;
     }
     struct bdd_node c = {level + '@', left, right};
-    int test = help_hashfunction(c);
     //check hashtable for entry
     int hash_index = help_hashfunction(c);
     int inc = hash_index - 1;
     int found = 0; //flag
+
     while(found == 0 && *(bdd_hash_map + hash_index) != NULL && hash_index != inc){
         if(compare_bdd(**(bdd_hash_map + hash_index), c)){
             found = 1;
+            break;
         }
-        if(inc == BDD_HASH_SIZE)
-            inc = 0;
+        if(hash_index == BDD_HASH_SIZE)
+            hash_index = 0;
         else
             hash_index++;
     }
 
-    printf("%d", found); //testing
-
     if(found){
         //return the index where it is found
+        //printf("difference: %ld\n", (*(bdd_hash_map + hash_index) - bdd_nodes));
+        int location = (*(bdd_hash_map + hash_index) - (bdd_nodes));
+        return location;
     }
     else{
         //insert into table and hashtable
-        // an unused node should be obtained from the bdd_nodes table, its fields
-        // should be initialized, and it should be inserted into the hash table so that it can be found later.
+        *(bdd_nodes + global_bddptr) = c;
+        *(bdd_hash_map + hash_index) = (bdd_nodes+ global_bddptr);
+        //printf("direction: %p\n", (bdd_nodes + global_bddptr));
+        global_bddptr += 1;
+        return global_bddptr - 1;
     }
-    return -1;
 }
 
 BDD_NODE *bdd_from_raster(int w, int h, unsigned char *raster) {

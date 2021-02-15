@@ -3,6 +3,7 @@
 
 #include "const.h"
 #include "debug.h"
+#include "help.h"
 
 #ifdef _STRING_H
 #error "Do not #include <string.h>. You will get a ZERO."
@@ -29,7 +30,17 @@ int main(int argc, char **argv)
 
     //printf("Command Options: 0x%x\n", command_options);
 
-    bdd_lookup(1, 4, 8);
+    // test for lookup
+    // global_bddptr = 256;
+    // int a = bdd_lookup(1, 4, 8);
+    // printf("lookup(1,4,8): %d\n", a);
+    // int b = bdd_lookup(1, 4, 9);
+    // printf("lookup(1,4,9): %d\n", b);
+    // int c = bdd_lookup(1,4,8);
+    // printf("lookup(1,4,8): %d\n", c);
+    // int d = bdd_lookup(1,4,9);
+    // printf("lookup(1,4,9): %d\n", d);
+
 
     if(command_options == 0x11){ // pgm to pgm
     	// do not see the option?
