@@ -2,7 +2,7 @@
 
 #include <stdio.h>
 
-extern int bddnode_ptr;
+extern int bddnode_ptr = 256;
 
 /*
 @brief compares 2 strings and returns 1(TRUE) if equal else 0(FALSE)

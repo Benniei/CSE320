@@ -34,7 +34,8 @@ void help_inittonull(int size, BDD_NODE **a){
 }
 
 int compare_bdd(struct bdd_node a, struct bdd_node c){
-	if((a.level == c.level) && (a.left == c.left) && (a.right == a.left)){
+	if((a.level == c.level) && (a.left == c.left) && (a.right == c.right)){
+		printf("equal\n");
 		return 1;
 	}
 	return 0;

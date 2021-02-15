@@ -31,26 +31,29 @@ int bdd_lookup(int level, int left, int right) {
     }
     struct bdd_node c = {level + '@', left, right};
     int test = help_hashfunction(c);
-    printf("%d\n", test);
     //check hashtable for entry
     int hash_index = help_hashfunction(c);
-    int inc = hash_index;
+    int inc = hash_index - 1;
     int found = 0; //flag
-    do{
-        if(compare_bdd(**(bdd_hash_map + inc), c)){
+    while(found == 0 && *(bdd_hash_map + hash_index) != NULL && hash_index != inc){
+        if(compare_bdd(**(bdd_hash_map + hash_index), c)){
             found = 1;
         }
         if(inc == BDD_HASH_SIZE)
             inc = 0;
         else
-            inc++;
-    }while(found == 0 && *(bdd_hash_map + inc) != NULL && hash_index != inc);
+            hash_index++;
+    }
+
+    printf("%d", found); //testing
 
     if(found){
         //return the index where it is found
     }
     else{
         //insert into table and hashtable
+        // an unused node should be obtained from the bdd_nodes table, its fields
+        // should be initialized, and it should be inserted into the hash table so that it can be found later.
     }
     return -1;
 }
