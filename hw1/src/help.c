@@ -4,6 +4,8 @@
 
 #include "bdd.h"
 
+int global_bddptr = 256;
+
 int help_strcmp(char *original, char *comp){
 
 	while((*original != '\0' || *comp != '\0')){
@@ -27,10 +29,10 @@ int help_strtoint(char *number){
 	return result;
 }
 
-void help_inittonull(int size, BDD_NODE **a){
-	for(int i = 0; i < size; i++){
-		*(a + i) = NULL;
-	}
+void help_inithashtonull(){
+    for(int i = 0; i < BDD_HASH_SIZE; i++){
+        *(bdd_hash_map + BDD_HASH_SIZE) = NULL;
+    }
 }
 
 int compare_bdd(struct bdd_node a, struct bdd_node c){

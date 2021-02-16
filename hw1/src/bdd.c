@@ -26,10 +26,13 @@
  */
 int bdd_lookup(int level, int left, int right) {
     // TO BE IMPLEMENTED
+    if(level == 0){
+        return -1;
+    }
     if(left == right){
         return left;
     }
-    struct bdd_node c = {level + '@', left, right};
+    BDD_NODE c = {level + '@', left, right};
     //check hashtable for entry
     int hash_index = help_hashfunction(c);
     int inc = hash_index - 1;
@@ -57,9 +60,15 @@ int bdd_lookup(int level, int left, int right) {
         *(bdd_nodes + global_bddptr) = c;
         *(bdd_hash_map + hash_index) = (bdd_nodes+ global_bddptr);
         //printf("direction: %p\n", (bdd_nodes + global_bddptr));
+        //printf("%d, %d, %d\n", (bdd_nodes+ global_bddptr)->level, (bdd_nodes+ global_bddptr)->left, (bdd_nodes+ global_bddptr)-> right);
         global_bddptr += 1;
         return global_bddptr - 1;
     }
+}
+
+int bdd_minlevel(int w, int h) {
+    //to be implemented
+    return -1;
 }
 
 BDD_NODE *bdd_from_raster(int w, int h, unsigned char *raster) {

@@ -17,7 +17,7 @@ int help_strtoint(char *number);
 /*
 @brief initialates an array to null
 */
-void help_inittonull(int size, BDD_NODE *a);
+void help_inithashtonull();
 
 /*
 @brief compares 2 bdd nodes to see if they are equal and returns T/F

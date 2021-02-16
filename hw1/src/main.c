@@ -31,15 +31,20 @@ int main(int argc, char **argv)
     //printf("Command Options: 0x%x\n", command_options);
 
     // test for lookup
-    // global_bddptr = 256;
+    // help_inithashtonull();
     // int a = bdd_lookup(1, 4, 8);
     // printf("lookup(1,4,8): %d\n", a);
     // int b = bdd_lookup(1, 4, 9);
     // printf("lookup(1,4,9): %d\n", b);
+
     // int c = bdd_lookup(1,4,8);
     // printf("lookup(1,4,8): %d\n", c);
     // int d = bdd_lookup(1,4,9);
     // printf("lookup(1,4,9): %d\n", d);
+    // int e = bdd_lookup(5, 100, 24);
+    // printf("lookup(5,100,24): %d\n", e);
+    // int f = bdd_lookup(5, 100, 24);
+    // printf("lookup(5,100,24): %d\n", f);
 
 
     if(command_options == 0x11){ // pgm to pgm
