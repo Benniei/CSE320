@@ -226,7 +226,6 @@ int validargs(int argc, char **argv) {
                     global_options += 0x200;
                     counter++; //need another increment to account for argument
                     int value = help_strtoint(*(argv + counter)); //check value
-                    printf("\n Value t: %d \n", value);
                     if(value >= 0 && value <= 255){
                         value = value << 16;
                         global_options += value;
