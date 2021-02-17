@@ -51,28 +51,26 @@ int help_hashfunction(struct bdd_node c){
 }
 
 int help_placenode(unsigned char *raster, int w, int h, int d, int level, int left, int middle, int right, int l, int r){
-	//printf("level: %d left: %d middle: %d right: %d\n",level, left, middle, right);
-	int width_left = left/d;
-	int height_left = left%d;
-	int width_right = right/d;
-	int height_right = right%d;
+	printf("level: %d left: %d middle: %d right: %d\n",level, left, middle, right);
+	// int width_left = left/d;
+	// int height_left = left%d;
+	// int width_right = right/d;
+	// int height_right = right%d;
+	// printf("w: %d r: %d\n", w, h);
+	// printf("width_left: %d height_left: %d\nwidth_right: %d, height_right: %d\n", width_left, height_left, width_right, height_right);
 	if(level > 0){
 		return bdd_lookup(level+1, l, r);
 	}
-	else if(width_left <= w && height_left <= h && width_right <= w && height_right <= h){
-
-		//printf("NODE LVL 1\nleft node: %d right node: %d\n", left, right);
+	else if(left < w*h && right < w*h){
+		//printf("NODE LVL 1 left node: %d right node: %d\n", left, right);
 		char raster_left = *(raster + left);
 		char raster_right = *(raster + right);
 		return bdd_lookup(1, (int)raster_left, (int)raster_right);
 	}
-	else if(width_left <= w && height_left <= h){
-		char raster_left = *(raster + left);
-		return raster_left;
-	}
-	else if(width_right <= w && height_right <= h){
-		char raster_right = *(raster + right);
-		return raster_right;
+	else if(left < w * h && right >= w * h){
+		char raster_single = *(raster + left);
+		//printf("NODE LVL 1 raster: %d\n\n", raster_single);
+		return raster_single;
 	}
 	else{
 		return 0;
@@ -85,12 +83,13 @@ int help_splithalf(unsigned char *raster, int w, int h, int d, int level, int le
 		level--;
 		int middle = (right + left)/2;
 		//printf("middle = %d\n", middle);
+		//printf("PARENT: level: %d left: %d middle: %d right: %d\n", level+ 1, left, middle, right);
 
 		int l = help_splithalf(raster, w, h, d, level, left, middle);
 
 		int r = help_splithalf(raster, w, h, d, level, middle + 1, right);
 
-		//printf("PARENT: level: %d left: %d middle: %d right: %d\n", level+ 1, left, middle, right);
+
 		return help_placenode(raster, w, h, d, level, left, middle, right, l, r);
 		// if(level + 1 > 0 && right < w * h){
 		// 	printf("Level: %d Left: %d Right: %d\n", level + 1, left, right);
