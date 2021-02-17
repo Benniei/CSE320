@@ -68,13 +68,11 @@ int help_placenode(unsigned char *raster, int w, int h, int d, int level, int le
 	}
 	else if(width_left <= w && height_left <= h){
 		char raster_left = *(raster + left);
-		char raster_right = 0;
-		return bdd_lookup(1, (int)raster_left, (int)raster_right);
+		return raster_left;
 	}
 	else if(width_right <= w && height_right <= h){
-		char raster_left = 0;
 		char raster_right = *(raster + right);
-		return bdd_lookup(1, (int)raster_left, (int)raster_right);
+		return raster_right;
 	}
 	else{
 		return 0;
