@@ -28,3 +28,8 @@ int compare_bdd(struct bdd_node a, struct bdd_node c);
 @brief hashing function for bdd
 */
 int help_hashfunction(struct bdd_node c);
+
+/*
+@brief breaks the raster into half
+*/
+int help_splithalf(unsigned char *raster, int w, int h, int d, int level, int left, int right);

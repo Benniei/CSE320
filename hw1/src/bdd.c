@@ -27,6 +27,7 @@
 int bdd_lookup(int level, int left, int right) {
     // TO BE IMPLEMENTED
     if(level == 0){
+        printf("in");
         return -1;
     }
     if(left == right){
@@ -57,23 +58,41 @@ int bdd_lookup(int level, int left, int right) {
     }
     else{
         //insert into table and hashtable
-        *(bdd_nodes + global_bddptr) = c;
+        (bdd_nodes + global_bddptr)->level= level + '@';
+        (bdd_nodes + global_bddptr)->left= left;
+        (bdd_nodes + global_bddptr)->right= right;
         *(bdd_hash_map + hash_index) = (bdd_nodes+ global_bddptr);
         //printf("direction: %p\n", (bdd_nodes + global_bddptr));
-        //printf("%d, %d, %d\n", (bdd_nodes+ global_bddptr)->level, (bdd_nodes+ global_bddptr)->left, (bdd_nodes+ global_bddptr)-> right);
+        printf("%d, %d, %d\n", (bdd_nodes+ global_bddptr)->level, (bdd_nodes+ global_bddptr)->left, (bdd_nodes+ global_bddptr)-> right);
         global_bddptr += 1;
         return global_bddptr - 1;
     }
 }
 
-int bdd_minlevel(int w, int h) {
+int bdd_min_level(int w, int h) {
     //to be implemented
-    return -1;
+    int max = (w > h)? w:h;
+    int copy = max;
+    int result = 0;
+    while(max){
+        result++;
+        max >>= 1;
+    }
+    max = 1 << (result - 1);
+    if(max == copy){
+        result--;
+    }
+
+    return result * 2;
 }
 
 BDD_NODE *bdd_from_raster(int w, int h, unsigned char *raster) {
     // TO BE IMPLEMENTED
-    return NULL;
+    int min_level = bdd_min_level(w, h);
+    int square_dim = (min_level/2) << 1;
+    printf("Min_level: %d Square_dimensions: %d\n", min_level, square_dim);
+    help_splithalf(raster, w, h, square_dim, min_level, 0, (square_dim << 1) - 1);
+    return (bdd_nodes + global_bddptr - 1);
 }
 
 void bdd_to_raster(BDD_NODE *node, int w, int h, unsigned char *raster) {

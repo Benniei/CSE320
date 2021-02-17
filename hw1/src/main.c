@@ -30,39 +30,33 @@ int main(int argc, char **argv)
 
     //printf("Command Options: 0x%x\n", command_options);
 
-    // test for lookup
-    // help_inithashtonull();
-    // int a = bdd_lookup(1, 4, 8);
-    // printf("lookup(1,4,8): %d\n", a);
-    // int b = bdd_lookup(1, 4, 9);
-    // printf("lookup(1,4,9): %d\n", b);
-
-    // int c = bdd_lookup(1,4,8);
-    // printf("lookup(1,4,8): %d\n", c);
-    // int d = bdd_lookup(1,4,9);
-    // printf("lookup(1,4,9): %d\n", d);
-    // int e = bdd_lookup(5, 100, 24);
-    // printf("lookup(5,100,24): %d\n", e);
-    // int f = bdd_lookup(5, 100, 24);
-    // printf("lookup(5,100,24): %d\n", f);
+    help_inithashtonull();
+    printf("%d\n", bdd_min_level(3, 3));
+    unsigned char input1[] = {4, 8, 6, 8};
+    bdd_from_raster(2, 2, input1);
 
 
     if(command_options == 0x11){ // pgm to pgm
     	// do not see the option?
+        USAGE(*argv, EXIT_SUCCESS);
     }
     else if(command_options == 0x21){ // pgm to birp
+        help_inithashtonull();
         pgm_to_birp(stdin, stdout);
     }
     else if(command_options == 0x31){ // pgm to ascii
     	pgm_to_ascii(stdin, stdout);
     }
     else if(command_options == 0x12){ // birp to pgm
+        help_inithashtonull();
 
     }
     else if(command_options == 0x22){ // birp to birp
+        help_inithashtonull();
 
     }
     else if(command_options == 0x32){ // birp to ascii
+        help_inithashtonull();
 
     }
     return EXIT_FAILURE;
