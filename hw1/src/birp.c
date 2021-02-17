@@ -10,6 +10,19 @@
 
 int pgm_to_birp(FILE *in, FILE *out) {
     // TO BE IMPLEMENTED
+    int wp = 0;
+    int hp = 0;
+    unsigned char *raster = raster_data;
+    size_t size = RASTER_SIZE_MAX;
+
+    int res = img_read_pgm(in, &wp, &hp, raster, size);
+
+    if(res == 0){
+        //printf("%d", *(raster));
+        printf("wp: %d, hp: %d\n", wp, hp);
+        bdd_from_raster(wp, hp, raster);
+        printf("%d", global_bddptr - 1);
+    }
     return -1;
 }
 
@@ -55,7 +68,6 @@ int pgm_to_ascii(FILE *in, FILE *out) {
             }
             fputc('\n', out);
         }
-        fputc('\n', out);
         return 0;
     }
     return -1;

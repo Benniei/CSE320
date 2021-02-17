@@ -27,7 +27,6 @@
 int bdd_lookup(int level, int left, int right) {
     // TO BE IMPLEMENTED
     if(level == 0){
-        printf("in");
         return -1;
     }
     if(left == right){
@@ -63,7 +62,7 @@ int bdd_lookup(int level, int left, int right) {
         (bdd_nodes + global_bddptr)->right= right;
         *(bdd_hash_map + hash_index) = (bdd_nodes+ global_bddptr);
         //printf("direction: %p\n", (bdd_nodes + global_bddptr));
-        printf("%d, %d, %d\n\n", (bdd_nodes+ global_bddptr)->level, (bdd_nodes+ global_bddptr)->left, (bdd_nodes+ global_bddptr)-> right);
+        printf("Node Number: %d  %d, %d, %d\n\n", global_bddptr, (bdd_nodes+ global_bddptr)->level, (bdd_nodes+ global_bddptr)->left, (bdd_nodes+ global_bddptr)-> right);
         global_bddptr += 1;
         return global_bddptr - 1;
     }
@@ -89,10 +88,10 @@ int bdd_min_level(int w, int h) {
 BDD_NODE *bdd_from_raster(int w, int h, unsigned char *raster) {
     // TO BE IMPLEMENTED
     int min_level = bdd_min_level(w, h);
-    int square_dim = (min_level/2) << 1;
-    int expanded_raster = (1 << square_dim) - 1;
-    //printf("Min_level: %d Square_dimensions: %d End of raster: %d\n", min_level, square_dim, expanded_raster);
-    help_splithalf(raster, w, h, square_dim, min_level, 0, expanded_raster);
+    int square_dim = 1 << (min_level/2);
+    int expanded_raster = (square_dim * square_dim) - 1;
+    printf("Min_level: %d Square_dimensions: %d End of raster: %d\n", min_level, square_dim, expanded_raster);
+    help_splithalf(raster, w, h, square_dim, min_level, 0, expanded_raster, 0);
     return (bdd_nodes + global_bddptr - 1);
 }
 
