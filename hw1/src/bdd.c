@@ -68,7 +68,7 @@ int bdd_lookup(int level, int left, int right) {
         (bdd_nodes + global_bddptr)->left= left;
         (bdd_nodes + global_bddptr)->right= right;
         *(bdd_hash_map + hash_index) = (bdd_nodes+ global_bddptr);
-        //printf("Node Number: %d  %c, %d, %d\n", global_bddptr, (bdd_nodes+ global_bddptr)->level, (bdd_nodes+ global_bddptr)->left, (bdd_nodes+ global_bddptr)-> right);
+        //printf("%d  %c, %d, %d\n", global_bddptr, (bdd_nodes+ global_bddptr)->level, (bdd_nodes+ global_bddptr)->left, (bdd_nodes+ global_bddptr)-> right);
         global_bddptr += 1;
         return global_bddptr - 1;
     }
