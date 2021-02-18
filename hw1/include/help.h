@@ -32,4 +32,4 @@ int help_hashfunction(struct bdd_node c);
 /*
 @brief breaks the raster into half
 */
-int help_splithalf(unsigned char *raster, int w, int h, int d, int level, int left, int right, int indicator);
+int help_splithalf(unsigned char *raster, int w, int h, int d, int level, int minx, int miny, int maxx, int maxy);
