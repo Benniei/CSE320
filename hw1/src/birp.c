@@ -19,7 +19,7 @@ int pgm_to_birp(FILE *in, FILE *out) {
 
     if(res == 0){
         //printf("%d", *(raster));
-        printf("wp: %d, hp: %d\n", wp, hp);
+        //printf("wp: %d, hp: %d\n", wp, hp);
         bdd_from_raster(wp, hp, raster);
         printf("%d", global_bddptr - 1);
     }

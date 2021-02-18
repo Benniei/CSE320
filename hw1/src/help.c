@@ -51,19 +51,19 @@ int help_hashfunction(struct bdd_node c){
 }
 
 int help_placenode(unsigned char *raster, int w, int h, int d, int level, int l, int r){
-	printf("l: %d r: %d", l, r);
+	// printf("row: %d column: %d\n", l, r);
 	int left = (l * w) + r;
 	int right = left + 1;
 
 
-	if(l < w && (r + 1) < h  ){
+	if(l < h && (r + 1) < w ){
 		//printf("NODE LVL 1 left node: %d right node: %d\n", left, right);
 		int raster_left = *(raster + left);
 		int raster_right = *(raster + right);
 		//printf(" raster_left: %d raster_right %d\n\n", raster_left, raster_right);
 		return bdd_lookup(1, raster_left, raster_right);
 	}
-	else if(l < w){
+	else if(l < h && (r + 1) == w){
 		int raster_single = *(raster + left);
 		//printf("NODE LVL 1 raster: %d\n\n", raster_single);
 		return raster_single;
@@ -77,7 +77,9 @@ int help_splithalf(unsigned char *raster, int w, int h, int d, int level, int mi
 	if(level == 1){
 		level--;
 		//printf("(%d, %d) (%d, %d) <bot %d>\n", minx, miny, maxx, maxy, level+1);
-		return help_placenode(raster, w, h, d, level, minx, miny);
+		int hold = help_placenode(raster, w, h, d, level, minx, miny);
+		// printf("HOLD: %d\n", hold);
+		return hold;
 	}
 	if(level > 0){
 		if(level%2 == 0){ //top bottom split
