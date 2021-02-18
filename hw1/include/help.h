@@ -3,6 +3,7 @@
 #include <stdio.h>
 
 int global_bddptr;
+int global_bddindex;
 
 /*
 @brief compares 2 strings and returns 1(TRUE) if equal else 0(FALSE)
@@ -33,3 +34,13 @@ int help_hashfunction(struct bdd_node c);
 @brief breaks the raster into half
 */
 int help_splithalf(unsigned char *raster, int w, int h, int d, int level, int minx, int miny, int maxx, int maxy);
+
+/*
+@brief checks if in bdd_index_map
+*/
+int help_inbddindex(int a);
+
+/*
+@brief finds serial number in index_map
+*/
+int help_inbddfindserial(int a);

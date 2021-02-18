@@ -28,10 +28,6 @@ int main(int argc, char **argv)
 
     int command_options = global_options & 0xff; // filters the commands
 
-    help_inithashtonull();
-    unsigned char input[] = {1,2,3,4,5,6};
-    bdd_from_raster(2, 3, input);
-
 
     if(command_options == 0x11){ // pgm to pgm
     	// do not see the option?

@@ -68,7 +68,7 @@ int bdd_lookup(int level, int left, int right) {
         (bdd_nodes + global_bddptr)->left= left;
         (bdd_nodes + global_bddptr)->right= right;
         *(bdd_hash_map + hash_index) = (bdd_nodes+ global_bddptr);
-        printf("Node Number: %d  %c, %d, %d\n", global_bddptr, (bdd_nodes+ global_bddptr)->level, (bdd_nodes+ global_bddptr)->left, (bdd_nodes+ global_bddptr)-> right);
+        //printf("Node Number: %d  %c, %d, %d\n", global_bddptr, (bdd_nodes+ global_bddptr)->level, (bdd_nodes+ global_bddptr)->left, (bdd_nodes+ global_bddptr)-> right);
         global_bddptr += 1;
         return global_bddptr - 1;
     }
@@ -106,7 +106,44 @@ void bdd_to_raster(BDD_NODE *node, int w, int h, unsigned char *raster) {
 
 int bdd_serialize(BDD_NODE *node, FILE *out) {
     // TO BE IMPLEMENTED
-    return -1;
+    BDD_NODE root = *node;
+    if((root.left) > 255){
+        bdd_serialize(bdd_nodes + root.left, out);
+    }else{
+        if(help_inbddindex(root.left) == 0){
+            *(bdd_index_map + global_bddindex++) = root.left;
+            char a = root.left;
+            fputc('@', out);
+            fputc(a , out);
+        }
+    }
+    if((root.right) > 255){
+        bdd_serialize(bdd_nodes + root.right, out);
+    }else{
+        if(help_inbddindex(root.right) == 0){
+            *(bdd_index_map + global_bddindex++) = root.right;
+            char a = root.right;
+            fputc('@', out);
+            fputc(a, out);
+        }
+    }
+    //printf("%c %d %d  \n", root.level, root.left, root.right);
+    int node_index = bdd_lookup((int)(root.level - '@'), root.left, root.right);
+    if(help_inbddindex(node_index) == 0){
+        *(bdd_index_map + global_bddindex++) = node_index;
+        fputc(root.level, out);
+        int left = help_inbddfindserial(root.left);
+        int right = help_inbddfindserial(root.right);
+        fputc(left & 0xff, out);
+        fputc(left>>8 & 0xff, out);
+        fputc(left>>16 & 0xff, out);
+        fputc(left>>24 & 0xff, out);
+        fputc(right & 0xff, out);
+        fputc(right>>8 & 0xff, out);
+        fputc(right>>16 & 0xff, out);
+        fputc(right>>24 & 0xff, out);
+    }
+    return 0;
 }
 
 BDD_NODE *bdd_deserialize(FILE *in) {

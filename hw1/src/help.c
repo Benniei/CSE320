@@ -5,6 +5,7 @@
 #include "bdd.h"
 
 int global_bddptr = 256;
+int global_bddindex = 0;
 
 int help_strcmp(char *original, char *comp){
 
@@ -102,4 +103,26 @@ int help_splithalf(unsigned char *raster, int w, int h, int d, int level, int mi
 	}
 
 	return 0;
+}
+
+int help_inbddindex(int a){
+	int flag = 0;
+	for(int i = 0; i < global_bddindex; i++){
+		if (a == *(bdd_index_map + i)){
+			flag = 1;
+			break;
+		}
+	}
+	return flag;
+}
+
+int help_inbddfindserial(int a){
+	int location;
+	for(int i = 0; i < global_bddindex; i++){
+		if(a == *(bdd_index_map + i)){
+			location = i + 1;
+			break;
+		}
+	}
+	return location;
 }
