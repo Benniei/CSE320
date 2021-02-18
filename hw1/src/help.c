@@ -55,12 +55,7 @@ int help_placenode(unsigned char *raster, int w, int h, int d, int level, int l,
 	int left = (l * w) + r;
 	int right = left + 1;
 
-	// int ele11 = l;
-	// int ele12 = r;
-	// int ele21 = l;
-	// int ele22 = r+1;
 
-	//printf("left: %d right: %d\n", left, right);
 	if(l < w && (r + 1) < h  ){
 		//printf("NODE LVL 1 left node: %d right node: %d\n", left, right);
 		int raster_left = *(raster + left);
@@ -92,20 +87,14 @@ int help_splithalf(unsigned char *raster, int w, int h, int d, int level, int mi
 			//printf("(%d, %d) (%d, %d) <tb %d>\n", minx, miny, maxx, maxy, level+1);
 			int l = help_splithalf(raster, w, h, d, level, minx, miny, (minx + maxx)/2, maxy);
 			int r = help_splithalf(raster, w, h, d, level, (minx + maxx)/2, miny, maxx, maxy);
-			//printf("(%d, %d) (%d, %d) <tb1 %d>\n", minx, miny, maxx, maxy, level);
-
 			return bdd_lookup(level + 1, l, r);
 		}
 		else{ //left right split
-
 			level--;
 			//printf("PARENT LEFTRIGHT: level: %d \n", level+ 1);
-
 			//printf("(%d, %d) (%d, %d) <lr %d>\n", minx, miny, maxx, maxy, level+1);
 			int l = help_splithalf(raster, w, h, d, level, minx, miny, maxx, (miny + maxy)/2);
 			int r = help_splithalf(raster, w, h, d, level, minx, (miny+maxy)/2, maxx, maxy);
-			//printf("(%d, %d) (%d, %d) <lr1 %d>\n", minx, miny, maxx, maxy, level);
-
 			return bdd_lookup(level + 1, l, r);
 		}
 	}

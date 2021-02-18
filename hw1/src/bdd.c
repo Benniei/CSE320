@@ -59,7 +59,6 @@ int bdd_lookup(int level, int left, int right) {
 
     if(found){
         //return the index where it is found
-        //printf("difference: %ld\n", (*(bdd_hash_map + hash_index) - bdd_nodes));
         int location = (*(bdd_hash_map + hash_index) - (bdd_nodes));
         return location;
     }
@@ -69,8 +68,7 @@ int bdd_lookup(int level, int left, int right) {
         (bdd_nodes + global_bddptr)->left= left;
         (bdd_nodes + global_bddptr)->right= right;
         *(bdd_hash_map + hash_index) = (bdd_nodes+ global_bddptr);
-        //printf("direction: %p\n", (bdd_nodes + global_bddptr));
-        printf("\nNode Number: %d  %d, %d, %d\n\n", global_bddptr, (bdd_nodes+ global_bddptr)->level, (bdd_nodes+ global_bddptr)->left, (bdd_nodes+ global_bddptr)-> right);
+        //printf("\nNode Number: %d  %d, %d, %d\n\n", global_bddptr, (bdd_nodes+ global_bddptr)->level, (bdd_nodes+ global_bddptr)->left, (bdd_nodes+ global_bddptr)-> right);
         global_bddptr += 1;
         return global_bddptr - 1;
     }
@@ -97,9 +95,8 @@ BDD_NODE *bdd_from_raster(int w, int h, unsigned char *raster) {
     // TO BE IMPLEMENTED
     int min_level = bdd_min_level(w, h);
     int square_dim = 1 << (min_level/2);
-    printf("Min_level: %d Square_dimensions: %d \n", min_level, square_dim);
+    //printf("Min_level: %d Square_dimensions: %d \n", min_level, square_dim);
     help_splithalf(raster, w, h, square_dim, min_level, 0, 0, square_dim, square_dim);
-    //printf("\nglobal_bddptr: %d", global_bddptr);
     return (bdd_nodes + global_bddptr - 1);
 }
 

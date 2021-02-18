@@ -26,12 +26,8 @@ int main(int argc, char **argv)
     // TO BE IMPLEMENTED
     //printf("Global Options: 0x%x\n", global_options);
 
-    int command_options = global_options & 0xff; // gets the type to convert to
+    int command_options = global_options & 0xff; // filters the commands
 
-    //printf("Command Options: 0x%x\n", command_options);
-    help_inithashtonull();
-    unsigned char input[] = {1,2,3,4,5,6,7,8,9};
-    bdd_from_raster(3, 3, input);
 
 
 
