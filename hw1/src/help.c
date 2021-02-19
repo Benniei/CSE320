@@ -77,7 +77,7 @@ int help_placenode(unsigned char *raster, int w, int h, int d, int level, int l,
 		return raster_single;
 	}
 	else{
-		return -1;
+		return 0;
 	}
 }
 
