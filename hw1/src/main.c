@@ -54,7 +54,7 @@ int main(int argc, char **argv)
         birp_to_ascii(stdin, stdout);
 
     }
-    return EXIT_FAILURE;
+    return EXIT_SUCCESS;
 }
 
 /*
