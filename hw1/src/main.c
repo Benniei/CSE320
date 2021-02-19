@@ -28,7 +28,6 @@ int main(int argc, char **argv)
 
     int command_options = global_options & 0xff; // filters the commands
 
-
     if(command_options == 0x11){ // pgm to pgm
     	// do not see the option?
         USAGE(*argv, EXIT_SUCCESS);
@@ -42,14 +41,17 @@ int main(int argc, char **argv)
     }
     else if(command_options == 0x12){ // birp to pgm
         help_inithashtonull();
+        birp_to_pgm(stdin, stdout);
 
     }
     else if(command_options == 0x22){ // birp to birp
         help_inithashtonull();
+        birp_to_birp(stdin, stdout);
 
     }
     else if(command_options == 0x32){ // birp to ascii
         help_inithashtonull();
+        birp_to_ascii(stdin, stdout);
 
     }
     return EXIT_FAILURE;

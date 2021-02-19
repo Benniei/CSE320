@@ -32,8 +32,15 @@ int help_strtoint(char *number){
 
 void help_inithashtonull(){
     for(int i = 0; i < BDD_HASH_SIZE; i++){
-        *(bdd_hash_map + BDD_HASH_SIZE) = NULL;
+        *(bdd_hash_map + i) = NULL;
     }
+}
+
+void help_clearindexmap(){
+	for(int i = 0; i < global_bddindex; i++){
+		*(bdd_index_map + i) = 0;
+	}
+	global_bddindex = 0;
 }
 
 int compare_bdd(struct bdd_node a, struct bdd_node c){
@@ -52,7 +59,7 @@ int help_hashfunction(struct bdd_node c){
 }
 
 int help_placenode(unsigned char *raster, int w, int h, int d, int level, int l, int r){
-	// printf("row: %d column: %d\n", l, r);
+	//printf("row: %d column: %d\n", l, r);
 	int left = (l * w) + r;
 	int right = left + 1;
 

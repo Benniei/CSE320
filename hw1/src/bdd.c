@@ -68,7 +68,7 @@ int bdd_lookup(int level, int left, int right) {
         (bdd_nodes + global_bddptr)->left= left;
         (bdd_nodes + global_bddptr)->right= right;
         *(bdd_hash_map + hash_index) = (bdd_nodes+ global_bddptr);
-        //printf("%d  %c, %d, %d\n", global_bddptr, (bdd_nodes+ global_bddptr)->level, (bdd_nodes+ global_bddptr)->left, (bdd_nodes+ global_bddptr)-> right);
+        printf("%d  %c, %d, %d\n", global_bddptr, (bdd_nodes+ global_bddptr)->level, (bdd_nodes+ global_bddptr)->left, (bdd_nodes+ global_bddptr)-> right);
         global_bddptr += 1;
         return global_bddptr - 1;
     }
@@ -95,7 +95,7 @@ BDD_NODE *bdd_from_raster(int w, int h, unsigned char *raster) {
     // TO BE IMPLEMENTED
     int min_level = bdd_min_level(w, h);
     int square_dim = 1 << (min_level/2);
-    //printf("Min_level: %d Square_dimensions: %d \n", min_level, square_dim);
+    printf("Min_level: %d Square_dimensions: %d w: %d h: %d\n", min_level, square_dim, w, h);
     help_splithalf(raster, w, h, square_dim, min_level, 0, 0, square_dim, square_dim);
     return (bdd_nodes + global_bddptr - 1);
 }
@@ -148,7 +148,35 @@ int bdd_serialize(BDD_NODE *node, FILE *out) {
 
 BDD_NODE *bdd_deserialize(FILE *in) {
     // TO BE IMPLEMENTED
-    return NULL;
+    int c;
+    do{
+        c = fgetc(in);
+        //printf("%d ", c);
+
+        if (c == 64){ //@
+            c = fgetc(in);
+            //printf("Leaf: %d\n", c);
+            *(bdd_index_map + global_bddindex++) = c;
+        }
+        else if(c > 64){
+            //printf("c: %c\n", c);
+            int a, b;
+            fread(&a, 4, 1, in); //index of left node
+            fread(&b, 4, 1, in); //index of right node
+            // printf("a: %d b: %d\n", a, b);
+            // printf("a: %d b: %d\n", *(bdd_index_map + a - 1), *(bdd_index_map + b - 1));
+            if(a - 1 > global_bddindex || b-1 > global_bddindex){
+                return NULL;
+            }
+            int loc = bdd_lookup(c - 64, *(bdd_index_map + a - 1), *(bdd_index_map + b - 1));
+            *(bdd_index_map + global_bddindex++) = loc;
+        }
+        if(c == EOF){
+            break;
+        }
+
+    }while(1);
+    return (bdd_nodes + global_bddptr - 1);
 }
 
 unsigned char bdd_apply(BDD_NODE *node, int r, int c) {
