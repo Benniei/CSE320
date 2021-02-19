@@ -21,6 +21,7 @@ int pgm_to_birp(FILE *in, FILE *out) {
         //printf("%d", *(raster));
         //printf("wp: %d, hp: %d\n", wp, hp);
         BDD_NODE* a = bdd_from_raster(wp, hp, raster);
+        help_clearindexmap();
         img_write_birp(a, wp, hp, out);
 
         //printf("\nBDD Pointer: %d\n", global_bddptr - 1 - 256);
@@ -36,6 +37,7 @@ int pgm_to_birp(FILE *in, FILE *out) {
 int birp_to_pgm(FILE *in, FILE *out) {
     // TO BE IMPLEMENTED
     int wp, hp;
+    help_clearindexmap();
     img_read_birp(in, &wp, &hp);
     return -1;
 }
@@ -43,6 +45,7 @@ int birp_to_pgm(FILE *in, FILE *out) {
 int birp_to_birp(FILE *in, FILE *out) {
     // TO BE IMPLEMENTED
     int wp, hp;
+    help_clearindexmap();
     img_read_birp(in, &wp, &hp);
     // printf("\nBDD Pointer: %d\n", global_bddptr);
     // printf("BDD Index: %d\n", global_bddindex);
@@ -93,6 +96,7 @@ int pgm_to_ascii(FILE *in, FILE *out) {
 int birp_to_ascii(FILE *in, FILE *out) {
     // TO BE IMPLEMENTED
     int wp, hp;
+    help_clearindexmap();
     BDD_NODE* c = img_read_birp(in, &wp, &hp);
 
     return -1;

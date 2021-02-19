@@ -37,9 +37,6 @@ void help_inithashtonull(){
 }
 
 void help_clearindexmap(){
-	for(int i = 0; i < global_bddindex; i++){
-		*(bdd_index_map + i) = 0;
-	}
 	global_bddindex = 0;
 }
 
