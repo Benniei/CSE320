@@ -21,9 +21,10 @@ int pgm_to_birp(FILE *in, FILE *out) {
         //printf("%d", *(raster));
         //printf("wp: %d, hp: %d\n", wp, hp);
         BDD_NODE* a = bdd_from_raster(wp, hp, raster);
-        //img_write_birp(a, wp, hp, out);
+        img_write_birp(a, wp, hp, out);
 
-        // printf("%d\n", global_bddptr - 1);
+        //printf("\nBDD Pointer: %d\n", global_bddptr - 1 - 256);
+        //printf("BDD Index: %d\n", global_bddindex - 1);
         // for(int i = 0; i < global_bddindex; i++){
         //     printf("%d ", *(bdd_index_map + i));
         // }

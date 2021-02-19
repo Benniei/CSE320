@@ -117,7 +117,7 @@ int help_inbddindex(int a){
 }
 
 int help_inbddfindserial(int a){
-	int location;
+	int location = -1;
 	for(int i = 0; i < global_bddindex; i++){
 		if(a == *(bdd_index_map + i)){
 			location = i + 1;
