@@ -91,6 +91,11 @@ BDD_NODE *bdd_from_raster(int w, int h, unsigned char *raster) {
 
 void bdd_to_raster(BDD_NODE *node, int w, int h, unsigned char *raster) {
     // TO BE IMPLEMENTED
+    for(int i = 0; i < w; i++){
+        for(int j = 0; j < h; j++){
+            *raster++ = bdd_apply(node, i, j);
+        }
+    }
 }
 
 int bdd_serialize(BDD_NODE *node, FILE *out) {
@@ -170,7 +175,67 @@ BDD_NODE *bdd_deserialize(FILE *in) {
 
 unsigned char bdd_apply(BDD_NODE *node, int r, int c) {
     // TO BE IMPLEMENTED
-    return 0;
+    int level = node->level - '@';
+    int size = 1 << (level/2);
+    int minx = 0, miny = 0;
+    int maxx = size;
+    int maxy = size;
+    //printf("Level: %d size: %d\n", level, size);
+    if(r < size || c < size){
+        while(1){
+            level = node->level - '@';
+            if(level%2 ==0){//topbot
+                // printf("(%d, %d) (%d, %d) <tb %d> %d\n", minx, miny, maxx, maxy, level+1, bdd_lookup(level + 1, node->left, node->right));
+                // printf("left: %d right: %d\n", node->left, node-> right);
+                if((r >= minx) && (c >= miny) && (r < (minx + maxx)/2) && (c < maxy)){//left node
+                    //printf("left<T>\n");
+                    maxx = (minx + maxx)/2;
+                    if(node->left < 256){
+                        return node->left;
+                    }
+                    else{
+                        node = LEFT(node, level + 1);
+                    }
+                }
+                else{
+                    //printf("right<B>\n");
+                    minx = (minx + maxx)/2;
+                    if(node->right < 256){
+                        return node->right;
+                    }
+                    else{
+                        node = RIGHT(node, level + 1);
+                    }
+                }
+            }
+            else{//leftright
+                //level--;
+                //printf("(%d, %d) (%d, %d) <lr %d> %d\n", minx, miny, maxx, maxy, level+1, bdd_lookup(level + 1, node->left, node->right));
+
+                if(((r >= minx) && (c>= miny)) && ((r < maxx) && (c < (miny + maxy)/2))){
+                    //printf("left<L>\n");
+                    maxy = (miny + maxy)/2;
+                    if(node->left < 256){
+                        return node->left;
+                    }
+                    else{
+                        node = LEFT(node, level + 1);
+                    }
+                }
+                else{
+                    //printf("right<R>\n");
+                    miny = (miny + maxy)/2;
+                    if(node->right < 256){
+                        return node->right;
+                    }
+                    else{
+                        node = RIGHT(node, level + 1);
+                    }
+                }
+            }
+        }
+    }
+    return -1;
 }
 
 BDD_NODE *bdd_map(BDD_NODE *node, unsigned char (*func)(unsigned char)) {

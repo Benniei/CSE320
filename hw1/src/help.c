@@ -2,6 +2,7 @@
 
 #include <stdio.h>
 
+#include "const.h"
 #include "bdd.h"
 
 int global_bddptr = 256;
@@ -25,7 +26,11 @@ int help_strtoint(char *number){
 	while(*number != '\0'){
 		result *= 10;
 		//printf("%d \n",result); debug
-		result += *number++ - 48;
+		int next = *number++ - 48;
+		if(next < 0 || next > 9){
+			return -1;
+		}
+		result += next;
 	}
 	return result;
 }
@@ -38,6 +43,12 @@ void help_inithashtonull(){
 
 void help_clearindexmap(){
 	global_bddindex = 0;
+}
+
+void help_clearrasterdata(){
+	for(int i = 0; i < RASTER_SIZE_MAX; i++){
+		*(raster_data + i) = 0;
+	}
 }
 
 int compare_bdd(struct bdd_node a, struct bdd_node c){
