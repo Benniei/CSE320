@@ -18,23 +18,15 @@ int pgm_to_birp(FILE *in, FILE *out) { //done
     int res = img_read_pgm(in, &wp, &hp, raster, size);
 
     if(res == 0){
-        //printf("%d", *(raster));
-        //printf("wp: %d, hp: %d\n", wp, hp);
         BDD_NODE* a = bdd_from_raster(wp, hp, raster);
         help_clearindexmap();
-        //img_write_birp(a, wp, hp, out);
-
-        //printf("\nBDD Pointer: %d\n", global_bddptr - 1 - 256);
-        //printf("BDD Index: %d\n", global_bddindex - 1);
-        // for(int i = 0; i < global_bddindex; i++){
-        //     printf("%d ", *(bdd_index_map + i));
-        // }
+        img_write_birp(a, wp, hp, out);
         return 0;
     }
     return -1;
 }
 
-int birp_to_pgm(FILE *in, FILE *out) {
+int birp_to_pgm(FILE *in, FILE *out) { //done
     // TO BE IMPLEMENTED
     int wp, hp;
     //printf("P5\n# CREATOR: The GIMP's PNM Filter Version 1.0\n130 130\n255\n");
@@ -43,7 +35,6 @@ int birp_to_pgm(FILE *in, FILE *out) {
     if(root == NULL){
         return -1;
     }
-    //printf("width: %d height: %d",wp, hp);
     help_clearrasterdata();
     unsigned char *raster = raster_data;
     bdd_to_raster(root, wp, hp, raster);
@@ -64,12 +55,31 @@ int birp_to_birp(FILE *in, FILE *out) {
     if(root == NULL){
         return -1;
     }
-    // printf("\nBDD Pointer: %d\n", global_bddptr);
-    // printf("BDD Index: %d\n", global_bddindex);
-    // for(int i = 0; i < global_bddindex; i++){
-    //         printf("%d ", *(bdd_index_map + i));
-    // }
-    printf("\n");
+
+    int command = global_options & 0xf00;
+    int value;
+
+    if(command == 0x100){ //negative
+
+    }
+    else if(command == 0x200){ //threshhold
+        value = global_options & 0xff0000;
+        value = value >> 16;
+        //printf("threshhold value: %d\n", value);
+    }
+    else if(command == 0x300){ //zoom
+        value = global_options & 0xff0000;
+        if((value & 0x800000) > 0){ //negative zoom
+            value = value | 0xff000000;
+            //printf("zoom value negs: %x\n", value);
+        }
+        value = value >> 16;
+        //printf("zoom value: %d\n", value);
+    }
+    else if(command == 0x400){ //rotate
+
+    }
+
     return 0;
 }
 
@@ -110,7 +120,7 @@ int pgm_to_ascii(FILE *in, FILE *out) { //done
     return -1;
 }
 
-int birp_to_ascii(FILE *in, FILE *out) {
+int birp_to_ascii(FILE *in, FILE *out) { //done
     // TO BE IMPLEMENTED
     int wp, hp;
     help_clearindexmap();

@@ -26,7 +26,7 @@ int main(int argc, char **argv)
     // TO BE IMPLEMENTED
 
     int command_options = global_options & 0xff; // filters the commands
-    int success;
+    int success_flag;
 
     if(command_options == 0x11){ // pgm to pgm
     	// do not see the option?
@@ -34,37 +34,37 @@ int main(int argc, char **argv)
     }
     else if(command_options == 0x21){ // pgm to birp
         help_inithashtonull();
-        success = pgm_to_birp(stdin, stdout);
-        if(success == -1){
+        success_flag = pgm_to_birp(stdin, stdout);
+        if(success_flag == -1){
             return EXIT_FAILURE;
         }
 
     }
     else if(command_options == 0x31){ // pgm to ascii
-    	success = pgm_to_ascii(stdin, stdout);
-        if(success == -1){
+    	success_flag = pgm_to_ascii(stdin, stdout);
+        if(success_flag == -1){
             return EXIT_FAILURE;
         }
 
     }
     else if(command_options == 0x12){ // birp to pgm
         help_inithashtonull();
-        success = birp_to_pgm(stdin, stdout);
-        if(success == -1){
+        success_flag = birp_to_pgm(stdin, stdout);
+        if(success_flag == -1){
             return EXIT_FAILURE;
         }
     }
     else if(command_options == 0x22){ // birp to birp
         help_inithashtonull();
-        // success = birp_to_birp(stdin, stdout);
-        // if(success == -1){
-        //     return EXIT_FAILURE;
-        // }
+        success_flag = birp_to_birp(stdin, stdout);
+        if(success_flag == -1){
+            return EXIT_FAILURE;
+        }
     }
     else if(command_options == 0x32){ // birp to ascii
         help_inithashtonull();
-        success = birp_to_ascii(stdin, stdout);
-        if(success == -1){
+        success_flag = birp_to_ascii(stdin, stdout);
+        if(success_flag == -1){
             return EXIT_FAILURE;
         }
     }
