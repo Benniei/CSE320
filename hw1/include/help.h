@@ -26,6 +26,11 @@ void help_inithashtonull();
 void help_clearindexmap();
 
 /*
+@brief clears the raster data
+*/
+void help_clearrasterdata();
+
+/*
 @brief compares 2 bdd nodes to see if they are equal and returns T/F
 */
 int compare_bdd(struct bdd_node a, struct bdd_node c);

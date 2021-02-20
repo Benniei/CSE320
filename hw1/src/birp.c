@@ -8,13 +8,13 @@
 #include "debug.h"
 #include "help.h"
 
-int pgm_to_birp(FILE *in, FILE *out) {
+int pgm_to_birp(FILE *in, FILE *out) { //done
     // TO BE IMPLEMENTED
     int wp = 0;
     int hp = 0;
     unsigned char *raster = raster_data;
     size_t size = RASTER_SIZE_MAX;
-
+    help_clearrasterdata();
     int res = img_read_pgm(in, &wp, &hp, raster, size);
 
     if(res == 0){
@@ -22,7 +22,7 @@ int pgm_to_birp(FILE *in, FILE *out) {
         //printf("wp: %d, hp: %d\n", wp, hp);
         BDD_NODE* a = bdd_from_raster(wp, hp, raster);
         help_clearindexmap();
-        img_write_birp(a, wp, hp, out);
+        //img_write_birp(a, wp, hp, out);
 
         //printf("\nBDD Pointer: %d\n", global_bddptr - 1 - 256);
         //printf("BDD Index: %d\n", global_bddindex - 1);
@@ -37,9 +37,19 @@ int pgm_to_birp(FILE *in, FILE *out) {
 int birp_to_pgm(FILE *in, FILE *out) {
     // TO BE IMPLEMENTED
     int wp, hp;
+    printf("P5\n# Created by GIMP version 2.10.18 PNM plug-in\n240 275\n255\n");
     help_clearindexmap();
-    img_read_birp(in, &wp, &hp);
-    return -1;
+    BDD_NODE* root = img_read_birp(in, &wp, &hp); //deserialize the birp
+    printf("width: %d height: %d",wp, hp);
+    help_clearrasterdata();
+    unsigned char *raster = raster_data;
+    bdd_to_raster(root, wp, hp, raster);
+    // for(int i = 0; i < wp; i++){
+    //     for(int j = 0; j < hp; j++){
+    //         fputc(*(raster++), out);
+    //     }
+    // }
+    return 0;
 }
 
 int birp_to_birp(FILE *in, FILE *out) {
@@ -56,7 +66,7 @@ int birp_to_birp(FILE *in, FILE *out) {
     return -1;
 }
 
-int pgm_to_ascii(FILE *in, FILE *out) {
+int pgm_to_ascii(FILE *in, FILE *out) { //done
     // TO BE IMPLEMENTED
 
     int wp = 0;
@@ -139,6 +149,10 @@ int validargs(int argc, char **argv) {
                 // equals to -i
                 if(help_strcmp(*(argv + counter), "-i")){
                     input_flag = 1;
+                    // -i specified but there is nothing following -> -1
+                    if(argc == 2){
+                        return -1;
+                    }
                     // input type pgm (0x1)
                     if(help_strcmp(*(argv + counter + 1), "pgm")){
                         global_options += 0x1;
@@ -149,7 +163,6 @@ int validargs(int argc, char **argv) {
                         global_options += 0x2;
                         counter += 2;
                     }
-                    // -i specified but there is nothing following -> -1
                     else{
                         return -1;
                     }
@@ -158,6 +171,10 @@ int validargs(int argc, char **argv) {
                 else{
                     output_flag = 1;
                     // output type pgm (0x10)
+                    // -o specified but there is nothing following -> -1
+                    if(argc == 2){
+                        return -1;
+                    }
                     if(help_strcmp(*(argv + counter + 1), "pgm")){
                         global_options += 0x10;
                         counter += 2;
@@ -172,7 +189,6 @@ int validargs(int argc, char **argv) {
                         global_options += 0x30;
                         counter += 2;
                     }
-                    // -o specified but there is nothing following -> -1
                     else{
                         return -1;
                     }
@@ -197,6 +213,10 @@ int validargs(int argc, char **argv) {
                 // equals to -i and no input previously
                 if(help_strcmp(*(argv + counter), "-i") && (input_flag == 0)){
                     input_flag = 1;
+                    // -i specified but there is nothing following -> -1
+                    if(argc == counter + 1){
+                        return -1;
+                    }
                     // input type pgm (0x1)
                     if(help_strcmp(*(argv + counter + 1), "pgm")){
                         global_options += 0x1;
@@ -207,7 +227,6 @@ int validargs(int argc, char **argv) {
                         global_options += 0x2;
                         counter += 2;
                     }
-                    // -i specified but there is nothing following -> -1
                     else{
                         return -1;
                     }
@@ -215,6 +234,10 @@ int validargs(int argc, char **argv) {
                 // equals to -o and no output previously
                 else if(help_strcmp(*(argv + counter), "-o") && (output_flag == 0)){
                     output_flag = 1;
+                    // -o specified but there is nothing following -> -1
+                    if(argc == counter + 1){
+                        return -1;
+                    }
                     // output type pgm (0x10)
                     if(help_strcmp(*(argv + counter + 1), "pgm")){
                         global_options += 0x10;
@@ -230,7 +253,6 @@ int validargs(int argc, char **argv) {
                         global_options += 0x30;
                         counter += 2;
                     }
-                    // -o specified but there is nothing following -> -1
                     else{
                         return -1;
                     }
@@ -261,6 +283,9 @@ int validargs(int argc, char **argv) {
                 else if(help_strcmp(*(argv + counter), "-t")){
                     global_options += 0x200;
                     counter++; //need another increment to account for argument
+                    if(argc == counter){
+                        return -1;
+                    }
                     int value = help_strtoint(*(argv + counter)); //check value
                     if(value >= 0 && value <= 255){
                         value = value << 16;
@@ -276,6 +301,9 @@ int validargs(int argc, char **argv) {
                 else if(help_strcmp(*(argv + counter), "-z")){
                     global_options += 0x300;
                     counter++; //need another increment to account for argument
+                    if(argc == counter){
+                        return -1;
+                    }
                     int value = help_strtoint(*(argv + counter)); //might need to change some bits
                     if(value >= 0 && value <= 16){
                         value *= -1; //negative value
@@ -292,6 +320,9 @@ int validargs(int argc, char **argv) {
                 else if(help_strcmp(*(argv + counter), "-Z")){
                     global_options += 0x300;
                     counter++; //need another increment to account for argument
+                    if(argc == counter){
+                        return -1;
+                    }
                     int value = help_strtoint(*(argv + counter));
                     if(value >= 0 && value <= 16){
                         value = value << 16;

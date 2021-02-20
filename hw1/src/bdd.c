@@ -57,7 +57,7 @@ int bdd_lookup(int level, int left, int right) {
         (bdd_nodes + global_bddptr)->left= left;
         (bdd_nodes + global_bddptr)->right= right;
         *(bdd_hash_map + hash_index) = (bdd_nodes+ global_bddptr);
-        //printf("%d  %c, %d, %d\n", global_bddptr, (bdd_nodes+ global_bddptr)->level, (bdd_nodes+ global_bddptr)->left, (bdd_nodes+ global_bddptr)-> right);
+        printf("%d  %c, %d, %d\n", global_bddptr, (bdd_nodes+ global_bddptr)->level, (bdd_nodes+ global_bddptr)->left, (bdd_nodes+ global_bddptr)-> right);
         global_bddptr += 1;
         return global_bddptr - 1;
     }
@@ -91,8 +91,8 @@ BDD_NODE *bdd_from_raster(int w, int h, unsigned char *raster) {
 
 void bdd_to_raster(BDD_NODE *node, int w, int h, unsigned char *raster) {
     // TO BE IMPLEMENTED
-    for(int i = 0; i < w; i++){
-        for(int j = 0; j < h; j++){
+    for(int i = 0; i < h; i++){
+        for(int j = 0; j < w; j++){
             *raster++ = bdd_apply(node, i, j);
         }
     }
@@ -180,55 +180,80 @@ unsigned char bdd_apply(BDD_NODE *node, int r, int c) {
     int minx = 0, miny = 0;
     int maxx = size;
     int maxy = size;
+    int level_counter;
     //printf("Level: %d size: %d\n", level, size);
-    if(r < size || c < size){
-        while(1){
-            level = node->level - '@';
-            if(level%2 ==0){//topbot
-                // printf("(%d, %d) (%d, %d) <tb %d> %d\n", minx, miny, maxx, maxy, level+1, bdd_lookup(level + 1, node->left, node->right));
-                // printf("left: %d right: %d\n", node->left, node-> right);
-                if((r >= minx) && (c >= miny) && (r < (minx + maxx)/2) && (c < maxy)){//left node
-                    //printf("left<T>\n");
-                    maxx = (minx + maxx)/2;
-                    if(node->left < 256){
-                        return node->left;
-                    }
-                    else{
-                        node = LEFT(node, level + 1);
-                    }
+
+    while(1){
+        level_counter = node->level - '@';
+        if(level%2 == 0){//topbot
+            level--;
+            //printf("(%d, %d) (%d, %d) <tb %d> %d\n", minx, miny, maxx, maxy, level_counter, bdd_lookup(node->level - '@', node->left, node->right));
+            // printf("left: %d right: %d\n", node->left, node-> right);
+            if((r >= minx) && (c >= miny) && (r < (minx + maxx)/2) && (c < maxy)){//left node
+                //printf("left<T>\n");
+                maxx = (minx + maxx)/2;
+                if(level + 1 > level_counter){
+                    continue;
+                }
+                if(node->left < 256){
+                    return node->left;
                 }
                 else{
-                    //printf("right<B>\n");
-                    minx = (minx + maxx)/2;
-                    if(node->right < 256){
-                        return node->right;
-                    }
-                    else{
-                        node = RIGHT(node, level + 1);
-                    }
+                    node = LEFT(node, level);
                 }
             }
-            else{//leftright
-                //printf("(%d, %d) (%d, %d) <lr %d> %d\n", minx, miny, maxx, maxy, level+1, bdd_lookup(level + 1, node->left, node->right));
-                if(((r >= minx) && (c>= miny)) && ((r < maxx) && (c < (miny + maxy)/2))){
-                    //printf("left<L>\n");
-                    maxy = (miny + maxy)/2;
-                    if(node->left < 256){
-                        return node->left;
-                    }
-                    else{
-                        node = LEFT(node, level + 1);
-                    }
+            else{
+                //printf("right<B>\n");
+                minx = (minx + maxx)/2;
+                if(level + 1 > level_counter){
+                    continue;
+                }
+                if(node->right < 256){
+                    return node->right;
                 }
                 else{
-                    //printf("right<R>\n");
-                    miny = (miny + maxy)/2;
-                    if(node->right < 256){
-                        return node->right;
-                    }
-                    else{
-                        node = RIGHT(node, level + 1);
-                    }
+                    node = RIGHT(node, level);
+                }
+            }
+        }
+        else{//leftright
+            level--;
+            //printf("level:%d\n", level);
+            //printf("(%d, %d) (%d, %d) <lr %d> %d\n", minx, miny, maxx, maxy, level_counter, bdd_lookup(node->level - '@', node->left, node->right));
+            if(level == 0){
+                //printf("inside");
+                if((r == minx && c == miny)){
+                    //printf("left");
+                    return node->left;
+                }
+                else{
+                    return node->right;
+                }
+            }
+            if(((r >= minx) && (c>= miny)) && ((r < maxx) && (c < (miny + maxy)/2))){
+                //printf("left<L>\n");
+                if(level + 1 > level_counter){
+                    continue;
+                }
+                maxy = (miny + maxy)/2;
+                if(node->left < 256){
+                    return node->left;
+                }
+                else{
+                    node = LEFT(node, level);
+                }
+            }
+            else{
+                //printf("right<R>\n");
+                miny = (miny + maxy)/2;
+                if(level + 1 > level_counter){
+                    continue;
+                }
+                if(node->right < 256){
+                    return node->right;
+                }
+                else{
+                    node = RIGHT(node, level);
                 }
             }
         }
