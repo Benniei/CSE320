@@ -85,7 +85,13 @@ BDD_NODE *bdd_from_raster(int w, int h, unsigned char *raster) {
     int min_level = bdd_min_level(w, h);
     int square_dim = 1 << (min_level/2);
     //printf("Min_level: %d Square_dimensions: %d w: %d h: %d\n", min_level, square_dim, w, h);
-    help_splithalf(raster, w, h, square_dim, min_level, 0, 0, square_dim, square_dim);
+    int final = help_splithalf(raster, w, h, square_dim, min_level, 0, 0, square_dim, square_dim);
+    if(final < 256 && global_bddptr == 256){
+        (bdd_nodes + 256)-> level = min_level;
+        (bdd_nodes + 256)-> left = final;
+        (bdd_nodes + 256)-> right = final;
+        global_bddptr++;
+    }
     return (bdd_nodes + global_bddptr - 1);
 }
 
