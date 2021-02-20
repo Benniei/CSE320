@@ -37,13 +37,17 @@ int pgm_to_birp(FILE *in, FILE *out) { //done
 int birp_to_pgm(FILE *in, FILE *out) {
     // TO BE IMPLEMENTED
     int wp, hp;
-    printf("P5\n# Created by GIMP version 2.10.18 PNM plug-in\n240 275\n255\n");
+    //printf("P5\n# CREATOR: The GIMP's PNM Filter Version 1.0\n130 130\n255\n");
     help_clearindexmap();
     BDD_NODE* root = img_read_birp(in, &wp, &hp); //deserialize the birp
-    printf("width: %d height: %d",wp, hp);
+    if(root == NULL){
+        return -1;
+    }
+    //printf("width: %d height: %d",wp, hp);
     help_clearrasterdata();
     unsigned char *raster = raster_data;
     bdd_to_raster(root, wp, hp, raster);
+    img_write_pgm(raster, wp, hp, out);
     // for(int i = 0; i < wp; i++){
     //     for(int j = 0; j < hp; j++){
     //         fputc(*(raster++), out);
@@ -56,14 +60,17 @@ int birp_to_birp(FILE *in, FILE *out) {
     // TO BE IMPLEMENTED
     int wp, hp;
     help_clearindexmap();
-    img_read_birp(in, &wp, &hp);
+    BDD_NODE* root = img_read_birp(in, &wp, &hp);
+    if(root == NULL){
+        return -1;
+    }
     // printf("\nBDD Pointer: %d\n", global_bddptr);
     // printf("BDD Index: %d\n", global_bddindex);
     // for(int i = 0; i < global_bddindex; i++){
     //         printf("%d ", *(bdd_index_map + i));
     // }
     printf("\n");
-    return -1;
+    return 0;
 }
 
 int pgm_to_ascii(FILE *in, FILE *out) { //done
@@ -107,9 +114,34 @@ int birp_to_ascii(FILE *in, FILE *out) {
     // TO BE IMPLEMENTED
     int wp, hp;
     help_clearindexmap();
-    BDD_NODE* c = img_read_birp(in, &wp, &hp);
+    BDD_NODE* root = img_read_birp(in, &wp, &hp); //deserialize the birp
+    if(root == NULL){
+        return -1;
+    }
+    ;
+    help_clearrasterdata();
+    unsigned char *raster = raster_data;
+    bdd_to_raster(root, wp, hp, raster);
 
-    return -1;
+    for(int j = 0; j < hp; j++){
+            for(int i = 0; i < wp; i++){
+                int a = *raster++;
+                if(a >= 0 && a <= 63){
+                    fputc(' ', out);
+                }
+                else if(a >= 64 && a <= 127){
+                    fputc('.', out);
+                }
+                else if(a >= 128 && a <= 191){
+                    fputc('*', out);
+                }
+                else if(a >= 192 && a <= 255){
+                    fputc('@', out);
+                }
+            }
+            fputc('\n', out);
+        }
+    return 0;
 }
 
 /**

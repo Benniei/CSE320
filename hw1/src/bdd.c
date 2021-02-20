@@ -57,7 +57,7 @@ int bdd_lookup(int level, int left, int right) {
         (bdd_nodes + global_bddptr)->left= left;
         (bdd_nodes + global_bddptr)->right= right;
         *(bdd_hash_map + hash_index) = (bdd_nodes+ global_bddptr);
-        printf("%d  %c, %d, %d\n", global_bddptr, (bdd_nodes+ global_bddptr)->level, (bdd_nodes+ global_bddptr)->left, (bdd_nodes+ global_bddptr)-> right);
+        //printf("%d  %c, %d, %d\n", global_bddptr, (bdd_nodes+ global_bddptr)->level, (bdd_nodes+ global_bddptr)->left, (bdd_nodes+ global_bddptr)-> right);
         global_bddptr += 1;
         return global_bddptr - 1;
     }
@@ -176,25 +176,16 @@ BDD_NODE *bdd_deserialize(FILE *in) {
 unsigned char bdd_apply(BDD_NODE *node, int r, int c) {
     // TO BE IMPLEMENTED
     int level = node->level - '@';
-    int size = 1 << (level/2);
-    int minx = 0, miny = 0;
-    int maxx = size;
-    int maxy = size;
-    int level_counter;
-    //printf("Level: %d size: %d\n", level, size);
+    int bit_shifter;
+
 
     while(1){
-        level_counter = node->level - '@';
+        level = node->level - '@';
         if(level%2 == 0){//topbot
-            level--;
-            //printf("(%d, %d) (%d, %d) <tb %d> %d\n", minx, miny, maxx, maxy, level_counter, bdd_lookup(node->level - '@', node->left, node->right));
-            // printf("left: %d right: %d\n", node->left, node-> right);
-            if((r >= minx) && (c >= miny) && (r < (minx + maxx)/2) && (c < maxy)){//left node
-                //printf("left<T>\n");
-                maxx = (minx + maxx)/2;
-                if(level + 1 > level_counter){
-                    continue;
-                }
+            bit_shifter = level/2;
+            bit_shifter = r & (1 << (bit_shifter - 1));
+            // printf("bit_shifter<tb - %d>: %d\n", level, bit_shifter);
+            if(bit_shifter == 0){
                 if(node->left < 256){
                     return node->left;
                 }
@@ -203,11 +194,6 @@ unsigned char bdd_apply(BDD_NODE *node, int r, int c) {
                 }
             }
             else{
-                //printf("right<B>\n");
-                minx = (minx + maxx)/2;
-                if(level + 1 > level_counter){
-                    continue;
-                }
                 if(node->right < 256){
                     return node->right;
                 }
@@ -217,25 +203,11 @@ unsigned char bdd_apply(BDD_NODE *node, int r, int c) {
             }
         }
         else{//leftright
-            level--;
-            //printf("level:%d\n", level);
-            //printf("(%d, %d) (%d, %d) <lr %d> %d\n", minx, miny, maxx, maxy, level_counter, bdd_lookup(node->level - '@', node->left, node->right));
-            if(level == 0){
-                //printf("inside");
-                if((r == minx && c == miny)){
-                    //printf("left");
-                    return node->left;
-                }
-                else{
-                    return node->right;
-                }
-            }
-            if(((r >= minx) && (c>= miny)) && ((r < maxx) && (c < (miny + maxy)/2))){
-                //printf("left<L>\n");
-                if(level + 1 > level_counter){
-                    continue;
-                }
-                maxy = (miny + maxy)/2;
+            bit_shifter = (level + 1)/2;
+            // printf("value: %x bit_shifter value: %d\n", c, bit_shifter);
+            bit_shifter = c & (1 << (bit_shifter - 1));
+            // printf("bit_shifter<lr - %d>: %d\n", level, bit_shifter);
+            if(bit_shifter == 0){
                 if(node->left < 256){
                     return node->left;
                 }
@@ -244,11 +216,6 @@ unsigned char bdd_apply(BDD_NODE *node, int r, int c) {
                 }
             }
             else{
-                //printf("right<R>\n");
-                miny = (miny + maxy)/2;
-                if(level + 1 > level_counter){
-                    continue;
-                }
                 if(node->right < 256){
                     return node->right;
                 }
