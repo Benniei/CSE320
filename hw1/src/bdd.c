@@ -209,9 +209,7 @@ unsigned char bdd_apply(BDD_NODE *node, int r, int c) {
                 }
             }
             else{//leftright
-                //level--;
                 //printf("(%d, %d) (%d, %d) <lr %d> %d\n", minx, miny, maxx, maxy, level+1, bdd_lookup(level + 1, node->left, node->right));
-
                 if(((r >= minx) && (c>= miny)) && ((r < maxx) && (c < (miny + maxy)/2))){
                     //printf("left<L>\n");
                     maxy = (miny + maxy)/2;

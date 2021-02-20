@@ -29,7 +29,7 @@ int pgm_to_birp(FILE *in, FILE *out) {
         // for(int i = 0; i < global_bddindex; i++){
         //     printf("%d ", *(bdd_index_map + i));
         // }
-
+        return 0;
     }
     return -1;
 }
