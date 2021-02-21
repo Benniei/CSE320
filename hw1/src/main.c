@@ -56,10 +56,13 @@ int main(int argc, char **argv)
     }
     else if(command_options == 0x22){ // birp to birp
         help_inithashtonull();
-        // success_flag = birp_to_birp(stdin, stdout);
-        // if(success_flag == -1){
-        //     return EXIT_FAILURE;
-        // }
+        if(global_options == 0x22){ // no flags are specified
+            return EXIT_FAILURE;
+        }
+        success_flag = birp_to_birp(stdin, stdout);
+        if(success_flag == -1){
+            return EXIT_FAILURE;
+        }
     }
     else if(command_options == 0x32){ // birp to ascii
         help_inithashtonull();
