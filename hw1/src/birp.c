@@ -53,6 +53,7 @@ int birp_to_birp(FILE *in, FILE *out) {
     int wp, hp;
     help_clearindexmap();
     BDD_NODE* root = img_read_birp(in, &wp, &hp);
+    BDD_NODE* a;
     if(root == NULL){
         return -1;
     }
@@ -61,24 +62,37 @@ int birp_to_birp(FILE *in, FILE *out) {
     int value;
 
     if(command == 0x100){ //negative
-        bdd_map(root, negative_mask);
+        a = bdd_map(root, negative_mask);
     }
     else if(command == 0x200){ //threshhold
-        bdd_map(root, threshold_mask);
+        a = bdd_map(root, threshold_mask);
     }
     else if(command == 0x300){ //zoom
+        int out_flag = 0;
         value = global_options & 0xff0000;
         if((value & 0x800000) > 0){ //negative zoom
+            out_flag = 1;
             value = value | 0xff000000;
-            //printf("zoom value negs: %x\n", value);
+            value  *= -1;
         }
-        value = value >> 16;
-        //printf("zoom value: %d\n", value);
+        value = value >> 16; //value of factor
+        int dimension = wp * (1 << value); //dimensions of new square
+        int new_level= bdd_min_level(dimension, dimension);
+        //printf("dimension: %d level: %d \n", dimension, new_level);
+        if(out_flag == 1){// zoom out (-z)
+
+        }else{// zoom in (-Z)
+            bdd_zoom(root, new_level, value);
+        }
+        wp = dimension;
+        hp = dimension;
     }
     else if(command == 0x400){ //rotate
 
     }
 
+    help_clearindexmap();
+    img_write_birp(a, wp, hp, out);
     return 0;
 }
 

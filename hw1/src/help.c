@@ -176,3 +176,7 @@ int help_bddmap(BDD_NODE* node, unsigned char (*func)(unsigned char)){
     int node_index = bdd_lookup(root.level, left, right);
     return node_index;
 }
+
+int help_zoom(BDD_NODE* node, int add_value){
+
+}

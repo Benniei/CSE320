@@ -258,9 +258,9 @@ BDD_NODE *bdd_zoom(BDD_NODE *node, int level, int factor) {
     if(factor == 0){
         return node;
     }
-    if(node->level - '@' > level){
+    if(node->level - '@' > level){ // zoom in
 
-    }else{
+    }else{ // zoom out
 
     }
     return NULL;
