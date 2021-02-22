@@ -54,3 +54,8 @@ int help_inbddindex(int a);
 @brief finds serial number in index_map
 */
 int help_inbddfindserial(int a);
+
+/*
+@brief helper for bdd_map traversal
+*/
+int help_bddmap(BDD_NODE* node, unsigned char (*func)(unsigned char));

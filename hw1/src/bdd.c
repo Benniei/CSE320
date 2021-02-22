@@ -236,20 +236,8 @@ unsigned char bdd_apply(BDD_NODE *node, int r, int c) {
 
 BDD_NODE *bdd_map(BDD_NODE *node, unsigned char (*func)(unsigned char)) {
     // TO BE IMPLEMENTED
-    BDD_NODE root = *node;
-    int left, right;
-    if((root.left) > 255){
-        left = bdd_map(bdd_nodes + root.left, func);
-    }else{
-        return func(root.left);
-    }
-    if((root.right) > 255){
-        right = bdd_map(bdd_nodes + root.right, func);
-    }else{
-        return func(root.right);
-    }
-    int node_index = bdd_lookup(root.level, left, right);
-    return bdd_nodes + node_index - 1;
+    int end_node = help_bddmap(node, func);
+    return bdd_nodes + end_node;
 }
 
 BDD_NODE *bdd_rotate(BDD_NODE *node, int level) {

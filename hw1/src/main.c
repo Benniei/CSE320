@@ -30,7 +30,7 @@ int main(int argc, char **argv)
 
     if(command_options == 0x11){ // pgm to pgm
     	// do not see the option?
-        USAGE(*argv, EXIT_SUCCESS);
+        USAGE(*argv, EXIT_FAILURE);
     }
     else if(command_options == 0x21){ // pgm to birp
         help_inithashtonull();
@@ -57,7 +57,7 @@ int main(int argc, char **argv)
     else if(command_options == 0x22){ // birp to birp
         help_inithashtonull();
         if(global_options == 0x22){ // no flags are specified
-            return EXIT_FAILURE;
+            USAGE(*argv, EXIT_FAILURE);
         }
         success_flag = birp_to_birp(stdin, stdout);
         if(success_flag == -1){

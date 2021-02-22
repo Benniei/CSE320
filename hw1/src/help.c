@@ -141,3 +141,20 @@ int help_inbddfindserial(int a){
 	}
 	return location;
 }
+
+int help_bddmap(BDD_NODE* node, unsigned char (*func)(unsigned char)){
+	BDD_NODE root = *node;
+    int left, right;
+    if((root.left) > 255){
+        left = bdd_map(bdd_nodes + root.left, func);
+    }else{
+        return func(root.left);
+    }
+    if((root.right) > 255){
+        right = bdd_map(bdd_nodes + root.right, func);
+    }else{
+        return func(root.right);
+    }
+    int node_index = bdd_lookup(root.level, left, right);
+    return node_index;
+}
