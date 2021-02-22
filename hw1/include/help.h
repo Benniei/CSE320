@@ -56,6 +56,16 @@ int help_inbddindex(int a);
 int help_inbddfindserial(int a);
 
 /*
+@brief threshold function
+*/
+unsigned char threshold_mask(unsigned char a);
+
+/*
+@brief negative function
+*/
+unsigned char negative_mask(unsigned char a);
+
+/*
 @brief helper for bdd_map traversal
 */
 int help_bddmap(BDD_NODE* node, unsigned char (*func)(unsigned char));

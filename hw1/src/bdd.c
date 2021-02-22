@@ -87,9 +87,9 @@ BDD_NODE *bdd_from_raster(int w, int h, unsigned char *raster) {
     //printf("Min_level: %d Square_dimensions: %d w: %d h: %d\n", min_level, square_dim, w, h);
     int final = help_splithalf(raster, w, h, square_dim, min_level, 0, 0, square_dim, square_dim);
     if(final < 256 && global_bddptr == 256){
-        (bdd_nodes + 256)-> level = min_level;
-        (bdd_nodes + 256)-> left = final;
-        (bdd_nodes + 256)-> right = final;
+        (bdd_nodes + global_bddptr)-> level = min_level;
+        (bdd_nodes + global_bddptr)-> left = final;
+        (bdd_nodes + global_bddptr)-> right = final;
         global_bddptr++;
     }
     return (bdd_nodes + global_bddptr - 1);
@@ -236,8 +236,16 @@ unsigned char bdd_apply(BDD_NODE *node, int r, int c) {
 
 BDD_NODE *bdd_map(BDD_NODE *node, unsigned char (*func)(unsigned char)) {
     // TO BE IMPLEMENTED
+    int start = global_bddptr;
     int end_node = help_bddmap(node, func);
-    return bdd_nodes + end_node;
+    // printf("end_node: %d\n", end_node);
+    if(global_bddptr == start && end_node < 256){
+        (bdd_nodes + global_bddptr)-> level = node -> level;
+        (bdd_nodes + global_bddptr)-> left = end_node;
+        (bdd_nodes + global_bddptr)-> right = end_node;
+        global_bddptr++;
+    }
+    return (bdd_nodes + global_bddptr - 1);
 }
 
 BDD_NODE *bdd_rotate(BDD_NODE *node, int level) {

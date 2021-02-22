@@ -28,8 +28,23 @@ int main(int argc, char **argv)
     int command_options = global_options & 0xff; // filters the commands
     int success_flag;
 
+    //printf("threshold: %d \nnegative: %d\n", threshold_mask(12), negative_mask(4));
+    unsigned char input2[] = {0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15};
+    BDD_NODE* root = bdd_from_raster(4,4,input2);
+
+    BDD_NODE* new_tree = bdd_map(root, negative_mask);
+
+    unsigned char output[100];
+    //printf("(0, 6): %d", bdd_apply(root, 0, 6));
+    bdd_to_raster(new_tree, 4, 4, output);
+    printf("\n");
+    for(int i=0;i<16;i++)
+    {
+       printf("%d ", output[i]);
+    }
+    printf("\n");
+
     if(command_options == 0x11){ // pgm to pgm
-    	// do not see the option?
         USAGE(*argv, EXIT_FAILURE);
     }
     else if(command_options == 0x21){ // pgm to birp

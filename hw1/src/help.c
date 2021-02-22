@@ -142,19 +142,37 @@ int help_inbddfindserial(int a){
 	return location;
 }
 
+// threshold function
+unsigned char threshold_mask(unsigned char a){
+    int threshold_value = global_options & 0xff0000;
+    threshold_value = threshold_value >> 16;
+    if(a >= threshold_value){
+        return (unsigned char)255;
+    }else{
+        return (unsigned char)0;
+    }
+}
+
+// negative function
+unsigned char negative_mask(unsigned char a){
+    int b = (int)a ^ 0xff;
+    return (unsigned char) b;
+}
+
 int help_bddmap(BDD_NODE* node, unsigned char (*func)(unsigned char)){
 	BDD_NODE root = *node;
     int left, right;
     if((root.left) > 255){
-        left = bdd_map(bdd_nodes + root.left, func);
+        left = help_bddmap(bdd_nodes + root.left, func);
     }else{
-        return func(root.left);
+        left = func(root.left);
     }
     if((root.right) > 255){
-        right = bdd_map(bdd_nodes + root.right, func);
+        right = help_bddmap(bdd_nodes + root.right, func);
     }else{
-        return func(root.right);
+        right = func(root.right);
     }
+    //printf("left: %d right: %d\n", left, right);
     int node_index = bdd_lookup(root.level, left, right);
     return node_index;
 }
