@@ -39,6 +39,7 @@ int birp_to_pgm(FILE *in, FILE *out) { //done
     unsigned char *raster = raster_data;
     bdd_to_raster(root, wp, hp, raster);
     img_write_pgm(raster, wp, hp, out);
+    //testing with comments
     // for(int i = 0; i < wp; i++){
     //     for(int j = 0; j < hp; j++){
     //         fputc(*(raster++), out);
@@ -63,7 +64,6 @@ int birp_to_birp(FILE *in, FILE *out) {
         bdd_map(root, negative_mask);
     }
     else if(command == 0x200){ //threshhold
-
         bdd_map(root, threshold_mask);
     }
     else if(command == 0x300){ //zoom
@@ -332,7 +332,6 @@ int validargs(int argc, char **argv) {
                         value = value << 16;
                         global_options += value;
                         counter++;
-                        //complete (untested)
                     }
                     else{
                         return -1;
