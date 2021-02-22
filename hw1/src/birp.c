@@ -47,6 +47,22 @@ int birp_to_pgm(FILE *in, FILE *out) { //done
     return 0;
 }
 
+// threshold function
+int threshold_mask(int a{
+    int threshold_value = global_options & 0xff0000;
+    threshold_value = threshold_value >> 16; 
+    if(a >= threshold_value){
+        return 255;
+    }else{
+        return 0;
+    }
+}
+
+// negative function
+int negative_mask(int a){
+    return a ^ 0xff;
+}
+
 int birp_to_birp(FILE *in, FILE *out) {
     // TO BE IMPLEMENTED
     int wp, hp;
@@ -60,12 +76,10 @@ int birp_to_birp(FILE *in, FILE *out) {
     int value;
 
     if(command == 0x100){ //negative
-
+        bdd_map(root, negative_mask);
     }
     else if(command == 0x200){ //threshhold
-        value = global_options & 0xff0000;
-        value = value >> 16;
-        //printf("threshhold value: %d\n", value);
+        bdd_map(root, threshold_mask);
     }
     else if(command == 0x300){ //zoom
         value = global_options & 0xff0000;
