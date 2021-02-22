@@ -255,13 +255,12 @@ BDD_NODE *bdd_rotate(BDD_NODE *node, int level) {
 
 BDD_NODE *bdd_zoom(BDD_NODE *node, int level, int factor) {
     // TO BE IMPLEMENTED
-    if(factor < 0){
-
-    }
-    else if(factor > 0){
-
-    }
-    else{
+    if(factor == 0){
         return node;
+    }
+    if(node->level - '@' > level){
+
+    }else{
+        
     }
 }
