@@ -261,6 +261,7 @@ BDD_NODE *bdd_zoom(BDD_NODE *node, int level, int factor) {
     if(node->level - '@' > level){
 
     }else{
-        
+
     }
+    return NULL;
 }
