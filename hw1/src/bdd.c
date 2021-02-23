@@ -184,7 +184,6 @@ unsigned char bdd_apply(BDD_NODE *node, int r, int c) {
     int level = node->level - '@';
     int bit_shifter;
 
-
     while(1){
         level = node->level - '@';
         if(level%2 == 0){//topbot

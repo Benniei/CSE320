@@ -73,17 +73,22 @@ int birp_to_birp(FILE *in, FILE *out) {
         int new_level;
         if((value & 0x800000) > 0){ //negative zoom
             value = value | 0xff000000;
+            value = value >> 16;
             value  *= -1;
             double temp = wp/(1<<value) + 0.5;
             dimension = (int) temp;
         }else{
             value = value >> 16; //value of factor
-            dimension = wp * (1 << value); //dimensions of new square      
+            dimension = wp * (1 << value); //dimensions of new square
         }
-        int new_level = bdd_min_level(dimension, dimension);
+        new_level = bdd_min_level(dimension, dimension);
+        if(new_level > 26){//raster unable to hold something greater than level 26
+            return -1;
+        }
         a = bdd_zoom(root, new_level, value);
         wp = dimension;
         hp = dimension;
+        //printf("Tree Level: %d Factor: %d Dimension: %d \n", new_level, value, dimension);
     }
     else if(command == 0x400){ //rotate
 

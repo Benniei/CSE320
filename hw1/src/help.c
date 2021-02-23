@@ -198,17 +198,30 @@ int help_zoomIn(BDD_NODE* node, int add_value){
 int help_zoomOut(BDD_NODE* node, int sub_value){
 	BDD_NODE root = *node;
     int left, right;
-    if((root.left) > 255){
+    int root_level = root.level - '@';
+    //printf("level: %d sub: %d\n", root_level, sub_value);
+    if(root_level <= sub_value){
+    	if(root.left == 0 && root.right == 0){
+    		return 0;
+    	}
+    	else{
+    		return 255;
+    	}
+    }
+    //printf("left: %d right: %d\n", root.left, root.right);
+    if((root.left) < 256){
         left = root.left;
     }else{
-        left = help_zoomIn(bdd_nodes + root.left, sub_value);
+    	//printf("left node\n");
+        left = help_zoomOut(bdd_nodes + root.left, sub_value);
     }
-    if((root.right) > 255){
+    if((root.right) < 256){
         right = root.right;
     }else{
-        right = help_zoomIn(bdd_nodes + root.right, sub_value);
-    }
-    //printf("left: %d right: %d\n", left, right);
-    int node_index = bdd_lookup(root.level - sub_value, left, right); //not mathematically correct, need fix
+    	//printf("right node\n");
+        right = help_zoomOut(bdd_nodes + root.right, sub_value);
+	}
+    //printf("level: %d left: %d right: %d\n", root_level - sub_value,left, right);
+    int node_index = bdd_lookup(root_level - sub_value, left, right); //not mathematically correct, need fix
     return node_index;
 }

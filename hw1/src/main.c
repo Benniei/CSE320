@@ -28,8 +28,6 @@ int main(int argc, char **argv)
     int command_options = global_options & 0xff; // filters the commands
     int success_flag;
 
-    //printf("threshold: %d \nnegative: %d\n", threshold_mask(12), negative_mask(4));
-
     if(command_options == 0x11){ // pgm to pgm
         USAGE(*argv, EXIT_FAILURE);
     }
