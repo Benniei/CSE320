@@ -249,6 +249,9 @@ BDD_NODE *bdd_map(BDD_NODE *node, unsigned char (*func)(unsigned char)) {
 
 BDD_NODE *bdd_rotate(BDD_NODE *node, int level) {
     // TO BE IMPLEMENTED
+    int row = 0; 
+    int column = 0;
+    int end_node = help_rotate(node, level, row, column);
     return NULL;
 }
 

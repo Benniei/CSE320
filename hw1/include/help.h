@@ -79,3 +79,8 @@ int help_zoomIn(BDD_NODE* node, int add_value);
 @brief helper for bdd_zoomOut
 */
 int help_zoomOut(BDD_NODE* node, int sub_value);
+
+/*
+@brief helper for rotate
+*/
+int help_rotate(BDD_NODE* node, int level, int row, int column);

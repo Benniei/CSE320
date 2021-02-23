@@ -225,3 +225,7 @@ int help_zoomOut(BDD_NODE* node, int sub_value){
     int node_index = bdd_lookup(root_level - sub_value, left, right); //not mathematically correct, need fix
     return node_index;
 }
+
+int help_rotate(BDD_NODE* node, int level, int row, int column){
+	return -1;
+}
