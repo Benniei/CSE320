@@ -258,10 +258,25 @@ BDD_NODE *bdd_zoom(BDD_NODE *node, int level, int factor) {
     if(factor == 0){
         return node;
     }
-    if(node->level - '@' > level){ // zoom in
-
+    int node_level = node->level - '@';
+    int start = global_bddptr;
+    int end_node;
+    if(node_level < level){ // zoom in
+        end_node = help_zoomIn(node,  2 * factor);
+        if(global_bddptr == start && end_node < 256){
+            (bdd_nodes + global_bddptr)-> level = level;
+            (bdd_nodes + global_bddptr)-> left = end_node;
+            (bdd_nodes + global_bddptr)-> right = end_node;
+            global_bddptr++;
+        }
     }else{ // zoom out
-
+        end_node = help_zoomOut(node,  2 * factor);
+        if(global_bddptr == start && end_node < 256){
+            (bdd_nodes + global_bddptr)-> level = level;
+            (bdd_nodes + global_bddptr)-> left = end_node;
+            (bdd_nodes + global_bddptr)-> right = end_node;
+            global_bddptr++;
+        }
     }
-    return NULL;
+    return bdd_nodes + global_bddptr -1;
 }

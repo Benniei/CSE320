@@ -68,22 +68,15 @@ int birp_to_birp(FILE *in, FILE *out) {
         a = bdd_map(root, threshold_mask);
     }
     else if(command == 0x300){ //zoom
-        int out_flag = 0;
         value = global_options & 0xff0000;
         if((value & 0x800000) > 0){ //negative zoom
-            out_flag = 1;
             value = value | 0xff000000;
             value  *= -1;
         }
         value = value >> 16; //value of factor
         int dimension = wp * (1 << value); //dimensions of new square
         int new_level= bdd_min_level(dimension, dimension);
-        //printf("dimension: %d level: %d \n", dimension, new_level);
-        if(out_flag == 1){// zoom out (-z)
-
-        }else{// zoom in (-Z)
-            bdd_zoom(root, new_level, value);
-        }
+        a = bdd_zoom(root, new_level, value);
         wp = dimension;
         hp = dimension;
     }
@@ -147,23 +140,23 @@ int birp_to_ascii(FILE *in, FILE *out) { //done
     bdd_to_raster(root, wp, hp, raster);
 
     for(int j = 0; j < hp; j++){
-            for(int i = 0; i < wp; i++){
-                int a = *raster++;
-                if(a >= 0 && a <= 63){
-                    fputc(' ', out);
-                }
-                else if(a >= 64 && a <= 127){
-                    fputc('.', out);
-                }
-                else if(a >= 128 && a <= 191){
-                    fputc('*', out);
-                }
-                else if(a >= 192 && a <= 255){
-                    fputc('@', out);
-                }
+        for(int i = 0; i < wp; i++){
+            int a = *raster++;
+            if(a >= 0 && a <= 63){
+                fputc(' ', out);
             }
-            fputc('\n', out);
+            else if(a >= 64 && a <= 127){
+                fputc('.', out);
+            }
+            else if(a >= 128 && a <= 191){
+                fputc('*', out);
+            }
+            else if(a >= 192 && a <= 255){
+                fputc('@', out);
+            }
         }
+        fputc('\n', out);
+    }
     return 0;
 }
 

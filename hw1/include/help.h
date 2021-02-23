@@ -71,6 +71,11 @@ unsigned char negative_mask(unsigned char a);
 int help_bddmap(BDD_NODE* node, unsigned char (*func)(unsigned char));
 
 /*
-@brief helper for bdd_zoom
+@brief helper for bdd_zoomIn
 */
-int help_zoom(BDD_NODE* node, int add_value);
+int help_zoomIn(BDD_NODE* node, int add_value);
+
+/*
+@brief helper for bdd_zoomOut
+*/
+int help_zoomOut(BDD_NODE* node, int sub_value);
