@@ -69,13 +69,18 @@ int birp_to_birp(FILE *in, FILE *out) {
     }
     else if(command == 0x300){ //zoom
         value = global_options & 0xff0000;
+        int dimension;
+        int new_level;
         if((value & 0x800000) > 0){ //negative zoom
             value = value | 0xff000000;
             value  *= -1;
+            double temp = wp/(1<<value) + 0.5;
+            dimension = (int) temp;
+        }else{
+            value = value >> 16; //value of factor
+            dimension = wp * (1 << value); //dimensions of new square      
         }
-        value = value >> 16; //value of factor
-        int dimension = wp * (1 << value); //dimensions of new square
-        int new_level= bdd_min_level(dimension, dimension);
+        int new_level = bdd_min_level(dimension, dimension);
         a = bdd_zoom(root, new_level, value);
         wp = dimension;
         hp = dimension;
