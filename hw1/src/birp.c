@@ -134,7 +134,6 @@ int birp_to_ascii(FILE *in, FILE *out) { //done
     if(root == NULL){
         return -1;
     }
-    ;
     help_clearrasterdata();
     unsigned char *raster = raster_data;
     bdd_to_raster(root, wp, hp, raster);
