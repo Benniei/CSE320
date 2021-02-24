@@ -91,7 +91,7 @@ int birp_to_birp(FILE *in, FILE *out) {
         //printf("Tree Level: %d Factor: %d Dimension: %d \n", new_level, value, dimension);
     }
     else if(command == 0x400){ //rotate
-        a = bdd_rotate(root, root->level);
+        a = bdd_rotate(root, root->level - '@');
     }
 
     help_clearindexmap();

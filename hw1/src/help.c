@@ -226,6 +226,46 @@ int help_zoomOut(BDD_NODE* node, int sub_value){
     return node_index;
 }
 
-int help_rotate(BDD_NODE* node, int level, int row, int column){
+int help_placerotate(BDD_NODE* node, int level, int minx, int miny, int mask){
+	int maxx = minx;
+	int maxy = miny + 1;
+	int x1 = miny;
+	int y1 = minx ^ mask;
+	int x2 = maxy;
+	int y2 = maxx ^ mask;
+	int left = bdd_apply(node, x1, y1);
+	int right = bdd_apply(node, x2, y2);
+	return bdd_lookup(1, left, right);
+}
+
+int help_rotate(BDD_NODE* node, int level, int minx, int miny, int maxx, int maxy){
+	if(level == 1){
+		level--;
+		//printf("(%d, %d) (%d, %d) <bot %d>\n", minx, miny, maxx, maxy, level+1);
+		int shift = node->level - '@';
+		int mask = -1 << (shift/2);
+		mask = mask ^ (-1);
+		int hold = help_placerotate(node, level, minx, miny, mask);
+		return hold;
+	}
+	if(level > 0){
+		if(level%2 == 0){ //top bottom split
+			level--;
+			//printf("PARENT TOPBOT: level: %d \n", level+ 1);
+			//printf("(%d, %d) (%d, %d) <tb %d>\n", minx, miny, maxx, maxy, level+1);
+			int l = help_rotate(node, level, minx, miny, (minx + maxx)/2, maxy);
+			int r = help_rotate(node, level, (minx + maxx)/2, miny, maxx, maxy);
+			return bdd_lookup(level + 1, l, r);
+		}
+		else{ //left right split
+			level--;
+			//printf("PARENT LEFTRIGHT: level: %d \n", level+ 1);
+			//printf("(%d, %d) (%d, %d) <lr %d>\n", minx, miny, maxx, maxy, level+1);
+			int l = help_rotate(node, level, minx, miny, maxx, (miny + maxy)/2);
+			int r = help_rotate(node, level, minx, (miny+maxy)/2, maxx, maxy);
+			return bdd_lookup(level + 1, l, r);
+		}
+	}
+
 	return -1;
 }

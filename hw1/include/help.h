@@ -83,4 +83,4 @@ int help_zoomOut(BDD_NODE* node, int sub_value);
 /*
 @brief helper for rotate
 */
-int help_rotate(BDD_NODE* node, int level, int row, int column);
+int help_rotate(BDD_NODE* node, int level, int minx, int miny, int maxx, int maxy);

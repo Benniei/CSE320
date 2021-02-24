@@ -40,10 +40,9 @@ int bdd_lookup(int level, int left, int right) {
             found = 1;
             break;
         }
+        hash_index++;
         if(hash_index == BDD_HASH_SIZE)
             hash_index = 0;
-        else
-            hash_index++;
     }
 
     if(found){
@@ -249,10 +248,18 @@ BDD_NODE *bdd_map(BDD_NODE *node, unsigned char (*func)(unsigned char)) {
 
 BDD_NODE *bdd_rotate(BDD_NODE *node, int level) {
     // TO BE IMPLEMENTED
-    int row = 0; 
-    int column = 0;
-    int end_node = help_rotate(node, level, row, column);
-    return NULL;
+    int start = global_bddptr;
+    int dimension = 1 << (node->level/2);
+    //printf("Dimension: %d", dimension);
+
+    int end_node = help_rotate(node, level, 0, 0, dimension, dimension);
+    if(global_bddptr == start && end_node < 256){
+        (bdd_nodes + global_bddptr)-> level = node -> level;
+        (bdd_nodes + global_bddptr)-> left = end_node;
+        (bdd_nodes + global_bddptr)-> right = end_node;
+        global_bddptr++;
+    }
+    return (bdd_nodes + global_bddptr - 1);
 }
 
 BDD_NODE *bdd_zoom(BDD_NODE *node, int level, int factor) {
