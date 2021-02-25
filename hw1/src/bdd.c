@@ -270,7 +270,7 @@ BDD_NODE *bdd_zoom(BDD_NODE *node, int level, int factor) {
     int node_level = node->level - '@';
     int start = global_bddptr;
     int end_node;
-    if(node_level < level){ // zoom in
+    if(factor > 0){ // zoom in
         end_node = help_zoomIn(node,  2 * factor);
         if(global_bddptr == start && end_node < 256){
             (bdd_nodes + global_bddptr)-> level = level;
@@ -279,7 +279,7 @@ BDD_NODE *bdd_zoom(BDD_NODE *node, int level, int factor) {
             global_bddptr++;
         }
     }else{ // zoom out
-        end_node = help_zoomOut(node,  2 * factor);
+        end_node = help_zoomOut(node,  -2 * factor);
         if(global_bddptr == start && end_node < 256){
             (bdd_nodes + global_bddptr)-> level = level;
             (bdd_nodes + global_bddptr)-> left = end_node;
