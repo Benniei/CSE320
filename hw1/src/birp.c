@@ -77,6 +77,7 @@ int birp_to_birp(FILE *in, FILE *out) {
             value  *= -1;
             double temp = wp/(1<<value) + 0.5;
             dimension = (int) temp;
+            value *= -1;
         }else{
             value = value >> 16; //value of factor
             dimension = wp * (1 << value); //dimensions of new square
