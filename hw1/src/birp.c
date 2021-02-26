@@ -19,7 +19,6 @@ int pgm_to_birp(FILE *in, FILE *out) { //done
 
     if(res == 0){
         BDD_NODE* a = bdd_from_raster(wp, hp, raster);
-        help_clearindexmap();
         img_write_birp(a, wp, hp, out);
         return 0;
     }
@@ -30,7 +29,6 @@ int birp_to_pgm(FILE *in, FILE *out) { //done
     // TO BE IMPLEMENTED
     int wp, hp;
     //printf("P5\n# CREATOR: The GIMP's PNM Filter Version 1.0\n130 130\n255\n");
-    help_clearindexmap();
     BDD_NODE* root = img_read_birp(in, &wp, &hp); //deserialize the birp
     if(root == NULL){
         return -1;
@@ -51,7 +49,6 @@ int birp_to_pgm(FILE *in, FILE *out) { //done
 int birp_to_birp(FILE *in, FILE *out) {
     // TO BE IMPLEMENTED
     int wp, hp;
-    help_clearindexmap();
     BDD_NODE* root = img_read_birp(in, &wp, &hp);
     BDD_NODE* a;
     if(root == NULL){
@@ -92,10 +89,13 @@ int birp_to_birp(FILE *in, FILE *out) {
         //printf("Tree Level: %d Factor: %d Dimension: %d \n", new_level, value, dimension);
     }
     else if(command == 0x400){ //rotate
-        a = bdd_rotate(root, root->level - '@');
+        int min_level = bdd_min_level(wp, hp);
+        int dimension = 1 << (min_level/2);
+        a = bdd_rotate(root, min_level);
+        wp = dimension;
+        hp = dimension;
     }
 
-    help_clearindexmap();
     img_write_birp(a, wp, hp, out);
     return 0;
 }
@@ -140,7 +140,6 @@ int pgm_to_ascii(FILE *in, FILE *out) { //done
 int birp_to_ascii(FILE *in, FILE *out) { //done
     // TO BE IMPLEMENTED
     int wp, hp;
-    help_clearindexmap();
     BDD_NODE* root = img_read_birp(in, &wp, &hp); //deserialize the birp
     if(root == NULL){
         return -1;

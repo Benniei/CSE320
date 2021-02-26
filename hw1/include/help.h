@@ -56,6 +56,11 @@ int help_inbddindex(int a);
 int help_inbddfindserial(int a);
 
 /*
+@brief helps with serialization
+*/
+int help_serialize(BDD_NODE* node, FILE* out);
+
+/*
 @brief threshold function
 */
 unsigned char threshold_mask(unsigned char a);

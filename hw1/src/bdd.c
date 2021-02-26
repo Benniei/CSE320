@@ -105,48 +105,14 @@ void bdd_to_raster(BDD_NODE *node, int w, int h, unsigned char *raster) {
 
 int bdd_serialize(BDD_NODE *node, FILE *out) {
     // TO BE IMPLEMENTED
-    BDD_NODE root = *node;
-    if((root.left) > 255){
-        bdd_serialize(bdd_nodes + root.left, out);
-    }else{
-        if(help_inbddindex(root.left) == 0){
-            *(bdd_index_map + global_bddindex++) = root.left;
-            char a = root.left;
-            fputc('@', out);
-            fputc(a , out);
-        }
-    }
-    if((root.right) > 255){
-        bdd_serialize(bdd_nodes + root.right, out);
-    }else{
-        if(help_inbddindex(root.right) == 0){
-            *(bdd_index_map + global_bddindex++) = root.right;
-            char a = root.right;
-            fputc('@', out);
-            fputc(a, out);
-        }
-    }
-    //printf("%c %d %d  \n", root.level, root.left, root.right);
-    int node_index = bdd_lookup((int)(root.level - '@'), root.left, root.right);
-    if(help_inbddindex(node_index) == 0){
-        *(bdd_index_map + global_bddindex++) = node_index;
-        fputc(root.level, out);
-        int left = help_inbddfindserial(root.left);
-        int right = help_inbddfindserial(root.right);
-        fputc(left & 0xff, out);
-        fputc(left>>8 & 0xff, out);
-        fputc(left>>16 & 0xff, out);
-        fputc(left>>24 & 0xff, out);
-        fputc(right & 0xff, out);
-        fputc(right>>8 & 0xff, out);
-        fputc(right>>16 & 0xff, out);
-        fputc(right>>24 & 0xff, out);
-    }
+    help_clearindexmap();
+    help_serialize(node, out);
     return 0;
 }
 
 BDD_NODE *bdd_deserialize(FILE *in) {
     // TO BE IMPLEMENTED
+    int bddindex = 0;
     int c;
     do{
         c = fgetc(in);
@@ -155,7 +121,7 @@ BDD_NODE *bdd_deserialize(FILE *in) {
         if (c == 64){ //@
             c = fgetc(in);
             //printf("Leaf: %d\n", c);
-            *(bdd_index_map + global_bddindex++) = c;
+            *(bdd_index_map + bddindex++) = c;
         }
         else if(c > 64){
             //printf("c: %c\n", c);
@@ -164,11 +130,11 @@ BDD_NODE *bdd_deserialize(FILE *in) {
             fread(&b, 4, 1, in); //index of right node
             // printf("a: %d b: %d\n", a, b);
             // printf("a: %d b: %d\n", *(bdd_index_map + a - 1), *(bdd_index_map + b - 1));
-            if(a - 1 > global_bddindex || b-1 > global_bddindex){
+            if(a - 1 > bddindex || b-1 > bddindex){
                 return NULL;
             }
             int loc = bdd_lookup(c - 64, *(bdd_index_map + a - 1), *(bdd_index_map + b - 1));
-            *(bdd_index_map + global_bddindex++) = loc;
+            *(bdd_index_map + bddindex++) = loc;
         }
         if(c == EOF){
             break;
@@ -249,7 +215,7 @@ BDD_NODE *bdd_map(BDD_NODE *node, unsigned char (*func)(unsigned char)) {
 BDD_NODE *bdd_rotate(BDD_NODE *node, int level) {
     // TO BE IMPLEMENTED
     int start = global_bddptr;
-    int dimension = 1 << (node->level/2);
+    int dimension = 1 <<(level/2);
     //printf("Dimension: %d", dimension);
 
     int end_node = help_rotate(node, level, 0, 0, dimension, dimension);

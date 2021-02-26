@@ -6,7 +6,7 @@
 #include "bdd.h"
 
 int global_bddptr = 256;
-int global_bddindex = 0;
+int global_bddindex = 0; //only used for serialized
 
 int help_strcmp(char *original, char *comp){
 
@@ -140,6 +140,47 @@ int help_inbddfindserial(int a){
 		}
 	}
 	return location;
+}
+
+int help_serialize(BDD_NODE* node, FILE* out){
+	BDD_NODE root = *node;
+    if((root.left) > 255){
+        help_serialize(bdd_nodes + root.left, out);
+    }else{
+        if(help_inbddindex(root.left) == 0){
+            *(bdd_index_map + global_bddindex++) = root.left;
+            char a = root.left;
+            fputc('@', out);
+            fputc(a , out);
+        }
+    }
+    if((root.right) > 255){
+        help_serialize(bdd_nodes + root.right, out);
+    }else{
+        if(help_inbddindex(root.right) == 0){
+            *(bdd_index_map + global_bddindex++) = root.right;
+            char a = root.right;
+            fputc('@', out);
+            fputc(a, out);
+        }
+    }
+    //printf("%c %d %d  \n", root.level, root.left, root.right);
+    int node_index = bdd_lookup((int)(root.level - '@'), root.left, root.right);
+    if(help_inbddindex(node_index) == 0){
+        *(bdd_index_map + global_bddindex++) = node_index;
+        fputc(root.level, out);
+        int left = help_inbddfindserial(root.left);
+        int right = help_inbddfindserial(root.right);
+        fputc(left & 0xff, out);
+        fputc(left>>8 & 0xff, out);
+        fputc(left>>16 & 0xff, out);
+        fputc(left>>24 & 0xff, out);
+        fputc(right & 0xff, out);
+        fputc(right>>8 & 0xff, out);
+        fputc(right>>16 & 0xff, out);
+        fputc(right>>24 & 0xff, out);
+    }
+    return 0;
 }
 
 // threshold function
