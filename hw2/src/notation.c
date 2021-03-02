@@ -7,7 +7,7 @@
    Nom: notation
    Auteur: Henry Thomas
    Date: 27/11/90
-/*
+
 This file is part of NOTATION program.
 
 NOTATION is free software; you can redistribute it and/or modify
@@ -1298,7 +1298,7 @@ int execute(num,c)
     m->tocol = curcol;
     m->tolig = curlig ;
 
-    /*m->topiece = curpiece ; /* ? */
+    /*m->topiece = curpiece ;  ? */
 
     if (configuring)
       (void) configure();
@@ -1481,13 +1481,13 @@ int parse_keyword(token,text)
     free_move_list(m);
     break;
   case TITLE:
-    output_text(dr, T_TITLE, text, NULL);
+    output_text(dr, T_TITLE, text, 0);
     break;
   case SUBTITLE:
-    output_text(dr, T_SUBTITLE, text, NULL);
+    output_text(dr, T_SUBTITLE, text, 0);
     break;
   case SCORE:
-    output_text(dr, T_SCORE, text, NULL);
+    output_text(dr, T_SCORE, text, 0);
     break;
   case LANGUE:
     in_language = find_keyword (t_language, NBLANGUAGES, in_language,
