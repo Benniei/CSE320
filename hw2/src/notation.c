@@ -281,10 +281,10 @@ play * theplay ;
 /* current game
    the name "tos" means "top of stack"
    */
-static game * tos; // CHANGE: GULL to nothing
+static game * tos = GULL;
 
 /* variable holding current move */
-static depl * m; // CHANGE: MULL to nothing
+static depl * m = MULL;
 
 
 int alternate_moves[10][2]; /* table of alternate moves, guessed by
