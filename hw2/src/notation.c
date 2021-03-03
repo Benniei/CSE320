@@ -483,7 +483,7 @@ depl * new_move()
   int i;
   static int counter = 0;
 
-  tmp = (depl *) malloc (sizeof(depl *));
+  tmp = (depl *) malloc (sizeof(depl));
   ALLOCP(tmp);
   for (i=0; i < ((sizeof (depl))/ sizeof (int)) ; i++)
     ((int *) tmp)[i] = 0;
@@ -1834,21 +1834,19 @@ int notation_main(argc,argv)
   init_move(m);
 
   /* allocation of the play descriptor */
-  (void) fprintf(stderr,"%s\n","Location 1");
-  (void) fprintf(stderr,"%ld\n",sizeof(play));
-  theplay = (play *) malloc (sizeof(play)) ;
+
+  theplay = (play *) malloc (sizeof(play));
   theplay->initial = tos ;
   theplay->chain   = m ;
   movecount = 1;
 
   /* main analysis routine */
   yyin = infile ;
-  yyout = stderr ;
-
-  /*init_parse(m); */
+  yyout = stderr;
+  init_parse(m);
   yylex();
 
-  if ((count == 0) && !error_flag)(play *)
+  if ((count == 0) && !error_flag)
     output_board(dr,tos);
 
   if (error_flag) {
