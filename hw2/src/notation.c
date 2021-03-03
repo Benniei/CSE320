@@ -281,10 +281,10 @@ play * theplay ;
 /* current game
    the name "tos" means "top of stack"
    */
-static game * tos = GULL ;
+static game * tos; // CHANGE: GULL to nothing
 
 /* variable holding current move */
-static depl * m = MULL ;
+static depl * m; // CHANGE: MULL to nothing
 
 
 int alternate_moves[10][2]; /* table of alternate moves, guessed by
@@ -764,6 +764,7 @@ void exit_variation()
 
     l--;
     free(m);
+
     m = stack[l].d ;
     tos = stack[l].b ;
 
@@ -1797,7 +1798,6 @@ int notation_main(argc,argv)
 #endif
 {
   (void) fprintf(stderr,"%s\n",version_string);
-
   /* allocation of driver descriptor */
   dr = new_driver();
 
@@ -1810,6 +1810,7 @@ int notation_main(argc,argv)
 
   (void) associe_traduction (&in_table, in_language);
   (void) associe_traduction (&(dr->out_table), out_language);
+
 
   /* assoc driver */
   init_driver(dr,driver);
@@ -1824,14 +1825,17 @@ int notation_main(argc,argv)
     fatal((stderr,"\nToo many errors"));
 
   /* allocation of board descriptor */
+
   tos = new_board();
   init_board(tos);
-
   /* allocation of move descriptor */
-  m->type = VOID ;
-  /*init_move(m);*/
+  // m->type = VOID; //doesnt work
+  m = new_move();
+  init_move(m);
 
   /* allocation of the play descriptor */
+  (void) fprintf(stderr,"%s\n","Location 1");
+  (void) fprintf(stderr,"%ld\n",sizeof(play));
   theplay = (play *) malloc (sizeof(play)) ;
   theplay->initial = tos ;
   theplay->chain   = m ;
@@ -1844,7 +1848,7 @@ int notation_main(argc,argv)
   /*init_parse(m); */
   yylex();
 
-  if ((count == 0) && !error_flag)
+  if ((count == 0) && !error_flag)(play *)
     output_board(dr,tos);
 
   if (error_flag) {
@@ -1855,10 +1859,10 @@ int notation_main(argc,argv)
 
   /* terminates output files */
   output_end(dr);
-
   /* close files */
   close_files();
-
+  free(tos);
+  free(dr);
   /* exit properly */
   return 0;
 }
