@@ -535,7 +535,7 @@ depl * add_trailing_move(mo)
   mo->next->next = (depl *) NULL;
   mo->next->sub  = (depl *) NULL;
 
-  mo->next->whiteturn = !( m->whiteturn ) ;
+  mo->next->whiteturn = !( mo->whiteturn ) ;
   mo->next->move = mo->move;
   if ( mo->next->whiteturn) {
     mo->next->move++;
@@ -764,7 +764,6 @@ void exit_variation()
 
     l--;
     free(m);
-
     m = stack[l].d ;
     tos = stack[l].b ;
 
@@ -1550,9 +1549,9 @@ int  parse_move(token)
   int etat =0;
   int code;
 
-  m = add_trailing_move(m);
-  init_parse(m);
-  m->type = MOVE;
+  // m = add_trailing_move(m);
+  // init_parse(m);
+  // m->type = MOVE;
 
   i=0;
   while ( !correcte && !erreursyntaxe ) {
@@ -1573,6 +1572,10 @@ int  parse_move(token)
     /*(void) fprintf(stderr, "ia panimaiou, davai\n");*/
   }
   /*init_parse(m);*/
+  m = add_trailing_move(m);
+  init_parse(m);
+  m->type = MOVE;
+
   return(TRUE);
 }
 
@@ -1832,6 +1835,7 @@ int notation_main(argc,argv)
   // m->type = VOID; //doesnt work
   m = new_move();
   init_move(m);
+  m->type = VOID;
 
   /* allocation of the play descriptor */
 
