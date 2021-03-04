@@ -341,14 +341,15 @@ char * com_long[] = {
 #ifdef __STDC__
 static int ispiece(char c)
 #else
-static int ispiece(c)
+static int ispiece(c) //checks if something is a piece on the board
      char c;
 #endif
 {
   register int i;
 
-  for ( i = 0 ; (i < NUMPIECES) && (c != in_table[i]) ; i++ ) ;
+  for ( i = 0 ; (i < NUMPIECES) && (c != in_table[i]) ; i++ );
   /*(void) fprintf(stdout, "piece %d %c\n" , i , c);*/
+
   return(i<NUMPIECES);
 }
 
@@ -1574,8 +1575,6 @@ int  parse_move(token)
   /*init_parse(m);*/
   m = add_trailing_move(m);
   init_parse(m);
-  m->type = MOVE;
-
   return(TRUE);
 }
 
