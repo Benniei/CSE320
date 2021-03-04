@@ -1520,8 +1520,8 @@ int parse_roque(token)
   for (i=0; i < NBROQUE && (strcmp(c_roque[i],token)!=0); i++) ;
   if ( i < NBROQUE ) {
 
-    m = add_trailing_move(m);
-    init_parse(m);
+    // m = add_trailing_move(m);
+    // init_parse(m);
 
     if (strlen(token) == 3) {
       m->type = PETITROQUE ;
@@ -1531,6 +1531,8 @@ int parse_roque(token)
       (void) execute(11,DUMMYCHAR);
     }
     /*(void) fprintf(stderr,"ROQUE\n");*/
+    m = add_trailing_move(m);
+    init_parse(m);
     return(TRUE);
   }
 
