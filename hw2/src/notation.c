@@ -1442,8 +1442,8 @@ int parse_keyword(token,text)
     /* don't forget we are configuring the previous move */
     /* -> move 0, black */
     configuring = FALSE;
-    m->move = 0;
-    m->whiteturn = FALSE;
+    //m->move = 0;
+    //m->whiteturn = FALSE;
     break;
   case CLEAR:
     clear_board(tos);
@@ -1552,11 +1552,6 @@ int  parse_move(token)
   int etat =0;
   int code;
 
-  if(m->move == 0){
-    m = add_trailing_move(m);
-    init_parse(m);
-    m->type = MOVE;
-  }
 
   i=0;
   while ( !correcte && !erreursyntaxe ) {
