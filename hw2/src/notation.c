@@ -1552,15 +1552,13 @@ int  parse_move(token)
   int etat =0;
   int code;
 
-  // m = add_trailing_move(m);
-  // init_parse(m);
-  // m->type = MOVE;
+  if(m->move == 0){
+    m = add_trailing_move(m);
+    init_parse(m);
+    m->type = MOVE;
+  }
 
   i=0;
-  if(m->uid == 1 && m->move == 0){
-    m->whiteturn = TRUE;
-    m->move = 1;
-  }
   while ( !correcte && !erreursyntaxe ) {
     code = typechar(token[i]);
     (void) execute(action[etat][code],token[i]);
