@@ -387,7 +387,7 @@ static int find_keyword(tab, nbentry,defaut,key,warning)
   int i ;
 
   for(i=0; (i< nbentry) ;i++)
-    if (strcmp(tab[i],key))
+    if (!strcmp(tab[i],key))
       return(i);
 
   /* we failed to find the keyword */
@@ -1206,6 +1206,7 @@ int execute_move()
       error((stderr,"\nBlack move %d illegal\n",m->move));
   }
 
+
   do_move(tos, m);
 
   output_move(dr,m);
@@ -1216,6 +1217,8 @@ int execute_move()
     close_files();
     exit(0);
   }
+
+
 
   /* do we need to display the move ? */
   if (nb_move_to_dsp > 0) {
@@ -1456,13 +1459,17 @@ int parse_keyword(token,text)
   case TOWHITE:
     /* don't forget we are configuring the previous move */
     /* reset to 0,black --> 1,white */
-    m->move = 0;
-    m->whiteturn = FALSE;
+    // m->move = 0;
+    // m->whiteturn = FALSE;
+    // m->move = 1;
+    m->whiteturn = TRUE;
     break;
   case TOBLACK:
     /* reset to 1,white -> 1 black */
-    m->move = 1;
-    m->whiteturn = TRUE;
+    // m->move = 1;
+    // m->whiteturn = TRUE;
+    // m->move = 0;
+    m->whiteturn = FALSE;
     break;
   case CONFIGWH:
     configuring = TRUE ;
@@ -1501,6 +1508,7 @@ int parse_keyword(token,text)
     putc ('\n', dr->outfile);
     break;
   case KNULL:
+    break;
   default:
     fprintf(stderr,"unknown keyword %s\n",token);
     break;
