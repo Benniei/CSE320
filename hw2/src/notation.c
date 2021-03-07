@@ -738,8 +738,9 @@ void enter_variation()
     /* A variation FOLLOWS the main line
        so we need to backtrack one move
        */
+    undo_move(tos,stack[l].d->prev);
     m = add_variation(stack[l].d);
-    undo_move(tos,stack[l].d);
+
 
     /* set variables */
     l++;
