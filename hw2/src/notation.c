@@ -569,6 +569,7 @@ static depl * add_variation(mo)
      we have to go back in the numbering */
   ip->sub->whiteturn =  mo->prev->whiteturn  ;
   ip->sub->move = mo->prev->move ;
+  ip->sub->type = mo->prev->type;
 
   return(ip->sub);
 }
