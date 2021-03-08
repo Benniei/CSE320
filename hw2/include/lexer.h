@@ -11,6 +11,8 @@ extern int lineno;
 extern FILE * yyin;
 extern FILE * yyout;
 
+int yylex_destroy ( void );
+
 #ifdef __STDC__
 extern int yylex(/*void*/);
 #else
