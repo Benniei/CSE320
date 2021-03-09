@@ -766,7 +766,9 @@ void exit_variation()
     output_variation(dr,VARIATION_OUT);
 
     l--;
+    free_move_list(m);
     free(m);
+    free(tos);
     m = stack[l].d ;
     tos = stack[l].b ;
 
