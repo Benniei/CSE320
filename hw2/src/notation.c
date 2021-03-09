@@ -1867,9 +1867,13 @@ int notation_main(argc,argv)
     output_board(dr,tos);
     fatal((stderr,"\nToo many errors"));
   }
-
   /* terminates output files */
   output_end(dr);
+  free_move_list(theplay->chain);
+  free(theplay->chain);
+  free(dr);
+  free(tos);
+  free(theplay);
   /* close files */
   close_files();
   yylex_destroy();
