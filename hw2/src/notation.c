@@ -767,7 +767,6 @@ void exit_variation()
 
     l--;
     free_move_list(m);
-    free(m);
     free(tos);
     m = stack[l].d ;
     tos = stack[l].b ;
@@ -1219,6 +1218,12 @@ int execute_move()
     (void) fprintf(dr->outfile, "\nLast position encountered:\n");
     output_board(dr,tos);
     close_files();
+    free_move_list(theplay->chain);
+    free(theplay->chain);
+    free(theplay->initial);
+    free(theplay);
+    free(dr);
+    yylex_destroy();
     exit(0);
   }
 
@@ -1232,6 +1237,12 @@ int execute_move()
 	if (stop_at_display) {
 	  output_end(dr);
 	  close_files();
+    free_move_list(theplay->chain);
+    free(theplay->chain);
+    free(theplay->initial);
+    free(theplay);
+    free(dr);
+    yylex_destroy();
 	  exit(0);
 	}
       }
@@ -1668,6 +1679,7 @@ int parse_options(argc,argv)
 	if ((dr->outfile = fopen (argv[narg],"w+")) == NULL) {
 	  (void) fprintf (stderr,"can't open %s output file\n",argv[narg]);
 	  (void) fprintf (stderr,"assume stdout for output\n");
+    dr->outfile = stdout;
 	}
   break;
       case 'e':
@@ -1732,6 +1744,8 @@ int parse_options(argc,argv)
 	break;
       case 'v': /* print version */
 	/* this already done, so exit() */
+  free(infile);
+  free(dr);
 	exit(0);
 	break;
       case 'h': /* help file */
@@ -1742,7 +1756,9 @@ int parse_options(argc,argv)
           while ((c = getc(fhelp)) != EOF)
             (void) fputc(c,stderr);
           (void) fclose(fhelp);
-	  exit(0);
+	  free(infile);
+    free(dr);
+    exit(0);
         }
          break;
       default:
@@ -1871,13 +1887,13 @@ int notation_main(argc,argv)
   }
   /* terminates output files */
   output_end(dr);
-  free_move_list(theplay->chain);
-  free(theplay->chain);
-  free(dr);
-  free(tos);
-  free(theplay);
   /* close files */
   close_files();
+  free_move_list(theplay->chain);
+  free(theplay->chain);
+  free(theplay->initial);
+  free(theplay);
+  free(dr);
   yylex_destroy();
   /* exit properly */
   return 0;
