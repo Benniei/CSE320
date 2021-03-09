@@ -1873,8 +1873,6 @@ int notation_main(argc,argv)
   /* close files */
   close_files();
   yylex_destroy();
-  free(tos);
-  free(dr);
   /* exit properly */
   return 0;
 }
