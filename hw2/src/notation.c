@@ -1744,6 +1744,7 @@ int parse_options(argc,argv)
 	break;
       case 'v': /* print version */
 	/* this already done, so exit() */
+  close_files();
   free(dr);
 	exit(0);
 	break;
@@ -1755,6 +1756,7 @@ int parse_options(argc,argv)
           while ((c = getc(fhelp)) != EOF)
             (void) fputc(c,stderr);
           (void) fclose(fhelp);
+    close_files();
     free(dr);
     exit(0);
         }
@@ -1766,7 +1768,7 @@ int parse_options(argc,argv)
       break;
     default: /* assume this is the input file */
       if ((infile = fopen (cp,"r")) == NULL)
-	fatal((stderr,"can't open %s input file\n",cp));
+	      fatal((stderr,"can't open %s input file\n",cp));
     }
     narg++;
   } /* process next arg */
