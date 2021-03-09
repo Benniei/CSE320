@@ -569,7 +569,7 @@ static depl * add_variation(mo)
      we have to go back in the numbering */
   ip->sub->whiteturn =  mo->prev->whiteturn  ;
   ip->sub->move = mo->prev->move ;
-  ip->sub->type = mo->prev->type;
+  ip->sub->type = mo->type;
 
   return(ip->sub);
 }
@@ -1744,7 +1744,6 @@ int parse_options(argc,argv)
 	break;
       case 'v': /* print version */
 	/* this already done, so exit() */
-  free(infile);
   free(dr);
 	exit(0);
 	break;
@@ -1756,7 +1755,6 @@ int parse_options(argc,argv)
           while ((c = getc(fhelp)) != EOF)
             (void) fputc(c,stderr);
           (void) fclose(fhelp);
-	  free(infile);
     free(dr);
     exit(0);
         }
