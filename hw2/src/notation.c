@@ -35,6 +35,8 @@ the Free Software Foundation, 675 Mass Ave, Cambridge, MA 02139, USA.  */
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
+#include <getopt.h>
+
 
 #include "chesstype.h"
 #include "notation.h"
@@ -1640,6 +1642,21 @@ void init_parse(m)
 /* cette fonction analyse les arguments de la ligne de commande
    Translation: this function parses the arguments of the command line
    */
+static struct option long_options[] = {
+  {"long-algebraic", no_argument, 0, 'a'},
+  {"short-algebraic", no_argument, 0, 's'},
+  {"input-language", required_argument, 0, 'f'},
+  {"output-language", required_argument, 0, 't'},
+  {"output-file", optional_argument, 0, 'o'},
+  {"show-after", required_argument, 0, 'c'},
+  {"end-after", required_argument, 0, 'e'},
+  {"board-only", no_argument, 0, 'b'},
+  {"driver", required_argument, 0, 'd'},
+  {"no-header", no_argument, 0, 'i'},
+  {"help", no_argument, 0, 'h'},
+  {"version", no_argument, 0, 'v'},
+  {0,0,0,0}
+};
 #ifdef __STDC__
 int parse_options(int argc,char *argv[])
 #else
@@ -1648,7 +1665,6 @@ int parse_options(argc,argv)
      char * argv[];
 #endif
 {
-  int flag = 0; //checks the amount of files
   int narg =1 ;
   int i;
   register int c;
@@ -1659,11 +1675,20 @@ int parse_options(argc,argv)
   dr->outfile = stdout;
   nb_move_to_dsp = 0;
 
+  int ch;
+  char hold;
+  int option_index;
   while (narg < argc ) {
     (void) strcpy (cp,argv[narg]);
     switch (cp[0]) {
     case '-' :
-      switch (cp[1]) {
+      option_index = 0;
+      ch = getopt_long(argc, argv, "asf:t:o:c:e:bd:ihv", long_options, &option_index);
+      if(ch == -1)
+        hold = cp[1];
+      else
+        hold = (char) long_options[option_index].val;
+      switch (hold) {
       case 'f' : /* from langage */
 	if  ((narg+1) >= argc )
 	  fatal((stderr,"missing argument to %s option",cp));
