@@ -1675,19 +1675,23 @@ int parse_options(argc,argv)
   dr->outfile = stdout;
   nb_move_to_dsp = 0;
 
-  int ch;
+
   char hold;
   int option_index;
   while (narg < argc ) {
     (void) strcpy (cp,argv[narg]);
     switch (cp[0]) {
     case '-' :
-      option_index = 0;
-      ch = getopt_long(argc, argv, "asf:t:o:c:e:bd:ihv", long_options, &option_index);
-      if(ch == -1)
-        hold = cp[1];
-      else
+      if(cp[1] == '-'){
+        option_index = 0;
+        getopt_long(argc, argv, "asf:t:o:c:e:bd:ihv", long_options, &option_index);
         hold = (char) long_options[option_index].val;
+      }
+      else{
+        option_index = 0;
+        getopt_long(argc, argv, "asf:t:o:c:e:bd:ihv", long_options, &option_index);
+        hold = cp[1];
+      }
       switch (hold) {
       case 'f' : /* from langage */
 	if  ((narg+1) >= argc )
@@ -1707,6 +1711,13 @@ int parse_options(argc,argv)
 	break;
       case 'o' : /* next arg is output file */
 	narg++ ;
+  if(argv[narg][0] == '-'){
+    (void) fprintf (stderr,"no file specified\n");
+    (void) fprintf (stderr,"assume stdout for output\n");
+    dr->outfile = stdout;
+    narg--;
+    break;
+  }
 	if ((dr->outfile = fopen (argv[narg],"w+")) == NULL) {
 	  (void) fprintf (stderr,"can't open %s output file\n",argv[narg]);
 	  (void) fprintf (stderr,"assume stdout for output\n");
