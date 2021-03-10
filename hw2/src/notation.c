@@ -1222,7 +1222,6 @@ int execute_move()
     free(theplay->chain);
     free(theplay->initial);
     free(theplay);
-    free(dr);
     yylex_destroy();
     exit(0);
   }
@@ -1241,7 +1240,6 @@ int execute_move()
     free(theplay->chain);
     free(theplay->initial);
     free(theplay);
-    free(dr);
     yylex_destroy();
 	  exit(0);
 	}
@@ -1437,8 +1435,15 @@ int parse_comment(com)
   else {
     /* we look for the comment in the short ascii table */
     t = find_keyword(com_short, NUM_COM_CODE, NUM_COM_CODE, com,FALSE);
-    if (t == NUM_COM_CODE)
+    if (t == NUM_COM_CODE){}
       fprintf (stderr,"\nWhat is \"%s\" ?\n",com);
+      close_files();
+      free_move_list(theplay->chain);
+      free(theplay->chain);
+      free(theplay->initial);
+      free(theplay);
+      yylex_destroy();
+      exit(1);
   }
   if (t != NUM_COM_CODE)
     output_text(dr,T_COMMENT, com, t);
@@ -1643,6 +1648,7 @@ int parse_options(argc,argv)
      char * argv[];
 #endif
 {
+  int flag = 0; //checks the amount of files
   int narg =1 ;
   int i;
   register int c;
@@ -1745,7 +1751,6 @@ int parse_options(argc,argv)
       case 'v': /* print version */
 	/* this already done, so exit() */
   close_files();
-  free(dr);
 	exit(0);
 	break;
       case 'h': /* help file */
@@ -1757,12 +1762,11 @@ int parse_options(argc,argv)
             (void) fputc(c,stderr);
           (void) fclose(fhelp);
     close_files();
-    free(dr);
     exit(0);
         }
          break;
       default:
-	error((stderr,"\nUnknown command line options %s\n",cp));
+	fatal((stderr,"\nUnknown command line options %s\n",cp));
 	break;
       }
       break;
@@ -1785,6 +1789,8 @@ void close_files()
     (void) fclose(infile);
   if (dr->outfile != stdout )
     (void) fclose(dr->outfile);
+  if(dr != NULL)
+    free(dr);
 }
 
 #ifdef __STDC__
@@ -1893,7 +1899,6 @@ int notation_main(argc,argv)
   free(theplay->chain);
   free(theplay->initial);
   free(theplay);
-  free(dr);
   yylex_destroy();
   /* exit properly */
   return 0;
