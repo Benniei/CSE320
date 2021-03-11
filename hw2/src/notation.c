@@ -1437,7 +1437,7 @@ int parse_comment(com)
   else {
     /* we look for the comment in the short ascii table */
     t = find_keyword(com_short, NUM_COM_CODE, NUM_COM_CODE, com,FALSE);
-    if (t == NUM_COM_CODE){}
+    if (t == NUM_COM_CODE){
       fprintf (stderr,"\nWhat is \"%s\" ?\n",com);
       close_files();
       free_move_list(theplay->chain);
@@ -1446,6 +1446,7 @@ int parse_comment(com)
       free(theplay);
       yylex_destroy();
       exit(1);
+    }
   }
   if (t != NUM_COM_CODE)
     output_text(dr,T_COMMENT, com, t);
