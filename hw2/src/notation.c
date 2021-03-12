@@ -1678,6 +1678,7 @@ int parse_options(argc,argv)
 
 
   char hold;
+  opterr = 0;
   char ch;
   int file_flag = 0;
   int option_index;
@@ -1694,14 +1695,15 @@ int parse_options(argc,argv)
         }
       }
       else{
-        option_index = 0;
         getopt_long(argc, argv, "asf:t:o:c:e:bd:ihv", long_options, &option_index);
         hold = cp[1];
       }
       switch (hold) {
       case 'f' : /* from langage */
 	if  ((narg+1) >= argc )
-	  fatal((stderr,"missing argument to %s option",cp));
+	  fatal((stderr,"missing argument to %s option\n",cp));
+  if(argv[narg + 1][0] == '-')
+    fatal((stderr,"missing argument to %s option\n",cp));
 	narg++ ;
 	in_language = find_keyword (t_language, NBLANGUAGES,
 				    DEFAULT_INPUT_LANGUAGE,
@@ -1709,7 +1711,9 @@ int parse_options(argc,argv)
 	break;
       case 't' : /* to langage */
 	if  ((narg+1) >= argc )
-	  fatal((stderr,"missing argument to %s option",cp));
+	  fatal((stderr,"missing argument to %s option\n",cp));
+  if(argv[narg + 1][0] == '-')
+    fatal((stderr,"missing argument to %s option\n",cp));
 	narg++ ;
 	out_language = find_keyword (t_language, NBLANGUAGES,
 				     DEFAULT_OUTPUT_LANGUAGE,
@@ -1717,6 +1721,13 @@ int parse_options(argc,argv)
 	break;
       case 'o' : /* next arg is output file */
 	narg++ ;
+  if(narg >= argc){
+    (void) fprintf (stderr,"no file specified\n");
+    (void) fprintf (stderr,"assume stdout for output\n");
+    dr->outfile = stdout;
+    narg--;
+    break;
+  }
   if(argv[narg][0] == '-'){
     (void) fprintf (stderr,"no file specified\n");
     (void) fprintf (stderr,"assume stdout for output\n");
@@ -1732,10 +1743,12 @@ int parse_options(argc,argv)
   break;
       case 'e':
 	if  ((narg+1) >= argc )
-	  fatal((stderr,"missing argument to %s option",cp));
+	  fatal((stderr,"missing argument to %s option\n",cp));
 	narg++ ;
 
 	i=0;
+  if(!isdigit(argv[narg][i]))
+    fatal((stderr,"missing argument to %s option\n",cp));
 	nb_move_to_dsp = 0;
 	move_to_display[nb_move_to_dsp] = 0;
 	while (isdigit(argv[narg][i])) {
@@ -1749,10 +1762,12 @@ int parse_options(argc,argv)
 	break;
       case 'c':
 	if  ((narg+1) >= argc )
-	  fatal((stderr,"missing argument to %s option",cp));
+	  fatal((stderr,"missing argument to %s option\n",cp));
 	narg++ ;
 
 	i=0;
+  if(!isdigit(argv[narg][i]))
+    fatal((stderr,"missing argument to %s option\n",cp));
 	while (isdigit(argv[narg][i])) {
 	  move_to_display[nb_move_to_dsp] = 0;
 	  while (isdigit(argv[narg][i])) {
@@ -1764,7 +1779,7 @@ int parse_options(argc,argv)
 	  nb_move_to_dsp++;
 
 	  if (nb_move_to_dsp > NB_MOVE_TO_DISP)
-	    fatal((stderr,"max. number of move to display exceeded"));
+	    fatal((stderr,"max. number of move to display exceeded\n"));
 
 	  /* process next number */
 	  if (argv[narg][i] == ',')
@@ -1782,7 +1797,9 @@ int parse_options(argc,argv)
 	break;
       case 'd': /* output driver */
 	if  ((narg+1) >= argc )
-	  fatal((stderr,"missing argument to %s option",cp));
+	  fatal((stderr,"missing argument to %s option\n",cp));
+  if(argv[narg + 1][0] == '-')
+    fatal((stderr,"missing argument to %s option\n",cp));
 	narg++ ;
 	driver = find_keyword(t_output, NB_DRIVER, DEFAULT_DRIVER,
 			      argv[narg],TRUE);
