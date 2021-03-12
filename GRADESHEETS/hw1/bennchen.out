@@ -1,0 +1,159 @@
+[----] Criterion v2.3.3
+[====] Running 1 test from basecode_tests_suite:
+[RUN ] basecode_tests_suite::birp_basic_test
+[PASS] basecode_tests_suite::birp_basic_test: (0.25s)
+[====] Running 1 test from black_box_tests:
+[RUN ] black_box_tests::birp_to_pgm_cat
+[PASS] black_box_tests::birp_to_pgm_cat: (1.88s)
+[====] Running 20 tests from blackbox_tests:
+[RUN ] blackbox_tests::BWHoriz_to_ASCII
+[PASS] blackbox_tests::BWHoriz_to_ASCII: (0.41s)
+[RUN ] blackbox_tests::BWHoriz_to_Birp
+[PASS] blackbox_tests::BWHoriz_to_Birp: (0.28s)
+[RUN ] blackbox_tests::BWHoriz_to_PGM
+[PASS] blackbox_tests::BWHoriz_to_PGM: (0.28s)
+[RUN ] blackbox_tests::BWVert_to_ASCII
+[PASS] blackbox_tests::BWVert_to_ASCII: (0.35s)
+[RUN ] blackbox_tests::BWVert_to_Birp
+[PASS] blackbox_tests::BWVert_to_Birp: (0.37s)
+[RUN ] blackbox_tests::BWVert_to_PGM
+[PASS] blackbox_tests::BWVert_to_PGM: (0.33s)
+[RUN ] blackbox_tests::allBlack_to_ASCII
+[PASS] blackbox_tests::allBlack_to_ASCII: (0.27s)
+[RUN ] blackbox_tests::allBlack_to_birp
+[PASS] blackbox_tests::allBlack_to_birp: (0.32s)
+[RUN ] blackbox_tests::allBlack_to_pgm
+[PASS] blackbox_tests::allBlack_to_pgm: (0.32s)
+[RUN ] blackbox_tests::allWhite_to_ASCII
+[PASS] blackbox_tests::allWhite_to_ASCII: (0.32s)
+[RUN ] blackbox_tests::allWhite_to_birp
+[PASS] blackbox_tests::allWhite_to_birp: (0.29s)
+[RUN ] blackbox_tests::allWhite_to_pgm
+[PASS] blackbox_tests::allWhite_to_pgm: (0.32s)
+[RUN ] blackbox_tests::birp_2_pgm1
+[PASS] blackbox_tests::birp_2_pgm1: (0.30s)
+[RUN ] blackbox_tests::birp_2_pgm_2
+[PASS] blackbox_tests::birp_2_pgm_2: (0.26s)
+[RUN ] blackbox_tests::birp_2_pgm_3
+[PASS] blackbox_tests::birp_2_pgm_3: (0.34s)
+[RUN ] blackbox_tests::birp_to_birp_1
+USAGE: bin/birp [-h] [-i FORMAT] [-o FORMAT] [-n|-r|-t THRESHOLD|-z FACTOR|-Z FACTOR]
+   -h       Help: displays this help menu.
+   -i       Input format: `pgm` or `birp` (default `birp`)
+   -o       Output format: `pgm`, `birp`, or `ascii` (default `birp`)
+
+In all cases, the program reads image data from the standard input and writes
+image data to the standard output.  If the input and output formats are both `birp`,
+then one of the following transformations may be specified (the default is an
+identity transformation; *i.e.* the image is passed unchanged):
+   -n	Complement each pixel value
+   -r	Rotate the image 90-degrees counterclockwise
+   -t	Apply a threshold filter (with THRESHOLD in [0, 255]) to the image
+   -z	Zoom out (by FACTOR in [0, 16]), producing a smaller raster
+   -Z	Zoom in, (by FACTOR in [0, 16]), producing a larger raster
+
+[----] tests/blackBoxTests.c:400: Assertion failed: birp to birp did not return with EXIT_SUCCESS on M.birp. Returned with 1
+[FAIL] blackbox_tests::birp_to_birp_1: (0.02s)
+[RUN ] blackbox_tests::birp_to_birp_2
+USAGE: bin/birp [-h] [-i FORMAT] [-o FORMAT] [-n|-r|-t THRESHOLD|-z FACTOR|-Z FACTOR]
+   -h       Help: displays this help menu.
+   -i       Input format: `pgm` or `birp` (default `birp`)
+   -o       Output format: `pgm`, `birp`, or `ascii` (default `birp`)
+
+In all cases, the program reads image data from the standard input and writes
+image data to the standard output.  If the input and output formats are both `birp`,
+then one of the following transformations may be specified (the default is an
+identity transformation; *i.e.* the image is passed unchanged):
+   -n	Complement each pixel value
+   -r	Rotate the image 90-degrees counterclockwise
+   -t	Apply a threshold filter (with THRESHOLD in [0, 255]) to the image
+   -z	Zoom out (by FACTOR in [0, 16]), producing a smaller raster
+   -Z	Zoom in, (by FACTOR in [0, 16]), producing a larger raster
+
+[----] tests/blackBoxTests.c:415: Assertion failed: birp to birp did not return with EXIT_SUCCESS on checker.birp. Returned with 1
+[FAIL] blackbox_tests::birp_to_birp_2: (0.02s)
+[RUN ] blackbox_tests::both_to_ascii
+[PASS] blackbox_tests::both_to_ascii: (0.32s)
+[RUN ] blackbox_tests::pgm_2_birp1
+[PASS] blackbox_tests::pgm_2_birp1: (0.22s)
+[RUN ] blackbox_tests::pgm_2_birp_cat
+[FAIL] blackbox_tests::pgm_2_birp_cat: Timed out. (10.01s)
+[====] Running 10 tests from invalid_args_tests:
+[RUN ] invalid_args_tests::big_zoomIn_error
+[----] tests/validargs_tests.c:200: Assertion failed: Invalid options. Got: 0x322 | Expected: 0x0
+[FAIL] invalid_args_tests::big_zoomIn_error: (0.00s)
+[RUN ] invalid_args_tests::big_zoomOut_error
+[----] tests/validargs_tests.c:166: Assertion failed: Invalid options. Got: 0x322 | Expected: 0x0
+[FAIL] invalid_args_tests::big_zoomOut_error: (0.00s)
+[RUN ] invalid_args_tests::comp_trans_combo
+[----] tests/validargs_tests.c:155: Assertion failed: Invalid options. Got: 0x122 | Expected: 0x0
+[FAIL] invalid_args_tests::comp_trans_combo: (0.00s)
+[RUN ] invalid_args_tests::input_rotation_error
+[----] tests/validargs_tests.c:222: Assertion failed: Invalid Global options. Got 0x21 | Expected 0x0
+[FAIL] invalid_args_tests::input_rotation_error: (0.00s)
+[RUN ] invalid_args_tests::input_rotation_test
+[PASS] invalid_args_tests::input_rotation_test: (0.00s)
+[RUN ] invalid_args_tests::negative_zoomIn_error
+[----] tests/validargs_tests.c:189: Assertion failed: Invalid options. Got: 0x322 | Expected: 0x0
+[FAIL] invalid_args_tests::negative_zoomIn_error: (0.00s)
+[RUN ] invalid_args_tests::negative_zoomOut_error
+[----] tests/validargs_tests.c:178: Assertion failed: Invalid options. Got: 0x322 | Expected: 0x0
+[FAIL] invalid_args_tests::negative_zoomOut_error: (0.00s)
+[RUN ] invalid_args_tests::out_of_order
+[----] tests/validargs_tests.c:258: Assertion failed: Invalid Global options. Got 0x422 | Expected 0x0
+[FAIL] invalid_args_tests::out_of_order: (0.00s)
+[RUN ] invalid_args_tests::transform_check
+[PASS] invalid_args_tests::transform_check: (0.00s)
+[RUN ] invalid_args_tests::transform_error
+[----] tests/validargs_tests.c:246: Assertion failed: Invalid Global options. Got 0x32 | Expected 0x0
+[FAIL] invalid_args_tests::transform_error: (0.00s)
+[====] Running 10 tests from unit_test_suite:
+[RUN ] unit_test_suite::bdd_apply_test
+[PASS] unit_test_suite::bdd_apply_test: (0.00s)
+[RUN ] unit_test_suite::bdd_lookup_hash_stress
+Killed
+[FAIL] unit_test_suite::bdd_lookup_hash_stress: Timed out. (10.01s)
+[RUN ] unit_test_suite::bdd_lookup_retrieval
+[PASS] unit_test_suite::bdd_lookup_retrieval: (0.00s)
+[RUN ] unit_test_suite::bdd_lookup_skip
+[PASS] unit_test_suite::bdd_lookup_skip: (0.00s)
+[RUN ] unit_test_suite::bdd_map_contrast_test
+[----] tests/bdd_unit_tests.c:206: Assertion failed: bdd after map does not match expected
+[FAIL] unit_test_suite::bdd_map_contrast_test: (0.20s)
+[RUN ] unit_test_suite::bdd_raster_test
+[----] tests/bdd_unit_tests.c:144: Assertion failed: bdd created from raster is not correct
+[FAIL] unit_test_suite::bdd_raster_test: (0.05s)
+[RUN ] unit_test_suite::bdd_rotate_360_test
+[FAIL] unit_test_suite::bdd_rotate_360_test: Timed out. (5.01s)
+[RUN ] unit_test_suite::bdd_serialize
+[PASS] unit_test_suite::bdd_serialize: (0.01s)
+[RUN ] unit_test_suite::bdd_serialize_twice
+[PASS] unit_test_suite::bdd_serialize_twice: (0.01s)
+[RUN ] unit_test_suite::zoom_in_out_test
+[----] tests/bdd_unit_tests.c:234: Assertion failed: Zooming in then out must restore original bdd
+[FAIL] unit_test_suite::zoom_in_out_test: (0.15s)
+[====] Running 11 tests from validargs_tests_suite:
+[RUN ] validargs_tests_suite::help_system_test
+[PASS] validargs_tests_suite::help_system_test: (0.00s)
+[RUN ] validargs_tests_suite::valid_args_ignore_flags_test
+[PASS] validargs_tests_suite::valid_args_ignore_flags_test: (0.00s)
+[RUN ] validargs_tests_suite::valid_args_incorrect_order_test
+[PASS] validargs_tests_suite::valid_args_incorrect_order_test: (0.00s)
+[RUN ] validargs_tests_suite::valid_args_no_parameter_test
+[PASS] validargs_tests_suite::valid_args_no_parameter_test: (0.00s)
+[RUN ] validargs_tests_suite::valid_args_threshold_bounds_test
+[PASS] validargs_tests_suite::valid_args_threshold_bounds_test: (0.00s)
+[RUN ] validargs_tests_suite::valid_args_zoom_out_test
+[PASS] validargs_tests_suite::valid_args_zoom_out_test: (0.00s)
+[RUN ] validargs_tests_suite::validargs_error_test
+[PASS] validargs_tests_suite::validargs_error_test: (0.00s)
+[RUN ] validargs_tests_suite::validargs_help_test
+[PASS] validargs_tests_suite::validargs_help_test: (0.00s)
+[RUN ] validargs_tests_suite::validargs_input_test
+[PASS] validargs_tests_suite::validargs_input_test: (0.00s)
+[RUN ] validargs_tests_suite::validargs_output_test
+[PASS] validargs_tests_suite::validargs_output_test: (0.00s)
+[RUN ] validargs_tests_suite::validargs_transform_test
+[PASS] validargs_tests_suite::validargs_transform_test: (0.00s)
+[----] Writing xml report in `crit.xml`.
+[====] Synthesis: Tested: 53 | Passing: 37 | Failing: 16 | Crashing: 0 
