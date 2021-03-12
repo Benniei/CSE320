@@ -1653,7 +1653,7 @@ static struct option long_options[] = {
   {"end-after", required_argument, 0, 'e'},
   {"board-only", no_argument, 0, 'b'},
   {"driver", required_argument, 0, 'd'},
-  {"no-header", no_argument, 0, 'i'},
+  {"no-headers", no_argument, 0, 'i'},
   {"help", no_argument, 0, 'h'},
   {"version", no_argument, 0, 'v'},
   {0,0,0,0}
@@ -1678,6 +1678,8 @@ int parse_options(argc,argv)
 
 
   char hold;
+  char ch;
+  int file_flag = 0;
   int option_index;
   while (narg < argc ) {
     (void) strcpy (cp,argv[narg]);
@@ -1685,8 +1687,11 @@ int parse_options(argc,argv)
     case '-' :
       if(cp[1] == '-'){
         option_index = 0;
-        getopt_long(argc, argv, "asf:t:o:c:e:bd:ihv", long_options, &option_index);
+        ch = getopt_long(argc, argv, "asf:t:o:c:e:bd:ihv", long_options, &option_index);
         hold = (char) long_options[option_index].val;
+        if(ch == '?'){
+          fatal((stderr,"\nUnknown command line options\n"));
+        }
       }
       else{
         option_index = 0;
@@ -1808,8 +1813,11 @@ int parse_options(argc,argv)
       }
       break;
     default: /* assume this is the input file */
+      if(file_flag == 1)
+        fatal((stderr,"can't open two input files\n"));
       if ((infile = fopen (cp,"r")) == NULL)
 	      fatal((stderr,"can't open %s input file\n",cp));
+      file_flag = 1;
     }
     narg++;
   } /* process next arg */
