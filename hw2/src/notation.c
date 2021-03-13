@@ -1225,7 +1225,7 @@ int execute_move()
     free(theplay->initial);
     free(theplay);
     yylex_destroy();
-    exit(0);
+    exit(1);
   }
 
 
