@@ -5,9 +5,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <helper.h>
 #include "debug.h"
 #include "sfmm.h"
+#include "help.h"
 
 void *sf_malloc(size_t size) {
     return NULL;
