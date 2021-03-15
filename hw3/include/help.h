@@ -15,10 +15,10 @@
 #define PACK(data, prealloc, alloc) (data + (prealloc<<1) + alloc)
 
 /*Read and write a word/address at p */
-#define READ_DATA(p) (*(unsigned int *)  p) 
+#define READ_DATA(p) (*(unsigned int *)  p)
 #define WRITE_DATA(p, data) (*(unsigned int *) p = (data))
 #define READ_ADDRESS(p) (*p)
-#define WRITE_DATA(p, address) (*p = address)
+#define WRITE_ADDRESS(p, address) (*p = address)
 
 /* Read size and get allocated fields */
 #define GET_SIZE(p) (READ_DATA(p) & ~0xF)
@@ -34,3 +34,7 @@
 #define RIGHT(p) (char*)p + GET_SIZE(HEADER((char *)p - WSIZE))
 
 /* Freelist */
+
+
+/* Functions */
+int sf_init(void);
