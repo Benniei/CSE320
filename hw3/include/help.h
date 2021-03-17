@@ -32,7 +32,7 @@
 #define FOOTER(p) (((char*)(p) + GET_SIZE(HEADER((char *)(p)))) - DSIZE)
 
 /* Heap -> gives pointers to header of adjacent blocks*/
-#define LEFT(p) (char*)p - GET_SIZE(HEADER((char *)p) - DSIZE) //goes to footer of the one to the left (only for free blocks)
+#define LEFT(p) (char*)p - GET_SIZE(HEADER((char *)p) - DSIZE) //goes to header of the one to the left (only for free blocks)
 #define RIGHT(p) (char*)p + GET_SIZE(HEADER((char *)p - WSIZE))
 
 /* Links */
@@ -45,7 +45,8 @@
 /* Functions */
 int sf_init(void);
 int sf_find_fit(size_t size);
-void sf_extend_heap(void);
+int sf_extend_heap(void);
 void sf_insert(sf_block* bp, size_t asize, int wilder_flag);
+sf_block* sf_coalesce(sf_block* bp);
 sf_block* remove_free_list(sf_block* bp);
 sf_block* insert_free_list(sf_block* bp, sf_block* ins);

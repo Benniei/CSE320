@@ -34,15 +34,9 @@ void sf_insert(sf_block* bp, size_t asize, int wilder_flag){
 }
 
 sf_block* remove_free_list(sf_block* bp){ //Parameter: pointer to location on sf_free_lists
-	sf_block* node = GET_NEXT(bp);
-	if(GET_NEXT(GET_NEXT(bp)) != bp){ // header + 2
-		SET_NEXT(bp, GET_NEXT(GET_NEXT(bp)));
-		SET_PREV(GET_NEXT(bp), bp);
-	}
-	else{ // header + 1
-		SET_NEXT(bp, bp);
-		SET_PREV(bp, bp);
-	}
+	sf_block* node = bp;
+	SET_NEXT(GET_PREV(bp), GET_NEXT(bp));
+	SET_PREV(GET_NEXT(bp), GET_PREV(bp));
 	return node;
 }
 
@@ -63,8 +57,21 @@ sf_block* insert_free_list(sf_block* bp, sf_block* ins){
 	return bp;
 }
 
-void sf_extend_heap(){
+sf_block* sf_coalesce(sf_block* bp){
+	return NULL;
+}
 
+int sf_extend_heap(void){
+	char* head;
+	if((head = sf_mem_grow()) == NULL){
+		sf_errno = ENOMEM;
+		return -1;
+	}
+	size_t prealloc = GET_PREALLOC(HEADER(head)) >> 1;
+	size_t size = PAGE_SZ - (2*WSIZE); // footer and header
+	SET_DATA(HEADER(head), PACK(size, prealloc, 0));
+	sf_coalesce((sf_block*) head);
+	return 0;
 }
 
 int sf_init(void){
