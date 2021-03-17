@@ -40,3 +40,4 @@
 
 /* Functions */
 int sf_init(void);
+int sf_find_fit(size_t size);

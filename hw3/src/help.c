@@ -42,3 +42,23 @@ int sf_init(void){
 	return 0;
 }
 
+int sf_find_fit(size_t size){
+	size_t temp;
+	int counter = 0;
+	if(size <= 32){
+		return 0;
+	}
+	temp = size/32;
+	if(size > (temp * 32)) // base case
+		temp++;
+	if(temp > 32) // blocks bigger than 32M
+		return 6;
+	size_t store = temp;
+	while(temp > 0){
+		temp = temp >> 1;
+		counter++;
+	}
+	if(store == (1<<(counter - 1)))
+		counter--;
+	return counter;
+}

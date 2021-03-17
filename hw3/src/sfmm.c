@@ -11,6 +11,14 @@
 #include "help.h"
 
 void *sf_malloc(size_t size) {
+	//size_t asize; // adjusted block size
+	//char* bp;
+
+	if(size == 0)
+		return NULL;
+
+	//asize = ALIGN((size + DSIZE)); /* add header and footer */
+
     return NULL;
 }
 
