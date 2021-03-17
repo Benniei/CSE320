@@ -15,26 +15,28 @@
 #define PACK(data, prealloc, alloc) (data + (prealloc<<1) + alloc)
 
 /*Read and write a word/address at p */
-#define READ_DATA(p) (*(unsigned int *)  p)
-#define WRITE_DATA(p, data) (*(unsigned int *) p = (data))
-#define READ_ADDRESS(p) (*p)
-#define WRITE_ADDRESS(p, address) (*p = address)
+#define READ_DATA(p) (*(size_t *)(p)) //use size_t because 8 bytes
+#define WRITE_DATA(p, data) (*(size_t *)(p) = (data))
+// #define READ_ADDRESS(p) (*p)
+// #define WRITE_ADDRESS(p, address) (*p = address)
+#define SET_DATA(p, data) (*(sf_block *)p).header = (data)
 
 /* Read size and get allocated fields */
 #define GET_SIZE(p) (READ_DATA(p) & ~0xF)
-#define GET_PREVALLOC(p) (READ_DATA(p) & 0x2)
+#define GET_PREALLOC(p) (READ_DATA(p) & 0x2)
 #define GET_ALLOC(p) (READ_DATA(p) & 0x1)
 
 /* Get address of Header and Footer */
 #define HEADER(p) ((char*)p - WSIZE)
-#define FOOTER(p) (((char*)p + GET_SIZE(HEADER((char *)p))) - DSIZE)
+#define FOOTER(p) (((char*)(p) + GET_SIZE(HEADER((char *)(p)))) - DSIZE)
 
 /* Heap -> gives pointers to header of adjacent blocks*/
 #define LEFT(p) (char*)p - GET_SIZE(HEADER((char *)p) - DSIZE) //goes to footer of the one to the left (only for free blocks)
 #define RIGHT(p) (char*)p + GET_SIZE(HEADER((char *)p - WSIZE))
 
-/* Freelist */
-
+/* Links */
+#define SET_PREV(p_source, ptr) (*(sf_block *)p_source).body.links.prev = (sf_block *)ptr
+#define SET_NEXT(p_source, ptr) (*(sf_block *)p_source).body.links.next = (sf_block *)ptr
 
 /* Functions */
 int sf_init(void);
