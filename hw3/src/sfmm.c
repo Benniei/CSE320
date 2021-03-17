@@ -11,14 +11,30 @@
 #include "help.h"
 
 void *sf_malloc(size_t size) {
-	//size_t asize; // adjusted block size
-	//char* bp;
+	size_t asize; // adjusted block size
+	int fl_index; // free_list index
 
 	if(size == 0)
 		return NULL;
 
-	//asize = ALIGN((size + DSIZE)); /* add header and footer */
+	if(sf_mem_start() == sf_mem_end()) // initates the heap
+		sf_init();
 
+	asize = ALIGN((size + DSIZE)); /* add header and footer */
+	fl_index = sf_find_fit(asize);
+
+	for(int i = fl_index; i < 7; i++){ //checking the freelist except for wilderness block
+		sf_block* head = (sf_free_list_heads + i);
+		sf_block* pointer = (sf_free_list_heads + i);
+		if(pointer->body.links.next != head){
+			continue;//allocate the block calls remove/insert FL and insert
+		}
+	}
+	// taking from wilderness block
+	/*
+	Check if fit_in wilderness block -> yes, then split or just take the whole wilderness
+	-> else extended the page and then check again
+	*/
     return NULL;
 }
 

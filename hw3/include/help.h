@@ -20,6 +20,7 @@
 // #define READ_ADDRESS(p) (*p)
 // #define WRITE_ADDRESS(p, address) (*p = address)
 #define SET_DATA(p, data) (*(sf_block *)p).header = (data)
+#define SET_PALLOC(p) (*(sf_block *)p).header = READ_DATA(p)|10
 
 /* Read size and get allocated fields */
 #define GET_SIZE(p) (READ_DATA(p) & ~0xF)
@@ -35,9 +36,16 @@
 #define RIGHT(p) (char*)p + GET_SIZE(HEADER((char *)p - WSIZE))
 
 /* Links */
-#define SET_PREV(p_source, ptr) (*(sf_block *)p_source).body.links.prev = (sf_block *)ptr
 #define SET_NEXT(p_source, ptr) (*(sf_block *)p_source).body.links.next = (sf_block *)ptr
+#define SET_PREV(p_source, ptr) (*(sf_block *)p_source).body.links.prev = (sf_block *)ptr
+#define GET_NEXT(p) (*(sf_block *)p).body.links.next
+#define GET_PREV(p) (*(sf_block *)p).body.links.prev
+
 
 /* Functions */
 int sf_init(void);
 int sf_find_fit(size_t size);
+void sf_extend_heap(void);
+void sf_insert(sf_block* bp, size_t asize, int wilder_flag);
+sf_block* remove_free_list(sf_block* bp);
+sf_block* insert_free_list(sf_block* bp, sf_block* ins);

@@ -6,12 +6,65 @@
 #include "sfmm.h"
 #include "help.h"
 
-int sf_init_free_list(){
+/*
+Functions to implement:
+cut out a portion of/entire free
+	Insert into free_list
+extend heap
+remove from free_list
+*/
+void sf_init_free_list(){
 	for(int i = 0; i < 8; i++){
 		sf_free_list_heads[i].body.links.prev = &sf_free_list_heads[i];
 		sf_free_list_heads[i].body.links.next = &sf_free_list_heads[i];
 	}
-	return 0;
+}
+
+void sf_insert(sf_block* bp, size_t asize, int wilder_flag){
+	size_t csize = GET_SIZE(HEADER(bp));
+	if((csize - asize) >= MIN_BLOCK_SIZE){
+		SET_DATA(HEADER(bp), PACK(csize, 0, 1));
+		bp = (sf_block*)RIGHT(bp);
+		SET_DATA(HEADER(bp), PACK(csize-asize, 1, 0));
+		SET_DATA(FOOTER(bp), PACK(csize-asize, 0, 0));
+	}else{
+		SET_DATA(HEADER(bp), PACK(csize, 0, 1));
+		SET_PALLOC(HEADER(RIGHT(bp)));
+	}
+}
+
+sf_block* remove_free_list(sf_block* bp){ //Parameter: pointer to location on sf_free_lists
+	sf_block* node = GET_NEXT(bp);
+	if(GET_NEXT(GET_NEXT(bp)) != bp){ // header + 2
+		SET_NEXT(bp, GET_NEXT(GET_NEXT(bp)));
+		SET_PREV(GET_NEXT(bp), bp);
+	}
+	else{ // header + 1
+		SET_NEXT(bp, bp);
+		SET_PREV(bp, bp);
+	}
+	return node;
+}
+
+sf_block* insert_free_list(sf_block* bp, sf_block* ins){
+	if(GET_NEXT(bp) == bp){ //only the header
+		SET_NEXT(bp, ins);
+		SET_PREV(bp, ins);
+		SET_NEXT(ins, bp);
+		SET_PREV(ins, bp);
+	}
+	else{
+		sf_block* node_b = GET_NEXT(bp);
+		SET_NEXT(bp, ins);
+		SET_NEXT(ins, node_b);
+		SET_PREV(node_b, ins);
+		SET_PREV(ins, bp);
+	}
+	return bp;
+}
+
+void sf_extend_heap(){
+
 }
 
 int sf_init(void){
