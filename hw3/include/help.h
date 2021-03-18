@@ -17,8 +17,6 @@
 /*Read and write a word/address at p */
 #define READ_DATA(p) (*(size_t *)(p)) //use size_t because 8 bytes
 #define WRITE_DATA(p, data) (*(size_t *)(p) = (data))
-// #define READ_ADDRESS(p) (*p)
-// #define WRITE_ADDRESS(p, address) (*p = address)
 #define SET_DATA(p, data) (*(sf_block *)p).header = (data)
 #define SET_PALLOC(p) (*(sf_block *)p).header = READ_DATA(p)|10
 
@@ -29,11 +27,13 @@
 
 /* Get address of Header and Footer */
 #define HEADER(p) ((char*)p - WSIZE)
-#define FOOTER(p) (((char*)(p) + GET_SIZE(HEADER((char *)(p)))) - DSIZE)
+#define FOOTER(p) (((char*)(p) + GET_SIZE(HEADER((p)))) - DSIZE)
+#define TO_PTR(p) ((char*)p + WSIZE)
 
-/* Heap -> gives pointers to header of adjacent blocks*/
-#define LEFT(p) (char*)p - GET_SIZE(HEADER((char *)p) - DSIZE) //goes to header of the one to the left (only for free blocks)
-#define RIGHT(p) (char*)p + GET_SIZE(HEADER((char *)p - WSIZE))
+/* Heap -> gives pointers to header of adjacent blocks *USE WITH HEADER/RETURN HEADER OF NEXT* */
+#define LEFT(p) (char*)p - GET_SIZE(p - WSIZE) //goes to header of the one to the left (only for free blocks)
+#define RIGHT(p) (char*)p + GET_SIZE((char *)p)
+// eg: sf_show_block((sf_block*)(RIGHT(HEADER(bp))));
 
 /* Links */
 #define SET_NEXT(p_source, ptr) (*(sf_block *)p_source).body.links.next = (sf_block *)ptr
@@ -45,7 +45,7 @@
 /* Functions */
 int sf_init(void);
 int sf_find_fit(size_t size);
-int sf_extend_heap(void);
+sf_block* sf_extend_heap(void);
 void sf_insert(sf_block* bp, size_t asize, int wilder_flag);
 sf_block* sf_coalesce(sf_block* bp);
 sf_block* remove_free_list(sf_block* bp);

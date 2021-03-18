@@ -20,7 +20,7 @@ void *sf_malloc(size_t size) {
 	if(sf_mem_start() == sf_mem_end()) // initates the heap
 		sf_init();
 
-	asize = ALIGN((size + DSIZE)); /* add header and footer */
+	asize = ALIGN((size + WSIZE)); /* add header and footer */
 	fl_index = sf_find_fit(asize);
 
 	for(int i = fl_index; i < 7; i++){ //checking the freelist except for wilderness block

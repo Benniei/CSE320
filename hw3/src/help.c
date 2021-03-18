@@ -37,6 +37,8 @@ sf_block* remove_free_list(sf_block* bp){ //Parameter: pointer to location on sf
 	sf_block* node = bp;
 	SET_NEXT(GET_PREV(bp), GET_NEXT(bp));
 	SET_PREV(GET_NEXT(bp), GET_PREV(bp));
+	SET_PREV(bp, NULL);
+	SET_NEXT(bp, NULL);
 	return node;
 }
 
@@ -57,21 +59,78 @@ sf_block* insert_free_list(sf_block* bp, sf_block* ins){
 	return bp;
 }
 
-sf_block* sf_coalesce(sf_block* bp){
-	return NULL;
+int check_wilderness(sf_block* bp){
+	if((GET_SIZE(RIGHT(bp)) == 0) && (GET_ALLOC(RIGHT(bp)) == 1))
+		return 1;
+	return 0;
 }
 
-int sf_extend_heap(void){
+sf_block* sf_coalesce(sf_block* bp){
+	size_t prev_alloc = GET_PREALLOC(HEADER(bp))>>1;
+	size_t next_alloc = GET_ALLOC(RIGHT(HEADER(bp)));
+	size_t size = GET_SIZE(HEADER(bp));
+	if(prev_alloc && next_alloc)
+		return bp;
+	else if(prev_alloc && !next_alloc){ // previous block allocated and next block is not
+		sf_block* node = remove_free_list((sf_block*)(RIGHT(HEADER(bp))));
+		size += GET_SIZE(node);
+		SET_DATA(HEADER(bp), PACK(size, 1, 0));
+		SET_DATA(FOOTER(TO_PTR(node)), PACK(size, 1, 0));
+		if(check_wilderness(bp)){
+			insert_free_list((sf_free_list_heads + 7), bp);
+		}
+		else{
+			int index = sf_find_fit(size);
+			insert_free_list((sf_free_list_heads + index), bp);
+		}
+	}
+	else if(!prev_alloc && next_alloc){
+		sf_block* node = remove_free_list((sf_block*)(LEFT(HEADER(bp))));
+		size += GET_SIZE(node);
+		SET_DATA(node, PACK(size, 1, 0));
+		SET_DATA((FOOTER(TO_PTR(node))), PACK(size, 1, 0));
+		bp = node;
+		if(check_wilderness(bp)){
+			insert_free_list((sf_free_list_heads + 7), bp);
+		}
+		else{
+			int index = sf_find_fit(size);
+			insert_free_list((sf_free_list_heads + index), bp);
+		}
+	}
+	else{
+		sf_block* node1 = remove_free_list((sf_block*)LEFT(HEADER(bp)));
+		sf_block* node2 = remove_free_list((sf_block*)RIGHT(HEADER(bp)));
+		size += GET_SIZE(node1) + GET_SIZE(node2);
+		SET_DATA(node1, PACK(size, 1, 0));
+		SET_DATA(FOOTER(TO_PTR(node2)), PACK(size, 1, 0));
+		bp = node1;
+		if(check_wilderness(bp)){
+			insert_free_list((sf_free_list_heads + 7), bp);
+		}
+		else{
+			int index = sf_find_fit(size);
+			insert_free_list((sf_free_list_heads + index), bp);
+		}
+	}
+	return bp;
+}
+
+sf_block* sf_extend_heap(void){
 	char* head;
 	if((head = sf_mem_grow()) == NULL){
 		sf_errno = ENOMEM;
-		return -1;
+		return NULL;
 	}
+
 	size_t prealloc = GET_PREALLOC(HEADER(head)) >> 1;
-	size_t size = PAGE_SZ - (2*WSIZE); // footer and header
-	SET_DATA(HEADER(head), PACK(size, prealloc, 0));
-	sf_coalesce((sf_block*) head);
-	return 0;
+	size_t size = PAGE_SZ; // footer and epilogue
+	SET_DATA(HEADER(head), PACK(size, prealloc, 0)); //need to add footer
+	SET_DATA(FOOTER(head), PACK(size, prealloc, 0));
+	/* Epilogue */
+	SET_DATA((sf_mem_end() - WSIZE), PACK(0, 0, 1));
+	sf_show_heap();
+	return sf_coalesce((sf_block*) head);;
 }
 
 int sf_init(void){
