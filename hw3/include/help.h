@@ -45,5 +45,6 @@
 int sf_init(void);
 int sf_find_fit(size_t size);
 sf_block* sf_extend_heap(void);
-sf_block* sf_insert(sf_block* bp, size_t asize);
-sf_block* sf_coalesce(sf_block* bp); //pass in the pointer
+sf_block* sf_insert(sf_block* bp, size_t asize); //pass in the header
+sf_block* sf_coalesce(sf_block* bp); //pass in the header
+sf_block* sf_change_to_free(sf_block* bp); //pass in the header

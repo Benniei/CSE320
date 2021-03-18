@@ -20,6 +20,14 @@ void sf_init_free_list(){
 	}
 }
 
+sf_block* sf_change_to_free(sf_block* bp){ //takes in the header
+	size_t size = GET_SIZE(bp);
+	size_t pall = GET_PREALLOC(bp) >> 1;
+	SET_DATA(bp, PACK(size, pall, 0));
+	SET_DATA(FOOTER(TO_PTR(bp)), PACK(size, pall, 0));
+	return bp;
+}
+
 sf_block* remove_free_list(sf_block* bp){ //Parameter: pointer to location on sf_free_lists
 	sf_block* node = bp;
 	SET_NEXT(GET_PREV(bp), GET_NEXT(bp));
@@ -51,8 +59,9 @@ sf_block* sf_insert(sf_block* bp, size_t asize){
 	remove_free_list(bp);
 	size_t csize = GET_SIZE(bp);
 	sf_block* node = bp;
+	size_t pall = GET_PREALLOC(bp) >> 1;
 	if((csize - asize) >= MIN_BLOCK_SIZE){
-		SET_DATA(bp, PACK(asize, 0, 1));
+		SET_DATA(bp, PACK(asize, pall, 1));
 		bp = (sf_block*)(RIGHT(bp));
 		SET_DATA(bp, PACK(csize-asize, 1, 0));
 		SET_DATA(FOOTER(TO_PTR(bp)), PACK(csize-asize, 1, 0));
