@@ -36,8 +36,12 @@ void *sf_malloc(size_t size) {
 		}
 	}
 	// taking from wilderness block
+	sf_block* extend;
 	if(GET_PREALLOC(sf_mem_end() - WSIZE)){
-		printf("mem is full");//make new page of memory and let the rest be handled by bottom
+		if((extend = sf_extend_heap()) == NULL){
+				return NULL;
+		}
+		//printf("mem is full");//make new page of memory and let the rest be handled by bottom
 	}
 
 	head = GET_NEXT((sf_free_list_heads + 7));
@@ -51,7 +55,6 @@ void *sf_malloc(size_t size) {
 	}
 	else{
 		while(asize > wilder_size){
-			sf_block* extend;
 			if((extend = sf_extend_heap()) == NULL){
 				return NULL;
 			}
