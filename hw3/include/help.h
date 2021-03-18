@@ -31,8 +31,8 @@
 #define TO_PTR(p) ((char*)p + WSIZE)
 
 /* Heap -> gives pointers to header of adjacent blocks *USE WITH HEADER/RETURN HEADER OF NEXT* */
-#define LEFT(p) (char*)p - GET_SIZE(p - WSIZE) //goes to header of the one to the left (only for free blocks)
-#define RIGHT(p) (char*)p + GET_SIZE((char *)p)
+#define LEFT(p) (char*)p - GET_SIZE(HEADER(p)) //goes to header of the one to the left (only for free blocks)
+#define RIGHT(p) (char*)p + GET_SIZE(p)
 // eg: sf_show_block((sf_block*)(RIGHT(HEADER(bp))));
 
 /* Links */
@@ -41,12 +41,9 @@
 #define GET_NEXT(p) (*(sf_block *)p).body.links.next
 #define GET_PREV(p) (*(sf_block *)p).body.links.prev
 
-
 /* Functions */
 int sf_init(void);
 int sf_find_fit(size_t size);
 sf_block* sf_extend_heap(void);
-void sf_insert(sf_block* bp, size_t asize, int wilder_flag);
-sf_block* sf_coalesce(sf_block* bp);
-sf_block* remove_free_list(sf_block* bp);
-sf_block* insert_free_list(sf_block* bp, sf_block* ins);
+sf_block* sf_insert(sf_block* bp, size_t asize);
+sf_block* sf_coalesce(sf_block* bp); //pass in the pointer

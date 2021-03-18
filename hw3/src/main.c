@@ -3,44 +3,53 @@
 #include "sfmm.h"
 
 int main(int argc, char const *argv[]) {
-	// printf("Show Blocks\n");
-	// sf_show_blocks();
-	// printf("Show Heap\n");
-	// sf_show_heap();
-	// printf("Show Free List\n");
-	// sf_show_free_lists();
-	// printf("Show Blocks\n");
-	// printf("Start Address:\n");
-	// printf("%p\n", sf_mem_start());
-	// printf("End Address:\n");
-	// printf("%p\n", sf_mem_end());
+	char * ptr1 = sf_malloc(1);
+    *(ptr1) = 'A';
+    printf("\n");
+    char * ptr2 = sf_malloc(1);
+    *(ptr2) = 'B';
+    printf("\n");
+    int * ptr3 = sf_malloc(2020 * sizeof(int));
+    *(ptr3 + 0) = 1;
+    *(ptr3 + 1) = 69;
+    *(ptr3 + 2) = 80;
+    *(ptr3 + 23) = 69;
 
-	// sf_init();
- //    printf("End Address:\n");
- //    printf("%p\n", sf_mem_end());
- //    sf_extend_heap();
- //    sf_show_heap();
+    //sf_show_heap();
+    printf("\n");
+    printf("\n");
+        printf("\n&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&\n");
+        printf("\n");printf("\n");
 
+    char *ptr4 = sf_malloc(8168);
+    *(ptr4) = 'Y';
 
-	// printf("End Address:\n");
-	// printf("%p\n", sf_mem_end());
-	// sf_show_heap();
-	// sf_block* head = (sf_free_list_heads + 7);
-	// sf_block* node = (sf_block*)TO_PTR(GET_NEXT(head));
-	// sf_show_block((sf_block*)HEADER(node));
-	// printf("\n");
-	// printf("node: %p\n", node);
-	// sf_coalesce(node);
-	return 0;
-
-    double* ptr = sf_malloc(sizeof(double));
     sf_show_heap();
+    printf("\n");
 
-    *ptr = 320320320e-320;
+	printf("\n");
+    printf("\n");
+        printf("\n&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&&\n");
+        printf("\n");printf("\n");
 
-    printf("%f\n", *ptr);
+    int * ptr5 = sf_malloc(9000);
+    if(ptr5 != NULL)
+    {
+        *(ptr5) = 'A';
+    }
 
-    sf_free(ptr);
+    sf_show_blocks();
+    printf("\n");
+
+    sf_show_free_lists();
+    printf("\n");
+    // sf_show_heap();
+
+    // *ptr = 320320320e-320;
+
+    // printf("%f\n", *ptr);
+
+    //sf_free(ptr);
 
     return EXIT_SUCCESS;
 }

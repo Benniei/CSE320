@@ -20,24 +20,51 @@ void *sf_malloc(size_t size) {
 	if(sf_mem_start() == sf_mem_end()) // initates the heap
 		sf_init();
 
-	asize = ALIGN((size + WSIZE)); /* add header and footer */
+	if(size + WSIZE <= 32)
+		asize = 32;
+	else
+		asize = ALIGN((size + WSIZE)); /* add header and footer */
+	//printf("asize: %ld\n", asize);
 	fl_index = sf_find_fit(asize);
-
+	//printf("fl_index: %d\n", fl_index);
+	sf_block* head;
 	for(int i = fl_index; i < 7; i++){ //checking the freelist except for wilderness block
-		sf_block* head = (sf_free_list_heads + i);
-		sf_block* pointer = (sf_free_list_heads + i);
-		if(GET_NEXT(pointer) != head){
-			// allocate the block calls remove/insert FL and insert
-			// sf_block* freed = remove_free_list(GET_NEXT(pointer));
+		head = (sf_free_list_heads + i);
+		if(GET_NEXT(head) != head){
+			head = sf_insert((sf_block *)GET_NEXT(head), asize);
+			return TO_PTR(head);
 		}
 	}
 	// taking from wilderness block
+	if(GET_PREALLOC(sf_mem_end() - WSIZE)){
+		printf("mem is full");//make new page of memory and let the rest be handled by bottom
+	}
+
+	head = GET_NEXT((sf_free_list_heads + 7));
+	size_t wilder_size = GET_SIZE(head);
+	//printf("wilder size: %ld\n", wilder_size);
+	//printf("asize: %ld\n", asize);
+
+	if(asize <= wilder_size){
+		head = sf_insert(head, asize);
+		printf("%p", head);
+	}
+	else{
+		while(asize > wilder_size){
+			sf_block* extend;
+			if((extend = sf_extend_heap()) == NULL){
+				return NULL;
+			}
+			wilder_size += PAGE_SZ;
+		}
+		head = sf_insert(head, asize);
+	}
 
 	/*
 	Check if fit_in wilderness block -> yes, then split or just take the whole wilderness
 	-> else extended the page and then check again
 	*/
-    return NULL;
+	return TO_PTR(head);
 }
 
 void sf_free(void *pp) {
