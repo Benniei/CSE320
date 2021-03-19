@@ -19,6 +19,7 @@
 #define WRITE_DATA(p, data) (*(size_t *)(p) = (data))
 #define SET_DATA(p, data) (*(sf_block *)p).header = (data)
 #define SET_PALLOC(p) (*(sf_block *)p).header = READ_DATA(p)|10
+#define SET_FREE(p) (*(sf_block *)p).header = READ_DATA(p)&(~10)
 
 /* Read size and get allocated fields */
 #define GET_SIZE(p) (READ_DATA(p) & ~0xF)

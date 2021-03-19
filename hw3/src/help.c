@@ -84,6 +84,9 @@ sf_block* sf_coalesce(sf_block* bp){ // pass in the pointer
 	size_t prev_alloc = GET_PREALLOC(bp)>>1;
 	size_t next_alloc = GET_ALLOC(RIGHT(bp));
 	size_t size = GET_SIZE(bp);
+	// printf("Prev_alloc: %ld\n", prev_alloc);
+	// printf("Next_alloc: %ld\n", next_alloc);
+	// printf("Size: %ld\n", size);
 	if(prev_alloc && next_alloc){
 		if(check_wilderness(bp)){
 			insert_free_list((sf_free_list_heads + 7), bp);
@@ -122,9 +125,10 @@ sf_block* sf_coalesce(sf_block* bp){ // pass in the pointer
 		}
 	}
 	else{
-		sf_block* node1 = remove_free_list((sf_block*)LEFT(bp));
-		sf_block* node2 = remove_free_list((sf_block*)RIGHT(bp));
+		sf_block* node1 = remove_free_list((sf_block*)(LEFT(bp)));
+		sf_block* node2 = remove_free_list((sf_block*)(RIGHT(bp)));
 		size += GET_SIZE(node1) + GET_SIZE(node2);
+		//printf("Size: %ld\n", size);
 		SET_DATA(node1, PACK(size, 1, 0));
 		SET_DATA(FOOTER(TO_PTR(node2)), PACK(size, 1, 0));
 		bp = node1;

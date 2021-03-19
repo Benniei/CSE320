@@ -92,7 +92,8 @@ void sf_free(void *pp) {
 	}
 	sf_block* node;
 	node = sf_change_to_free((sf_block*)HEADER(pp));
-	sf_coalesce(node);
+	node = sf_coalesce(node);
+	SET_FREE((RIGHT(node)));
     return;
 }
 
