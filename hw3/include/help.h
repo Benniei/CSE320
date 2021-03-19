@@ -45,6 +45,7 @@
 /* Functions */
 int sf_init(void);
 int sf_find_fit(size_t size);
+void validate_pointer(sf_block* pp);
 sf_block* sf_extend_heap(void);
 sf_block* sf_insert(sf_block* bp, size_t asize); //pass in the header
 sf_block* sf_coalesce(sf_block* bp); //pass in the header

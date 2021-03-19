@@ -20,6 +20,28 @@ void sf_init_free_list(){
 	}
 }
 
+void validate_pointer(sf_block* pp){
+	if(pp == NULL)
+		abort();
+	if((size_t)pp%16 != 0)
+		abort();
+	if((GET_SIZE(HEADER(pp)))%16 != 0)
+		abort();
+	if((GET_SIZE(HEADER(pp))) < 32)
+		abort();
+	if((GET_ALLOC(HEADER(pp))) == 0)
+		abort();
+	if(((sf_block*)(FOOTER(pp))) >= (sf_block*)sf_mem_end())
+		abort();
+	if(((sf_block*)(RIGHT(HEADER(pp)))) >= (sf_block*)sf_mem_end())
+		abort();
+	if((GET_PREALLOC(HEADER(pp))) == 0){
+		sf_block* prev_footer = (sf_block*)(HEADER(pp) - WSIZE);
+		if(GET_ALLOC(prev_footer) != 0)
+			abort();
+	}
+}
+
 sf_block* sf_change_to_free(sf_block* bp){ //takes in the header
 	size_t size = GET_SIZE(bp);
 	size_t pall = GET_PREALLOC(bp) >> 1;
