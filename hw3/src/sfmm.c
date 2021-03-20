@@ -23,16 +23,20 @@ void *sf_malloc(size_t size) {
 	if(size + WSIZE <= 32)
 		asize = 32;
 	else
-		asize = ALIGN((size + WSIZE)); /* add header and footer */
+		asize = ALIGN((size + WSIZE)); /* add header*/
 	//printf("asize: %ld\n", asize);
 	fl_index = sf_find_fit(asize);
 	//printf("fl_index: %d\n", fl_index);
 	sf_block* head;
 	for(int i = fl_index; i < 7; i++){ //checking the freelist except for wilderness block
 		head = (sf_free_list_heads + i);
-		if(GET_NEXT(head) != head){
-			head = sf_insert((sf_block *)GET_NEXT(head), asize);
-			return TO_PTR(head);
+		sf_block* ptr = GET_NEXT(head);
+		while(ptr != head){
+			if(GET_SIZE(ptr) > asize){
+				head = sf_insert((sf_block *)GET_NEXT(head), asize);
+				return TO_PTR(head);
+			}
+			ptr = GET_NEXT(ptr);
 		}
 	}
 	// taking from wilderness block
@@ -41,6 +45,7 @@ void *sf_malloc(size_t size) {
 		if((extend = sf_extend_heap()) == NULL){
 				return NULL;
 		}
+		//sf_show_blocks();
 		//printf("mem is full");//make new page of memory and let the rest be handled by bottom
 	}
 
@@ -49,10 +54,8 @@ void *sf_malloc(size_t size) {
 	//printf("wilder size: %ld\n", wilder_size);
 	//printf("asize: %ld\n", asize);
 
-	if(asize <= wilder_size){
+	if(asize <= wilder_size)
 		head = sf_insert(head, asize);
-		printf("%p", head);
-	}
 	else{
 		while(asize > wilder_size){
 			if((extend = sf_extend_heap()) == NULL){
@@ -75,12 +78,31 @@ void sf_free(void *pp) {
 	sf_block* node;
 	node = sf_change_to_free((sf_block*)HEADER(pp));
 	node = sf_coalesce(node);
-	SET_FREE((RIGHT(node)));
+	SET_FREE((RIGHT(node))); //sets the prealloc of the next block
     return;
 }
 
 void *sf_realloc(void *pp, size_t rsize) {
-    return NULL;
+	validate_pointer(pp);
+	size_t asize;
+	size_t psize = GET_SIZE(HEADER(pp));
+	if(rsize + WSIZE <= 32)
+		asize = 32;
+	else
+		asize = ALIGN((rsize + WSIZE)); /* add header*/
+	printf("asize: %ld\n", asize);
+	if(asize > psize){
+	//larger size
+		sf_block* ptr;
+		if((ptr = sf_malloc(rsize)) == NULL)
+			return NULL;
+		memcpy(ptr, pp, rsize);
+		sf_free(pp);
+		return ptr;
+	}
+	else
+		sf_split((sf_block*)(HEADER(pp)), asize);
+    return pp;
 }
 
 void *sf_memalign(size_t size, size_t align) {

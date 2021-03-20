@@ -20,6 +20,12 @@ void sf_init_free_list(){
 	}
 }
 
+int round_32(int num){
+	if(num%32 > 0)
+		return num + (32-num%32);
+	return num;
+}
+
 void validate_pointer(sf_block* pp){
 	if(pp == NULL)
 		abort();
@@ -76,6 +82,24 @@ sf_block* insert_free_list(sf_block* bp, sf_block* ins){
 	return bp;
 }
 
+sf_block* sf_split(sf_block* bp, size_t asize){
+	size_t csize = GET_SIZE(bp);
+	sf_block* node = bp;
+	size_t pall = GET_PREALLOC(bp) >> 1;
+	if(csize < asize)
+		return bp;
+	if((csize - asize) >= MIN_BLOCK_SIZE){
+		SET_DATA(bp, PACK(asize, pall, 1));
+		bp = (sf_block*)(RIGHT(bp));
+		SET_DATA(bp, PACK(csize-asize, 1, 0));
+		SET_DATA(FOOTER(TO_PTR(bp)), PACK(csize-asize, 1, 0));
+		SET_FREE((sf_block*)(RIGHT(bp)));
+		sf_coalesce(bp);
+		return node;
+	}else{
+		return bp;
+	}
+}
 
 sf_block* sf_insert(sf_block* bp, size_t asize){
 	remove_free_list(bp);
@@ -87,6 +111,7 @@ sf_block* sf_insert(sf_block* bp, size_t asize){
 		bp = (sf_block*)(RIGHT(bp));
 		SET_DATA(bp, PACK(csize-asize, 1, 0));
 		SET_DATA(FOOTER(TO_PTR(bp)), PACK(csize-asize, 1, 0));
+		SET_FREE((sf_block*)(RIGHT(bp)));
 		sf_coalesce(bp);
 		return node;
 	}else{
