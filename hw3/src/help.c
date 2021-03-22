@@ -115,7 +115,7 @@ sf_block* sf_insert(sf_block* bp, size_t asize){
 		sf_coalesce(bp);
 		return node;
 	}else{
-		SET_DATA(bp, PACK(csize, 0, 1));
+		SET_DATA(bp, PACK(csize, pall, 1));
 		SET_PALLOC((sf_block*)(RIGHT(bp)));
 		return bp;
 	}
@@ -252,5 +252,6 @@ int sf_find_fit(size_t size){
 	}
 	if(store == (1<<(counter - 1)))
 		counter--;
+	//printf("Indexz: %d\n", counter);
 	return counter;
 }

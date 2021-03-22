@@ -32,8 +32,8 @@ void *sf_malloc(size_t size) {
 		head = (sf_free_list_heads + i);
 		sf_block* ptr = GET_NEXT(head);
 		while(ptr != head){
-			if(GET_SIZE(ptr) > asize){
-				head = sf_insert((sf_block *)GET_NEXT(head), asize);
+			if(GET_SIZE(ptr) >= asize){
+				head = sf_insert((sf_block *)ptr, asize);
 				return TO_PTR(head);
 			}
 			ptr = GET_NEXT(ptr);
@@ -106,5 +106,39 @@ void *sf_realloc(void *pp, size_t rsize) {
 }
 
 void *sf_memalign(size_t size, size_t align) {
-    return NULL;
+	if(align < 32){
+		errno = EINVAL;
+		return NULL;
+	}
+	if(POWERTWO(align) == 0){
+		errno = EINVAL;
+		return NULL;
+	}
+	size_t nsize = size + align + MIN_BLOCK_SIZE;
+	size_t pad = align + MIN_BLOCK_SIZE;
+	sf_block* hp = sf_malloc(nsize);
+	nsize = GET_SIZE(HEADER(hp));
+	size_t excess = align - ((size_t)(hp) % align);
+	size_t palloc = GET_PREALLOC(HEADER(hp))>>1;
+	if(excess > 0 && excess < 32)
+		excess = excess + align;
+	/* cut the front */
+	if(excess > 0){
+		sf_block* node = (sf_block*)HEADER(hp);
+		SET_DATA(HEADER(hp), PACK(excess, palloc, 0));
+		SET_DATA(FOOTER(hp), PACK(excess, palloc, 0));
+		/* retain the middle */
+		hp = (sf_block*)(RIGHT(HEADER(hp)));
+		nsize = nsize - excess;
+		palloc = 0;
+		pad = pad - excess;
+		SET_DATA(hp, PACK(nsize, 0, 1));
+		sf_coalesce((sf_block*)(node));
+	}
+	/* cut the back */
+	SET_DATA(hp, PACK(nsize - pad, palloc, 1));
+	SET_DATA((RIGHT(hp)), PACK(pad, 1, 0));
+	SET_DATA(FOOTER(TO_PTR((RIGHT(hp)))), PACK(pad, 1, 0));
+	sf_coalesce((sf_block*)(RIGHT(hp)));
+    return TO_PTR(hp);
 }
