@@ -90,7 +90,7 @@ void *sf_realloc(void *pp, size_t rsize) {
 		asize = 32;
 	else
 		asize = ALIGN((rsize + WSIZE)); /* add header*/
-	printf("asize: %ld\n", asize);
+	//printf("asize: %ld\n", asize);
 	if(asize > psize){
 	//larger size
 		sf_block* ptr;
@@ -118,7 +118,11 @@ void *sf_memalign(size_t size, size_t align) {
 	size_t pad = align + MIN_BLOCK_SIZE;
 	sf_block* hp = sf_malloc(nsize);
 	nsize = GET_SIZE(HEADER(hp));
-	size_t excess = align - ((size_t)(hp) % align);
+	size_t excess;
+	if((size_t)(hp) % align == 0)
+		excess = 0;
+	else
+		excess = align - ((size_t)(hp) % align);
 	size_t palloc = GET_PREALLOC(HEADER(hp))>>1;
 	if(excess > 0 && excess < 32)
 		excess = excess + align;
@@ -134,11 +138,9 @@ void *sf_memalign(size_t size, size_t align) {
 		pad = pad - excess;
 		SET_DATA(hp, PACK(nsize, 0, 1));
 		sf_coalesce((sf_block*)(node));
+		hp = (sf_block*)TO_PTR(hp);
 	}
 	/* cut the back */
-	SET_DATA(hp, PACK(nsize - pad, palloc, 1));
-	SET_DATA((RIGHT(hp)), PACK(pad, 1, 0));
-	SET_DATA(FOOTER(TO_PTR((RIGHT(hp)))), PACK(pad, 1, 0));
-	sf_coalesce((sf_block*)(RIGHT(hp)));
+	sf_realloc(hp, (nsize - pad - WSIZE));
     return TO_PTR(hp);
 }
