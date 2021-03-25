@@ -180,3 +180,72 @@ Test(sfmm_basecode_suite, realloc_smaller_block_free_block, .timeout = TEST_TIME
 //STUDENT UNIT TESTS SHOULD BE WRITTEN BELOW
 //DO NOT DELETE THESE COMMENTS
 //############################################
+
+Test(sf_basecode_suite, memalign_aligned, .timeout = TEST_TIMEOUT){
+		size_t sz_x = 50, ali_x = 64;
+	void *x = sf_memalign(sz_x, ali_x);
+
+	cr_assert_not_null(x, "x is NULL!");
+	cr_assert( ((size_t)x)%ali_x == 0, "The pointer is not aligned!");
+
+	assert_free_block_count(0, 1);
+	assert_free_block_count(8080, 1);
+
+	cr_assert(sf_errno == 0, "sf_errno is not zero!");
+}
+
+Test(sf_basecode_suite, memalign_not_aligned, .timeout = TEST_TIMEOUT){
+		size_t sz_x = 50, ali_x = 64;
+		size_t sz_y = 40;
+	void *y = sf_malloc(sz_y);
+	void *x = sf_memalign(sz_x, ali_x);
+
+	cr_assert_not_null(x, "x is NULL!");
+	cr_assert_not_null(y, "y is NULL!");
+	cr_assert( ((size_t)x)%ali_x == 0, "The pointer is not aligned!");
+
+	assert_free_block_count(0, 2);
+	assert_free_block_count(80, 1);
+	assert_free_block_count(7936, 1);
+
+	cr_assert(sf_errno == 0, "sf_errno is not zero!");
+}
+
+Test(sf_basecode_suite, malloc_at_epilogue, .timeout = TEST_TIMEOUT){
+		size_t sz_x = 8144-8;
+	void *x = sf_malloc(sz_x);
+
+	cr_assert_not_null(x, "x is NULL!");
+
+	sf_block *bp = (sf_block *)((char *)x - 8);
+	cr_assert(bp->header & 0x2, "Preallocated bit is not set!");
+
+	assert_free_block_count(0, 0);
+
+	cr_assert(sf_errno == 0, "sf_errno is not zero!");
+}
+
+Test(sf_basecode_suite, free_freed_block, .signal = SIGABRT){
+		size_t sz_x = 8144-8;
+	void *x = sf_malloc(sz_x);
+	sf_free(x);
+
+	cr_assert_not_null(x, "x is NULL!");
+
+	sf_free(x);
+
+	cr_assert(sf_errno == 0, "sf_errno is not zero!");
+
+}
+
+Test(sf_basecode_suite, free_epilogue, .signal = SIGABRT){
+	size_t sz_x = 8144-8;
+	void *x = sf_malloc(sz_x);
+
+	cr_assert_not_null(x, "x is NULL!");
+
+	sf_free(sf_mem_end());
+
+	cr_assert(sf_errno == 0, "sf_errno is not zero!");
+
+}

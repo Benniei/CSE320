@@ -142,5 +142,5 @@ void *sf_memalign(size_t size, size_t align) {
 	}
 	/* cut the back */
 	sf_realloc(hp, (nsize - pad - WSIZE));
-    return TO_PTR(hp);
+    return hp;
 }
