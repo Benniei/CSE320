@@ -48,7 +48,7 @@ void validate_pointer_free(sf_block* pp){
 	}
 }
 
-int validate_pointer_free_realloc(sf_block* pp){
+int validate_pointer_realloc(sf_block* pp){
 	if(pp == NULL){
 		return 1;
 	}

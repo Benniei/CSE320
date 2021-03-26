@@ -83,7 +83,7 @@ void sf_free(void *pp) {
 }
 
 void *sf_realloc(void *pp, size_t rsize) {
-	if(validate_pointer_realloc(pp) == 1){
+	if( validate_pointer_realloc(pp) == 1){
 		sf_errno = EINVAL;
 		return NULL;
 	}
