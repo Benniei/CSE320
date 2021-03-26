@@ -100,7 +100,7 @@ void *sf_realloc(void *pp, size_t rsize) {
 		sf_block* ptr;
 		if((ptr = sf_malloc(rsize)) == NULL)
 			return NULL;
-		memcpy(ptr, pp, psize);
+		memcpy(ptr, pp, psize - WSIZE);
 		sf_free(pp);
 		return ptr;
 	}
