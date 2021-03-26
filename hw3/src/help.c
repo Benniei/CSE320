@@ -26,7 +26,7 @@ int round_32(int num){
 	return num;
 }
 
-void validate_pointer(sf_block* pp){
+void validate_pointer_free(sf_block* pp){
 	if(pp == NULL)
 		abort();
 	if((size_t)pp%16 != 0)
@@ -47,6 +47,38 @@ void validate_pointer(sf_block* pp){
 			abort();
 	}
 }
+
+int validate_pointer_realloc(sf_block* pp){
+	if(pp == NULL){
+		return 1;
+	}
+	if((size_t)pp%16 != 0){
+		return 1;
+	}
+	if((GET_SIZE(HEADER(pp)))%16 != 0){
+		return 1;
+	}
+	if((GET_SIZE(HEADER(pp))) < 32){
+		return 1;
+	}
+	if((GET_ALLOC(HEADER(pp))) == 0){
+		return 1;
+	}
+	if(((sf_block*)(FOOTER(pp))) >= (sf_block*)sf_mem_end()){
+		return 1;
+	}
+	if(((sf_block*)(RIGHT(HEADER(pp)))) >= (sf_block*)sf_mem_end()){
+		return 1;
+	}
+	if((GET_PREALLOC(HEADER(pp))) == 0){
+		sf_block* prev_footer = (sf_block*)(HEADER(pp) - WSIZE);
+		if(GET_ALLOC(prev_footer) != 0){
+			return 1;
+		}
+	}
+	return 0;
+}
+
 
 sf_block* sf_change_to_free(sf_block* bp){ //takes in the header
 	size_t size = GET_SIZE(bp);
