@@ -74,7 +74,7 @@ void *sf_malloc(size_t size) {
 }
 
 void sf_free(void *pp) {
-	validate_pointer(pp);
+	validate_pointer_free(pp);
 	sf_block* node;
 	node = sf_change_to_free((sf_block*)HEADER(pp));
 	node = sf_coalesce(node);
@@ -83,7 +83,10 @@ void sf_free(void *pp) {
 }
 
 void *sf_realloc(void *pp, size_t rsize) {
-	validate_pointer(pp);
+	if(validate_pointer_realloc(pp) == 1){
+		sf_errno = EINVAL;
+		return NULL;
+	}
 	size_t asize;
 	size_t psize = GET_SIZE(HEADER(pp));
 	if(rsize == 0){
