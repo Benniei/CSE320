@@ -86,6 +86,10 @@ void *sf_realloc(void *pp, size_t rsize) {
 	validate_pointer(pp);
 	size_t asize;
 	size_t psize = GET_SIZE(HEADER(pp));
+	if(rsize == 0){
+		sf_free(pp);
+		return NULL;
+	}
 	if(rsize + WSIZE <= 32)
 		asize = 32;
 	else
@@ -96,7 +100,7 @@ void *sf_realloc(void *pp, size_t rsize) {
 		sf_block* ptr;
 		if((ptr = sf_malloc(rsize)) == NULL)
 			return NULL;
-		memcpy(ptr, pp, rsize);
+		memcpy(ptr, pp, psize);
 		sf_free(pp);
 		return ptr;
 	}
