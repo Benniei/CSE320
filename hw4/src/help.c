@@ -38,6 +38,10 @@ void add_printer(char* name, char* filetp){
 	global_printerct++;
 }
 
+void add_job(char* file_name, FILE_TYPE* file_type){
+
+}
+
 void free_names(void){
 	for(int i = 0; i < global_printerct; i++)
 		free(printers[i].name);

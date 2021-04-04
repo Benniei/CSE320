@@ -6,7 +6,7 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <string.h>
-
+#include <time.h>
 
 #include "imprimer.h"
 #include "conversions.h"
@@ -80,7 +80,7 @@ int run_cli(FILE *in, FILE *out)
 
         }
         /* Confiruration Commands */
-        else if(strcmp(token, "printer") == 0){
+        else if(strcmp(token, "printer") == 0){ // DONE
             if(args_counter != 2){
                 printf("Wrong number of args(given: %d, required: %d) for CLI command \'printer\'\n", args_counter, 2);
                 sf_cmd_error("arg count");
@@ -91,9 +91,9 @@ int run_cli(FILE *in, FILE *out)
                 printer_name = strtok(NULL, " ");
                 file_type = strtok(NULL, " ");
                 // printf("printer: %s, %s\n", printer_name, file_type);
-                if(global_printerct >= 32){
+                if(global_printerct >= MAX_PRINTERS){
                     printf("The printer list is full\n");
-                    sf_cmd_error("printer list full");
+                    sf_cmd_error("printer (list full)");
                     goto end_free;
                 }
                 if(find_type(file_type) == NULL){
@@ -117,7 +117,7 @@ int run_cli(FILE *in, FILE *out)
                 sf_cmd_ok();
             }
         }
-        else if(strcmp(token, "conversion") == 0){
+        else if(strcmp(token, "conversion") == 0){ // DONE
             if(args_counter < 3){
                 printf("Wrong number of args(given: %d, required: %d) for CLI command \'conversion\'\n", args_counter, 3);
                 sf_cmd_error("arg count");
@@ -154,7 +154,7 @@ int run_cli(FILE *in, FILE *out)
             }
         }
         /* Informational Commands */
-        else if(strcmp(token, "printers") == 0){
+        else if(strcmp(token, "printers") == 0){ // DONE
             if(args_counter > 0){
                 printf("Wrong number of args(given: %d, required: %d) for CLI command \'printers\'\n", args_counter, 0);
                 sf_cmd_error("arg count");
@@ -175,16 +175,28 @@ int run_cli(FILE *in, FILE *out)
         }
         /* Spooling commands */
         else if(strcmp(token, "print") == 0){ //check again
-            if(args_counter != 2){
+            if(args_counter < 1){
                 printf("Wrong number of args(given: %d, required: %d) for CLI command \'print\'\n", args_counter, 1);
                 sf_cmd_error("arg count");
             }
             else{
                 char* file_name;
-                char* printer;
+                // char* printer;
                 file_name = strtok(NULL, " ");
-                printer = strtok(NULL, " ");
-                printf("print: %s, %s\n", file_name, printer);
+                FILE_TYPE * file_type = infer_file_type(file_name);
+                if(global_jobfill >= MAX_JOBS){
+                    printf("The jobs list is full\n");
+                    sf_cmd_error("print (list full)");
+                    goto end_free;
+                }
+                if(file_type == NULL){
+                    printf("Unable to infer file type\n");
+                    sf_cmd_error("print (Unknown File Type)");
+                    goto end_free;
+                }
+                // printer = strtok(NULL, " ");
+                // printf("print: %s, %s\n", file_name, printer);
+
             }
         }
         else if(strcmp(token, "cancel") == 0){
