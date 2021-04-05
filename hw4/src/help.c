@@ -34,13 +34,18 @@ void add_printer(char* name, char* filetp){
 	global_printerct++;
 }
 
-int add_job(char* file_name, FILE_TYPE* file_type){
+int add_job(char* file_name, FILE_TYPE* file_type, char* start_time){
 	int position = find_job_empty();
+	jobs[position].used_entry = 1;
 	jobs[position].id = position;
 	jobs[position].type = file_type;
 	jobs[position].status = JOB_CREATED;
+	jobs[position].create_time = start_time;
 	jobs[position].eligible = -1;
 	jobs[position].file_name = file_name;
+	if(global_jobfill == global_jobptr)
+		global_jobptr++;
+	global_jobfill++;
 	return position;
 }
 

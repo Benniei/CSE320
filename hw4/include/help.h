@@ -23,10 +23,11 @@ typedef struct job {
 	int id;
 	FILE_TYPE* type;
 	JOB_STATUS status;
+	char* create_time;
 	int eligible;
 	char* file_name;
 	int num_eligible;
-	PRINTER eligible_printers[MAX_PRINTERS];
+	PRINTER* eligible_printers[MAX_PRINTERS];
 }JOB;
 
 JOB jobs[MAX_JOBS];
@@ -38,7 +39,7 @@ int num_args(char* command); /* returns the number of arguments */
 
 void add_printer(char* name, char* filetp);
 
-int add_job(char* file_name, FILE_TYPE* file_type);
+int add_job(char* file_name, FILE_TYPE* file_type, char* start_time);
 
 int find_job_empty();
 
