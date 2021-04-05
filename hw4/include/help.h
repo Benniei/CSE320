@@ -19,20 +19,29 @@ int global_printerct;
 
 /* Job Struct */
 typedef struct job {
+	char used_entry;
 	int id;
 	FILE_TYPE* type;
 	JOB_STATUS status;
 	int eligible;
 	char* file_name;
+	int num_eligible;
+	PRINTER eligible_printers[MAX_PRINTERS];
 }JOB;
 
 JOB jobs[MAX_JOBS];
-int global_jobptr;
-int global_jobfill;
+int global_jobptr; // pointer for end of array
+int global_jobfill; // how many jobs are filled (always <= jobptr)
 
 /* Functions */
 int num_args(char* command); /* returns the number of arguments */
 
 void add_printer(char* name, char* filetp);
+
+int add_job(char* file_name, FILE_TYPE* file_type);
+
+int find_job_empty();
+
+int find_printer(char* name);
 
 void free_names(void);

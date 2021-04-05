@@ -30,7 +30,7 @@ int run_cli(FILE *in, FILE *out)
             if(line_size <= 0){
                 // printf("\n");
                 free(line_buf);
-                return 0;
+                return -1;
             }
             command = line_buf;
         }
@@ -63,7 +63,7 @@ int run_cli(FILE *in, FILE *out)
                 free_names();
                 sf_cmd_ok();
                 free(command);
-                return 1;
+                return -1;
             }
         }
         else if(strcmp(token, "type") == 0){ // DONE
@@ -174,14 +174,14 @@ int run_cli(FILE *in, FILE *out)
             else{}
         }
         /* Spooling commands */
-        else if(strcmp(token, "print") == 0){ //check again
+        else if(strcmp(token, "print") == 0){
             if(args_counter < 1){
                 printf("Wrong number of args(given: %d, required: %d) for CLI command \'print\'\n", args_counter, 1);
                 sf_cmd_error("arg count");
             }
             else{
                 char* file_name;
-                // char* printer;
+                char* printer;
                 file_name = strtok(NULL, " ");
                 FILE_TYPE * file_type = infer_file_type(file_name);
                 if(global_jobfill >= MAX_JOBS){
@@ -194,9 +194,30 @@ int run_cli(FILE *in, FILE *out)
                     sf_cmd_error("print (Unknown File Type)");
                     goto end_free;
                 }
-                // printer = strtok(NULL, " ");
-                // printf("print: %s, %s\n", file_name, printer);
+                int pos = add_job(file_name, file_type);
 
+                int counter = 0;
+                printer = strtok(NULL, " ");
+                while(printer != NULL){
+                    int printer_pos = find_printer(printer);
+                    if(printer_pos == -1){
+                        printf("Printer \'%s\' not found\n", printer);
+                        sf_cmd_error("print (printer not found)");
+                        goto end_free;
+                    }
+                    jobs[pos].eligible_printers[counter++] = printers[printer_pos]; //findprinter
+                    printer = strtok(NULL, " ");
+                }
+                jobs[pos].num_eligible = counter;
+
+                //time
+                time_t t;
+                time(&t);
+                // printf("\n current time is : %s",ctime(&t));
+                sf_job_created(pos, file_name, file_type->name);
+                printf("JOB[%d]: type=%s, creation(%s), status(%s)=%s, eligible=%x, file=%s", pos, file_type->name, ctime(&t),
+                    ctime(&t), job_status_names[jobs[pos].status], jobs[pos].eligible, jobs[pos].file_name);
+                sf_cmd_ok();
             }
         }
         else if(strcmp(token, "cancel") == 0){
