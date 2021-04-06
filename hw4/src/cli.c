@@ -272,7 +272,17 @@ int run_cli(FILE *in, FILE *out)
             else{
                 char* printer_name;
                 printer_name = strtok(NULL, " ");
-                printf("disable: %s\n", printer_name);
+                // printf("disable: %s\n", printer_name);
+                int pos = find_printer(printer_name);
+                if(pos == -1){
+                    printf("Printer \'%s\' not found\n", printer_name);
+                    sf_cmd_error("disable (printer not found)");
+                    goto end_free;
+                }
+                printers[pos].status = PRINTER_DISABLED;
+                printf("PRINTER: id=%d, name=%s, type=%s, status=%s\n", printers[pos].id, printers[pos].name, printers[pos].type->name, printer_status_names[printers[pos].status]);
+                sf_printer_status(printer_name, printers[pos].status);
+                sf_cmd_ok();
             }
         }
         else if(strcmp(token, "enable") == 0){
@@ -283,7 +293,17 @@ int run_cli(FILE *in, FILE *out)
             else{
                 char* printer_name;
                 printer_name = strtok(NULL, " ");
-                printf("disable: %s\n", printer_name);
+                int pos = find_printer(printer_name);
+                // printf("disable: %s\n", printer_name);
+                if(pos == -1){
+                    printf("Printer \'%s\' not found\n", printer_name);
+                    sf_cmd_error("enable (printer not found)");
+                    goto end_free;
+                }
+                printers[pos].status = PRINTER_IDLE;
+                printf("PRINTER: id=%d, name=%s, type=%s, status=%s\n", printers[pos].id, printers[pos].name, printers[pos].type->name, printer_status_names[printers[pos].status]);
+                sf_printer_status(printer_name, printers[pos].status);
+                sf_cmd_ok();
             }
         }
         /* Unrecognized Command */
