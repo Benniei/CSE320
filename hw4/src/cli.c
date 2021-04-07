@@ -20,19 +20,19 @@ int run_cli(FILE *in, FILE *out)
     int args_counter;
     while(1){
     	char* command;
-        char* line_buf = NULL;
-        size_t line_buf_size = 0;
-        ssize_t line_size = 0;
+        char line[256];
         if(in == stdin)
             command = sf_readline("imp> ");
         else{
-            line_size = getline(&line_buf, &line_buf_size, in);
-            if(line_size <= 0){
-                // printf("\n");
-                free(line_buf);
-                return -1;
+            if(fgets(line, sizeof(line), in) != NULL){
+                //fprintf(stdout, "line: %s\n", line);
+                command = strtok(line, "\n");
+                command = line;
             }
-            command = line_buf;
+            else{
+                printf("\n");
+                return 0;
+            }
         }
 
     	char* token;
@@ -46,29 +46,30 @@ int run_cli(FILE *in, FILE *out)
         /* Miscellaneous commands  */
         if(strcmp(token, "help") == 0){ // DONE
             if(args_counter > 0){
-                printf("Wrong number of args(given: %d, required: %d) for CLI command \'help\'\n", args_counter, 0);
+                fprintf(out,"Wrong number of args(given: %d, required: %d) for CLI command \'help\'\n", args_counter, 0);
                 sf_cmd_error("arg count");
             }
             else{
-                printf("Commands are: help quit type printer conversion printers jobs print cancel disable enable pause resume\n");
+                fprintf(out,"Commands are: help quit type printer conversion printers jobs print cancel disable enable pause resume\n");
                 sf_cmd_ok();
             }
         }
         else if(strcmp(token, "quit") == 0){ // DONE
             if(args_counter > 0){
-                printf("Wrong number of args(given: %d, required: %d) for CLI command \'quit\'\n", args_counter, 0);
+                fprintf(out,"Wrong number of args(given: %d, required: %d) for CLI command \'quit\'\n", args_counter, 0);
                 sf_cmd_error("arg count");
             }
             else{
                 free_names();
                 sf_cmd_ok();
-                free(command);
+                if(in == stdin || in == NULL)
+                    free(command);
                 return -1;
             }
         }
         else if(strcmp(token, "type") == 0){ // DONE
             if(args_counter != 1){
-                printf("Wrong number of args(given: %d, required: %d) for CLI command \'type\'\n", args_counter, 1);
+                fprintf(out,"Wrong number of args(given: %d, required: %d) for CLI command \'type\'\n", args_counter, 1);
                 sf_cmd_error("arg count");
             }
             else{
@@ -82,7 +83,7 @@ int run_cli(FILE *in, FILE *out)
         /* Configuration Commands */
         else if(strcmp(token, "printer") == 0){ // DONE
             if(args_counter != 2){
-                printf("Wrong number of args(given: %d, required: %d) for CLI command \'printer\'\n", args_counter, 2);
+                fprintf(out,"Wrong number of args(given: %d, required: %d) for CLI command \'printer\'\n", args_counter, 2);
                 sf_cmd_error("arg count");
             }
             else{
@@ -92,18 +93,18 @@ int run_cli(FILE *in, FILE *out)
                 file_type = strtok(NULL, " ");
                 // printf("printer: %s, %s\n", printer_name, file_type);
                 if(global_printerct >= MAX_PRINTERS){
-                    printf("The printer list is full\n");
+                    fprintf(out,"The printer list is full\n");
                     sf_cmd_error("printer (list full)");
                     goto end_free;
                 }
                 if(find_type(file_type) == NULL){
-                    printf("Unknown file type: %s\n", file_type);
+                    fprintf(out,"Unknown file type: %s\n", file_type);
                     sf_cmd_error("printer (Unknown File Type)");
                     goto end_free;
                 }
                 for(int i = 0; i < global_printerct; i++){
                     if(strcmp(printers[i].name,printer_name) == 0){
-                        printf("Printer name \'%s\' not unique\n", printer_name);
+                        fprintf(out,"Printer name \'%s\' not unique\n", printer_name);
                         sf_cmd_error("printer (name not unique)");
                         goto end_free;
                     }
@@ -113,23 +114,23 @@ int run_cli(FILE *in, FILE *out)
                 strcpy(pt_name, printer_name);
                 add_printer(pt_name, file_type);
                 sf_printer_defined(pt_name, file_type);
-                printf("PRINTER: id=%d, name=%s, type=%s, status=%s\n", printers[pos].id, printers[pos].name, printers[pos].type->name, printer_status_names[printers[pos].status]);
+                fprintf(out,"PRINTER: id=%d, name=%s, type=%s, status=%s\n", printers[pos].id, printers[pos].name, printers[pos].type->name, printer_status_names[printers[pos].status]);
                 sf_cmd_ok();
             }
         }
         else if(strcmp(token, "conversion") == 0){ // DONE
             if(args_counter < 3){
-                printf("Wrong number of args(given: %d, required: %d) for CLI command \'conversion\'\n", args_counter, 3);
+                fprintf(out,"Wrong number of args(given: %d, required: %d) for CLI command \'conversion\'\n", args_counter, 3);
                 sf_cmd_error("arg count");
             }
             else{
                 char* file_type1;
                 char* file_type2;
-                char* conversion_pgm[args_counter - 2];
+                char* conversion_pgm[args_counter - 1];
                 file_type1 = strtok(NULL, " ");
 
                 if(find_type(file_type1) == NULL){
-                    printf("Unknown file type: %s\n", file_type1);
+                    fprintf(out,"Unknown file type: %s\n", file_type1);
                     sf_cmd_error("conversion (Unknown File Type)");
                     goto end_free;
                 }
@@ -137,7 +138,7 @@ int run_cli(FILE *in, FILE *out)
                 file_type2 = strtok(NULL, " ");
 
                 if(find_type(file_type1) == NULL){
-                    printf("Unknown file type: %s\n", file_type1);
+                    fprintf(out,"Unknown file type: %s\n", file_type1);
                     sf_cmd_error("conversion (Unknown File Type)");
                     goto end_free;
                 }
@@ -145,36 +146,40 @@ int run_cli(FILE *in, FILE *out)
                 int i = 0;
                 token = strtok(NULL, " ");
                 while(token != NULL){
+
                     conversion_pgm[i] = token;
                     token = strtok(NULL, " ");
                     i++;
                 }
-                // printf("conversion: %s, %s,%s\n", file_type1, file_type2, (command_cpy + conv_buf));
+                conversion_pgm[i] = NULL;
+
+                //printf("conversion: %s, %s, %s..\n", file_type1, file_type2, *conversion_pgm);
                 define_conversion(file_type1, file_type2, conversion_pgm);
+                sf_cmd_ok();
             }
         }
         /* Informational Commands */
         else if(strcmp(token, "printers") == 0){ // DONE
             if(args_counter > 0){
-                printf("Wrong number of args(given: %d, required: %d) for CLI command \'printers\'\n", args_counter, 0);
+                fprintf(out,"Wrong number of args(given: %d, required: %d) for CLI command \'printers\'\n", args_counter, 0);
                 sf_cmd_error("arg count");
             }
             else{
                 for(int i = 0; i < global_printerct; i++){
-                    printf("PRINTER: id=%d, name=%s, type=%s, status=%s\n", printers[i].id, printers[i].name, printers[i].type->name, printer_status_names[printers[i].status]);
+                    fprintf(out,"PRINTER: id=%d, name=%s, type=%s, status=%s\n", printers[i].id, printers[i].name, printers[i].type->name, printer_status_names[printers[i].status]);
                 }
                 sf_cmd_ok();
             }
         }
         else if(strcmp(token, "jobs") == 0){
             if(args_counter > 0){
-                printf("Wrong number of args(given: %d, required: %d) for CLI command \'jobs\'\n", args_counter, 0);
+                fprintf(out,"Wrong number of args(given: %d, required: %d) for CLI command \'jobs\'\n", args_counter, 0);
                 sf_cmd_error("arg count");
             }
             else{
                 for(int i = 0; i < global_jobptr; i++){
                     if(jobs[i].used_entry == 1){
-                        printf("JOB[%d]: type=%s, creation(%.19s), status(%.19s)=%s, eligible=%x, file=%s\n", i, jobs[i].type->name, jobs[i].create_time,
+                        fprintf(out,"JOB[%d]: type=%s, creation(%.19s), status(%.19s)=%s, eligible=%x, file=%s\n", i, jobs[i].type->name, jobs[i].create_time,
                             jobs[i].create_time, job_status_names[jobs[i].status], jobs[i].eligible, jobs[i].file_name);
                     }
                 }
@@ -184,7 +189,7 @@ int run_cli(FILE *in, FILE *out)
         /* Spooling commands */
         else if(strcmp(token, "print") == 0){
             if(args_counter < 1){
-                printf("Wrong number of args(given: %d, required: %d) for CLI command \'print\'\n", args_counter, 1);
+                fprintf(out,"Wrong number of args(given: %d, required: %d) for CLI command \'print\'\n", args_counter, 1);
                 sf_cmd_error("arg count");
             }
             else{
@@ -193,12 +198,12 @@ int run_cli(FILE *in, FILE *out)
                 file_name = strtok(NULL, " ");
                 FILE_TYPE * file_type = infer_file_type(file_name);
                 if(global_jobfill >= MAX_JOBS){
-                    printf("The jobs list is full\n");
+                    fprintf(out,"The jobs list is full\n");
                     sf_cmd_error("print (list full)");
                     goto end_free;
                 }
                 if(file_type == NULL){
-                    printf("Unable to infer file type\n");
+                    fprintf(out,"Unable to infer file type\n");
                     sf_cmd_error("print (Unknown File Type)");
                     goto end_free;
                 }
@@ -212,7 +217,7 @@ int run_cli(FILE *in, FILE *out)
                 while(printer != NULL){
                     int printer_pos = find_printer(printer);
                     if(printer_pos == -1){
-                        printf("Printer \'%s\' not found\n", printer);
+                        fprintf(out,"Printer \'%s\' not found\n", printer);
                         sf_cmd_error("print (printer not found)");
                         goto end_free;
                     }
@@ -232,7 +237,7 @@ int run_cli(FILE *in, FILE *out)
         }
         else if(strcmp(token, "cancel") == 0){
             if(args_counter != 1){
-                printf("Wrong number of args(given: %d, required: %d) for CLI command \'cancel\'\n", args_counter, 1);
+                fprintf(out,"Wrong number of args(given: %d, required: %d) for CLI command \'cancel\'\n", args_counter, 1);
                 sf_cmd_error("arg count");
             }
             else{
@@ -243,7 +248,7 @@ int run_cli(FILE *in, FILE *out)
         }
         else if(strcmp(token, "pause") == 0){
             if(args_counter != 1){
-                printf("Wrong number of args(given: %d, required: %d) for CLI command \'pause\'\n", args_counter, 1);
+                fprintf(out,"Wrong number of args(given: %d, required: %d) for CLI command \'pause\'\n", args_counter, 1);
                 sf_cmd_error("arg count");
             }
             else{
@@ -255,7 +260,7 @@ int run_cli(FILE *in, FILE *out)
         }
         else if(strcmp(token, "resume") == 0){
             if(args_counter != 1){
-                printf("Wrong number of args(given: %d, required: %d) for CLI command \'resume\'\n", args_counter, 1);
+                fprintf(out,"Wrong number of args(given: %d, required: %d) for CLI command \'resume\'\n", args_counter, 1);
                 sf_cmd_error("arg count");
             }
             else{
@@ -266,7 +271,7 @@ int run_cli(FILE *in, FILE *out)
         }
         else if(strcmp(token, "disable") == 0){
             if(args_counter != 1){
-                printf("Wrong number of args(given: %d, required: %d) for CLI command \'disable\'\n", args_counter, 1);
+                fprintf(out,"Wrong number of args(given: %d, required: %d) for CLI command \'disable\'\n", args_counter, 1);
                 sf_cmd_error("arg count");
             }
             else{
@@ -275,19 +280,19 @@ int run_cli(FILE *in, FILE *out)
                 // printf("disable: %s\n", printer_name);
                 int pos = find_printer(printer_name);
                 if(pos == -1){
-                    printf("Printer \'%s\' not found\n", printer_name);
+                    fprintf(out,"Printer \'%s\' not found\n", printer_name);
                     sf_cmd_error("disable (printer not found)");
                     goto end_free;
                 }
                 printers[pos].status = PRINTER_DISABLED;
-                printf("PRINTER: id=%d, name=%s, type=%s, status=%s\n", printers[pos].id, printers[pos].name, printers[pos].type->name, printer_status_names[printers[pos].status]);
+                fprintf(out,"PRINTER: id=%d, name=%s, type=%s, status=%s\n", printers[pos].id, printers[pos].name, printers[pos].type->name, printer_status_names[printers[pos].status]);
                 sf_printer_status(printer_name, printers[pos].status);
                 sf_cmd_ok();
             }
         }
         else if(strcmp(token, "enable") == 0){
             if(args_counter != 1){
-                printf("Wrong number of args(given: %d, required: %d) for CLI command \'disable\'\n", args_counter, 1);
+                fprintf(out, "Wrong number of args(given: %d, required: %d) for CLI command \'disable\'\n", args_counter, 1);
                 sf_cmd_error("arg count");
             }
             else{
@@ -296,23 +301,24 @@ int run_cli(FILE *in, FILE *out)
                 int pos = find_printer(printer_name);
                 // printf("disable: %s\n", printer_name);
                 if(pos == -1){
-                    printf("Printer \'%s\' not found\n", printer_name);
+                    fprintf(out,"Printer \'%s\' not found\n", printer_name);
                     sf_cmd_error("enable (printer not found)");
                     goto end_free;
                 }
                 printers[pos].status = PRINTER_IDLE;
-                printf("PRINTER: id=%d, name=%s, type=%s, status=%s\n", printers[pos].id, printers[pos].name, printers[pos].type->name, printer_status_names[printers[pos].status]);
+                fprintf(out,"PRINTER: id=%d, name=%s, type=%s, status=%s\n", printers[pos].id, printers[pos].name, printers[pos].type->name, printer_status_names[printers[pos].status]);
                 sf_printer_status(printer_name, printers[pos].status);
                 sf_cmd_ok();
             }
         }
         /* Unrecognized Command */
         else{
-            printf("Unrecognized Command: %s\n", token);
+            fprintf(out,"Unrecognized Command: %s\n", token);
             sf_cmd_error("unrecognized command");
         }
         end_free:
-        free(command);
+        if(in == stdin || in == NULL)
+            free(command);
     }
 
     abort();

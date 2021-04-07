@@ -45,4 +45,6 @@ int find_job_empty();
 
 int find_printer(char* name);
 
+int find_job(int pos);
+
 void free_names(void);

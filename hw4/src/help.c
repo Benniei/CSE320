@@ -67,6 +67,14 @@ int find_printer(char* name){
 	return -1;
 }
 
+int find_job(int pos){
+	if(pos < global_jobptr || pos < 0)
+		return -1;
+	if(jobs[pos].used_entry == 0)
+		return -1;
+	return pos;
+}
+
 void free_names(void){
 	for(int i = 0; i < global_printerct; i++)
 		free(printers[i].name);
