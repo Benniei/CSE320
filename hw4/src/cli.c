@@ -241,9 +241,27 @@ int run_cli(FILE *in, FILE *out)
                 sf_cmd_error("arg count");
             }
             else{
-                char* job_number;
-                job_number = strtok(NULL, " ");
-                printf("cancel: %s\n", job_number);
+                int job_number;
+                job_number = strtoint(strtok(NULL, " "));
+                // printf("cancel: %d\n", job_number);
+                if(job_number >= global_printerct){
+                    fprintf(out,"Job [%d] is out of range\n", job_number);
+                    sf_cmd_error("cancel (invalid job)");
+                    goto end_free;
+                }
+                if(jobs[job_number].used_entry == 0){
+                     fprintf(out,"Job [%d] does not exist\n", job_number);
+                    sf_cmd_error("cancel (invalid job)");
+                    goto end_free;
+                }
+                if(jobs[job_number].status == JOB_PAUSED){
+                    //SIGTERM
+                    //SIGCONT
+                }
+                else{
+                    //SIGTERM
+                }
+                jobs[job_number].status = JOB_ABORTED;
             }
         }
         else if(strcmp(token, "pause") == 0){
@@ -252,11 +270,23 @@ int run_cli(FILE *in, FILE *out)
                 sf_cmd_error("arg count");
             }
             else{
-                char* job_number;
-                job_number = strtok(NULL, " ");
-                printf("pause: %s\n", job_number);
-            }
+                int job_number;
+                job_number = strtoint(strtok(NULL, " "));
+                // printf("pause: %d\n", job_number);
+                if(job_number >= global_printerct){
+                    fprintf(out,"Job [%d] is out of range\n", job_number);
+                    sf_cmd_error("pause (invalid job)");
+                    goto end_free;
+                }
+                if(jobs[job_number].used_entry == 0){
+                     fprintf(out,"Job [%d] does not exist\n", job_number);
+                    sf_cmd_error("pause (invalid job)");
+                    goto end_free;
+                }
+                //SIGNAL SIGSTOP (READ DOC)
+                jobs[job_number].status = JOB_PAUSED;
 
+            }
         }
         else if(strcmp(token, "resume") == 0){
             if(args_counter != 1){
@@ -264,9 +294,21 @@ int run_cli(FILE *in, FILE *out)
                 sf_cmd_error("arg count");
             }
             else{
-                char* job_number;
-                job_number = strtok(NULL, " ");
-                printf("resume: %s\n", job_number);
+                int job_number;
+                job_number = strtoint(strtok(NULL, " "));
+                // printf("resume: %d\n", job_number);
+                if(job_number >= global_printerct){
+                    fprintf(out,"Job [%d] is out of range\n", job_number);
+                    sf_cmd_error("resume (invalid job)");
+                    goto end_free;
+                }
+                if(jobs[job_number].used_entry == 0){
+                     fprintf(out,"Job [%d] does not exist\n", job_number);
+                    sf_cmd_error("resume (invalid job)");
+                    goto end_free;
+                }
+                jobs[job_number].status = JOB_RUNNING;
+                //Send SIGCONT
             }
         }
         else if(strcmp(token, "disable") == 0){

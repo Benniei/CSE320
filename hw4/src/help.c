@@ -79,3 +79,17 @@ void free_names(void){
 	for(int i = 0; i < global_printerct; i++)
 		free(printers[i].name);
 }
+
+int strtoint(char *number){
+	int result = 0;
+	while(*number != '\0'){
+		result *= 10;
+		//printf("%d \n",result); debug
+		int next = *number++ - 48;
+		if(next < 0 || next > 9){
+			return -1;
+		}
+		result += next;
+	}
+	return result;
+}

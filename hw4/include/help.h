@@ -48,3 +48,5 @@ int find_printer(char* name);
 int find_job(int pos);
 
 void free_names(void);
+
+int strtoint(char* number);
