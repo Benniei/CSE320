@@ -34,9 +34,8 @@ void add_printer(char* name, char* filetp){
 	global_printerct++;
 }
 
-int add_job(char* file_name, FILE_TYPE* file_type, char* start_time){
+int add_job(char* file_name, FILE_TYPE* file_type, time_t start_time){
 	int position = find_job_empty();
-	jobs[position].used_entry = 1;
 	jobs[position].id = position;
 	jobs[position].type = file_type;
 	jobs[position].status = JOB_CREATED;
@@ -53,7 +52,7 @@ int find_job_empty(){
 	if(global_jobptr == global_jobfill)
 		return global_jobfill;
 	for(int i = 0; i < global_jobptr; i++){
-		if(jobs[i].used_entry == 0)
+		if(jobs[i].status == JOB_DELETED)
 			return i;
 	}
 	return -1;
@@ -67,10 +66,10 @@ int find_printer(char* name){
 	return -1;
 }
 
-int find_job(int pos){
+int find_job(int pos){ //complete
 	if(pos < global_jobptr || pos < 0)
 		return -1;
-	if(jobs[pos].used_entry == 0)
+	if(jobs[pos].status == JOB_DELETED)
 		return -1;
 	return pos;
 }

@@ -36,6 +36,7 @@ int run_cli(FILE *in, FILE *out)
         }
 
     	char* token;
+        char status_change = 0;
         size_t cmd_size = strlen(command) + 1; // considers \0
         char* command_cpy = malloc(cmd_size);
         strcpy(command_cpy, command);
@@ -178,9 +179,9 @@ int run_cli(FILE *in, FILE *out)
             }
             else{
                 for(int i = 0; i < global_jobptr; i++){
-                    if(jobs[i].used_entry == 1){
-                        fprintf(out,"JOB[%d]: type=%s, creation(%.19s), status(%.19s)=%s, eligible=%x, file=%s\n", i, jobs[i].type->name, jobs[i].create_time,
-                            jobs[i].create_time, job_status_names[jobs[i].status], jobs[i].eligible, jobs[i].file_name);
+                    if(jobs[i].status != JOB_DELETED){
+                        fprintf(out,"JOB[%d]: type=%s, creation(%.19s), status(%.19s)=%s, eligible=%08x, file=%s\n", i, jobs[i].type->name, ctime(&jobs[i].create_time),
+                            ctime(&jobs[i].create_time), job_status_names[jobs[i].status], jobs[i].eligible, jobs[i].file_name);
                     }
                 }
                 sf_cmd_ok();
@@ -210,10 +211,12 @@ int run_cli(FILE *in, FILE *out)
                 //time
                 time_t t;
                 time(&t);
-                int pos = add_job(file_name, file_type, ctime(&t));
+                int pos = add_job(file_name, file_type, t);
 
                 int counter = 0;
                 printer = strtok(NULL, " ");
+                if(printer != NULL)
+                    jobs[pos].eligible = 0;
                 while(printer != NULL){
                     int printer_pos = find_printer(printer);
                     if(printer_pos == -1){
@@ -221,16 +224,16 @@ int run_cli(FILE *in, FILE *out)
                         sf_cmd_error("print (printer not found)");
                         goto end_free;
                     }
+                    jobs[pos].eligible = jobs[pos].eligible | (1<<printer_pos);
                     jobs[pos].eligible_printers[counter++] = &printers[printer_pos]; //findprinter
                     printer = strtok(NULL, " ");
                 }
                 jobs[pos].num_eligible = counter;
-
-
+                status_change = 1;
                 // printf("\n current time is : %s",ctime(&t));
 
-                printf("JOB[%d]: type=%s, creation(%.19s), status(%.19s)=%s, eligible=%x, file=%s\n", pos, file_type->name, jobs[pos].create_time,
-                    jobs[pos].create_time, job_status_names[jobs[pos].status], jobs[pos].eligible, jobs[pos].file_name);
+                printf("JOB[%d]: type=%s, creation(%.19s), status(%.19s)=%s, eligible=%08x, file=%s\n", pos, file_type->name, ctime(&jobs[pos].create_time),
+                    ctime(&jobs[pos].create_time), job_status_names[jobs[pos].status], jobs[pos].eligible, jobs[pos].file_name);
                 sf_job_created(pos, file_name, file_type->name);
                 sf_cmd_ok();
             }
@@ -249,8 +252,8 @@ int run_cli(FILE *in, FILE *out)
                     sf_cmd_error("cancel (invalid job)");
                     goto end_free;
                 }
-                if(jobs[job_number].used_entry == 0){
-                     fprintf(out,"Job [%d] does not exist\n", job_number);
+                if(jobs[job_number].status == JOB_DELETED){
+                    fprintf(out,"Job [%d] does not exist\n", job_number);
                     sf_cmd_error("cancel (invalid job)");
                     goto end_free;
                 }
@@ -278,7 +281,7 @@ int run_cli(FILE *in, FILE *out)
                     sf_cmd_error("pause (invalid job)");
                     goto end_free;
                 }
-                if(jobs[job_number].used_entry == 0){
+                if(jobs[job_number].status == JOB_DELETED){
                      fprintf(out,"Job [%d] does not exist\n", job_number);
                     sf_cmd_error("pause (invalid job)");
                     goto end_free;
@@ -302,7 +305,7 @@ int run_cli(FILE *in, FILE *out)
                     sf_cmd_error("resume (invalid job)");
                     goto end_free;
                 }
-                if(jobs[job_number].used_entry == 0){
+                if(jobs[job_number].status == JOB_DELETED){
                      fprintf(out,"Job [%d] does not exist\n", job_number);
                     sf_cmd_error("resume (invalid job)");
                     goto end_free;
@@ -347,6 +350,7 @@ int run_cli(FILE *in, FILE *out)
                     sf_cmd_error("enable (printer not found)");
                     goto end_free;
                 }
+                status_change = 1;
                 printers[pos].status = PRINTER_IDLE;
                 fprintf(out,"PRINTER: id=%d, name=%s, type=%s, status=%s\n", printers[pos].id, printers[pos].name, printers[pos].type->name, printer_status_names[printers[pos].status]);
                 sf_printer_status(printer_name, printers[pos].status);
@@ -358,6 +362,11 @@ int run_cli(FILE *in, FILE *out)
             fprintf(out,"Unrecognized Command: %s\n", token);
             sf_cmd_error("unrecognized command");
         }
+        if(status_change == 1){
+            //forking and pipelining
+        }
+        // CONVERSION** owo=  find_conversion_path("aaa", "ccc");
+        // printf("%p\n", owo);
         end_free:
         if(in == stdin || in == NULL)
             free(command);
