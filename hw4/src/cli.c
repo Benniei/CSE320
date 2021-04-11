@@ -7,6 +7,7 @@
 #include <ctype.h>
 #include <string.h>
 #include <time.h>
+#include <unistd.h>
 
 #include "imprimer.h"
 #include "conversions.h"
@@ -363,8 +364,27 @@ int run_cli(FILE *in, FILE *out)
             sf_cmd_error("unrecognized command");
         }
         if(status_change == 1){
-            //forking and pipelining
+            // forking and pipelining
+            int pid;
+            int fd[2];
+            if((pid = fork()) == 0){ // Child Process
+                if(pipe(fd) == -1){
+                    fprintf(stderr, "Cannot create pipe");
+                    // Handler
+                }
+                if((pid = fork()) == 0){ // Child Process
+                    // actually stuff goes here
+                }
+                else{ // Parent Process
+
+                }
+            }
+            else{
+                // setgpid() goes here
+            }
+            printf("%p, %p\n", &pid, fd);
         }
+
         // CONVERSION** owo=  find_conversion_path("aaa", "ccc");
         // printf("%p\n", owo);
         end_free:
