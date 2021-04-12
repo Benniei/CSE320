@@ -28,7 +28,7 @@ typedef struct job {
 	char* file_name;
 	int pgid;
 	int num_eligible;
-	PRINTER* eligible_printers[MAX_PRINTERS];
+	char* eligible_printers[MAX_PRINTERS];
 	char* printer_used;
 }JOB;
 

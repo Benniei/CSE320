@@ -224,12 +224,11 @@ int run_cli(FILE *in, FILE *out)
                 while(printer != NULL){
                     int printer_pos = find_printer(printer);
                     if(printer_pos == -1){
-                        fprintf(out,"Printer \'%s\' not found\n", printer);
-                        sf_cmd_error("print (printer not found)");
-                        goto end_free;
+                        jobs[pos].eligible_printers[counter++]=printer;
+                        continue;
                     }
                     jobs[pos].eligible = jobs[pos].eligible | (1<<printer_pos);
-                    jobs[pos].eligible_printers[counter++] = &printers[printer_pos]; //findprinter
+                    jobs[pos].eligible_printers[counter++] = printer; //findprinter
                     printer = strtok(NULL, " ");
                 }
                 jobs[pos].num_eligible = counter;
@@ -378,15 +377,15 @@ int run_cli(FILE *in, FILE *out)
                 }
                 if((pid = fork()) == 0){ // Child Process
                     // actually stuff goes here
+                    exit (0);
                 }
                 else{ // Parent Process
-
+                    exit (0);
                 }
             }
             else{
                 // setgpid() goes here
             }
-            printf("%p, %p\n", &pid, fd);
         }
 
         // CONVERSION** owo=  find_conversion_path("aaa", "ccc");
