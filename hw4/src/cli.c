@@ -63,6 +63,7 @@ int run_cli(FILE *in, FILE *out)
             }
             else{
                 free_names();
+                free_job_file();
                 sf_cmd_ok();
                 if(in == stdin || in == NULL)
                     free(command);
@@ -154,7 +155,7 @@ int run_cli(FILE *in, FILE *out)
                     i++;
                 }
                 conversion_pgm[i] = NULL;
-
+                status_change = 1;
                 //printf("conversion: %s, %s, %s..\n", file_type1, file_type2, *conversion_pgm);
                 define_conversion(file_type1, file_type2, conversion_pgm);
                 sf_cmd_ok();
@@ -212,7 +213,9 @@ int run_cli(FILE *in, FILE *out)
                 //time
                 time_t t;
                 time(&t);
-                int pos = add_job(file_name, file_type, t);
+                char* jb_name = malloc(strlen(file_name) + 1);
+                strcpy(jb_name, file_name);
+                int pos = add_job(jb_name, file_type, t);
 
                 int counter = 0;
                 printer = strtok(NULL, " ");
@@ -365,6 +368,7 @@ int run_cli(FILE *in, FILE *out)
         }
         if(status_change == 1){
             // forking and pipelining
+            // remember to free file name before deleting
             int pid;
             int fd[2];
             if((pid = fork()) == 0){ // Child Process
