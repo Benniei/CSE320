@@ -225,6 +225,7 @@ int run_cli(FILE *in, FILE *out)
                     int printer_pos = find_printer(printer);
                     if(printer_pos == -1){
                         jobs[pos].eligible_printers[counter++]=printer;
+                        printer = strtok(NULL, " ");
                         continue;
                     }
                     jobs[pos].eligible = jobs[pos].eligible | (1<<printer_pos);
