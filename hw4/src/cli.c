@@ -181,7 +181,7 @@ int run_cli(FILE *in, FILE *out)
             }
             else{
                 for(int i = 0; i < global_jobptr; i++){
-                    if(jobs[i].status != JOB_DELETED){
+                    if(jobs[i].status == JOB_CREATED){
                         fprintf(out,"JOB[%d]: type=%s, creation(%.19s), status(%.19s)=%s, eligible=%08x, file=%s\n", i, jobs[i].type->name, ctime(&jobs[i].create_time),
                             ctime(&jobs[i].create_time), job_status_names[jobs[i].status], jobs[i].eligible, jobs[i].file_name);
                     }
