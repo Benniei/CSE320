@@ -225,8 +225,8 @@ int run_cli(FILE *in, FILE *out)
                     int printer_pos = find_printer(printer);
                     if(printer_pos == -1){
                         fprintf(out,"Printer \'%s\' not found\n", printer);
-                        sf_cmd_error("print (printer not found)");
-                        goto end_free;
+                        // sf_cmd_error("print (printer not found)");
+                        continue;
                     }
                     jobs[pos].eligible = jobs[pos].eligible | (1<<printer_pos);
                     jobs[pos].eligible_printers[counter++] = &printers[printer_pos]; //findprinter
