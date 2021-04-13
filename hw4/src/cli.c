@@ -37,7 +37,7 @@ int run_cli(FILE *in, FILE *out)
         }
 
     	char* token;
-        char status_change = 0;
+        char status_flag = 0;
         size_t cmd_size = strlen(command) + 1; // considers \0
         char* command_cpy = malloc(cmd_size);
         strcpy(command_cpy, command);
@@ -50,6 +50,7 @@ int run_cli(FILE *in, FILE *out)
             if(args_counter > 0){
                 fprintf(out,"Wrong number of args(given: %d, required: %d) for CLI command \'help\'\n", args_counter, 0);
                 sf_cmd_error("arg count");
+                goto end_free;
             }
             else{
                 fprintf(out,"Commands are: help quit type printer conversion printers jobs print cancel disable enable pause resume\n");
@@ -60,6 +61,7 @@ int run_cli(FILE *in, FILE *out)
             if(args_counter > 0){
                 fprintf(out,"Wrong number of args(given: %d, required: %d) for CLI command \'quit\'\n", args_counter, 0);
                 sf_cmd_error("arg count");
+                goto end_free;
             }
             else{
                 free_names();
@@ -74,6 +76,7 @@ int run_cli(FILE *in, FILE *out)
             if(args_counter != 1){
                 fprintf(out,"Wrong number of args(given: %d, required: %d) for CLI command \'type\'\n", args_counter, 1);
                 sf_cmd_error("arg count");
+                goto end_free;
             }
             else{
                 char* file_type;
@@ -88,6 +91,7 @@ int run_cli(FILE *in, FILE *out)
             if(args_counter != 2){
                 fprintf(out,"Wrong number of args(given: %d, required: %d) for CLI command \'printer\'\n", args_counter, 2);
                 sf_cmd_error("arg count");
+                goto end_free;
             }
             else{
                 char* printer_name;
@@ -125,6 +129,7 @@ int run_cli(FILE *in, FILE *out)
             if(args_counter < 3){
                 fprintf(out,"Wrong number of args(given: %d, required: %d) for CLI command \'conversion\'\n", args_counter, 3);
                 sf_cmd_error("arg count");
+                goto end_free;
             }
             else{
                 char* file_type1;
@@ -155,7 +160,7 @@ int run_cli(FILE *in, FILE *out)
                     i++;
                 }
                 conversion_pgm[i] = NULL;
-                status_change = 1;
+                status_flag = 1;
                 //printf("conversion: %s, %s, %s..\n", file_type1, file_type2, *conversion_pgm);
                 define_conversion(file_type1, file_type2, conversion_pgm);
                 sf_cmd_ok();
@@ -166,6 +171,7 @@ int run_cli(FILE *in, FILE *out)
             if(args_counter > 0){
                 fprintf(out,"Wrong number of args(given: %d, required: %d) for CLI command \'printers\'\n", args_counter, 0);
                 sf_cmd_error("arg count");
+                goto end_free;
             }
             else{
                 for(int i = 0; i < global_printerct; i++){
@@ -194,6 +200,7 @@ int run_cli(FILE *in, FILE *out)
             if(args_counter < 1){
                 fprintf(out,"Wrong number of args(given: %d, required: %d) for CLI command \'print\'\n", args_counter, 1);
                 sf_cmd_error("arg count");
+                goto end_free;
             }
             else{
                 char* file_name;
@@ -233,7 +240,7 @@ int run_cli(FILE *in, FILE *out)
                     printer = strtok(NULL, " ");
                 }
                 jobs[pos].num_eligible = counter;
-                status_change = 1;
+                status_flag = 1;
                 // printf("\n current time is : %s",ctime(&t));
 
                 printf("JOB[%d]: type=%s, creation(%.19s), status(%.19s)=%s, eligible=%08x, file=%s\n", pos, file_type->name, ctime(&jobs[pos].create_time),
@@ -246,6 +253,7 @@ int run_cli(FILE *in, FILE *out)
             if(args_counter != 1){
                 fprintf(out,"Wrong number of args(given: %d, required: %d) for CLI command \'cancel\'\n", args_counter, 1);
                 sf_cmd_error("arg count");
+                goto end_free;
             }
             else{
                 int job_number;
@@ -275,6 +283,7 @@ int run_cli(FILE *in, FILE *out)
             if(args_counter != 1){
                 fprintf(out,"Wrong number of args(given: %d, required: %d) for CLI command \'pause\'\n", args_counter, 1);
                 sf_cmd_error("arg count");
+                goto end_free;
             }
             else{
                 int job_number;
@@ -299,6 +308,7 @@ int run_cli(FILE *in, FILE *out)
             if(args_counter != 1){
                 fprintf(out,"Wrong number of args(given: %d, required: %d) for CLI command \'resume\'\n", args_counter, 1);
                 sf_cmd_error("arg count");
+                goto end_free;
             }
             else{
                 int job_number;
@@ -322,6 +332,7 @@ int run_cli(FILE *in, FILE *out)
             if(args_counter != 1){
                 fprintf(out,"Wrong number of args(given: %d, required: %d) for CLI command \'disable\'\n", args_counter, 1);
                 sf_cmd_error("arg count");
+                goto end_free;
             }
             else{
                 char* printer_name;
@@ -343,6 +354,7 @@ int run_cli(FILE *in, FILE *out)
             if(args_counter != 1){
                 fprintf(out, "Wrong number of args(given: %d, required: %d) for CLI command \'disable\'\n", args_counter, 1);
                 sf_cmd_error("arg count");
+                goto end_free;
             }
             else{
                 char* printer_name;
@@ -354,8 +366,8 @@ int run_cli(FILE *in, FILE *out)
                     sf_cmd_error("enable (printer not found)");
                     goto end_free;
                 }
-                status_change = 1;
                 printers[pos].status = PRINTER_IDLE;
+                status_flag = 1;
                 fprintf(out,"PRINTER: id=%d, name=%s, type=%s, status=%s\n", printers[pos].id, printers[pos].name, printers[pos].type->name, printer_status_names[printers[pos].status]);
                 sf_printer_status(printer_name, printers[pos].status);
                 sf_cmd_ok();
@@ -365,30 +377,119 @@ int run_cli(FILE *in, FILE *out)
         else{
             fprintf(out,"Unrecognized Command: %s\n", token);
             sf_cmd_error("unrecognized command");
+            goto end_free;
         }
-        if(status_change == 1){
-            // forking and pipelining
-            // remember to free file name before deleting
-            int pid;
-            int fd[2];
-            if((pid = fork()) == 0){ // Child Process
-                if(pipe(fd) == -1){
-                    fprintf(stderr, "Cannot create pipe");
-                    // Handler
-                }
-                if((pid = fork()) == 0){ // Child Process
-                    // actually stuff goes here
-                    exit (0);
-                }
-                else{ // Parent Process
-                    exit (0);
-                }
-            }
-            else{
-                // setgpid() goes here
-            }
-        }
+        if(status_flag == 1){
 
+            int i;
+            int num_conv;
+            for(i = 0; i < global_jobptr; i++){
+                char match_flag = 0;
+                if(jobs[i].status != JOB_CREATED)
+                    continue;
+                if(jobs[i].num_eligible == 0){
+                    // Check through all the printers
+                    for(int k = 0; k < global_jobptr; k++){
+                        if(printers[k].status != PRINTER_IDLE)
+                            continue;
+
+                        // check if conversion exist
+                        num_conv = check_conversion(jobs[i].type->name, printers[k].type->name);
+                        if(num_conv == -1)
+                            continue;
+                        match_flag = 1;
+                        jobs[i].printer_id = k;
+                        jobs[i].num_conversions = num_conv;
+                    }
+                }
+                else{
+                    for(int k = 0; k < jobs[i].num_eligible; k++){
+                        int pos = find_printer(jobs[i].eligible_printers[k]);
+                        if(pos == -1)
+                            continue;
+                        if(printers[pos].status != PRINTER_IDLE)
+                            continue;
+                        // check if conversion exist
+                        num_conv = check_conversion(jobs[i].type->name, printers[k].type->name);
+                        if(num_conv == -1)
+                            continue;
+                        match_flag = 1;
+                        jobs[i].printer_id = k;
+                        jobs[i].num_conversions = num_conv;
+                    }
+                }
+                if(match_flag == 1){
+                    // forking and pipelining
+                    // remember to free file name before deleting
+                    int pid;
+                    if(num_conv == 0){
+                        if((pid = fork()) == 0){ // Child Process
+                            printf("In the main");
+                            jobs[i].status = JOB_RUNNING;
+                            sf_job_status(jobs[i].id, JOB_RUNNING);
+                            printers[jobs[i].printer_id].status = PRINTER_BUSY;
+                            int fd[2];// 0 is read, 1 is write
+                            int printer_fd = imp_connect_to_printer(printers[jobs[i].printer_id].name, printers[jobs[i].printer_id].type->name, PRINTER_NORMAL);
+                            char* cat[3]; // used to read the file
+                            cat[0] = "cat";
+                            cat[1] = jobs[i].file_name;
+                            cat[2] = NULL;
+                            char* bincat[2] = {"/bin/cat", NULL};
+                            char* term_commands[3] = {"cat", "/bin/cat", NULL};
+                            sf_job_started(jobs[i].id, printers[jobs[i].printer_id].name, (int) getpgrp(), term_commands);
+
+                            if(pipe(fd) == -1){
+                                fprintf(stderr, "Cannot create pipe");
+                                // Handler
+                                exit(1);
+                            }
+
+                            dup2(printer_fd, 1);
+                            if((pid = fork()) == 0){ // Child Process
+                                // writes into the pipe
+                                dup2(fd[1], 1); // replace stdout with writing to pipe
+                                close(fd[0]); // close read part of pipe
+                                execvp("cat", cat);
+                                exit (0);
+                            }
+                            else{ // Parent Process
+                                // reads from the pipe
+                                dup2(fd[0], 0);  // replace stdin with reading from pipe
+                                close(fd[1]); // close write part of pipe
+                                execvp("/bin/cat", bincat);
+                                exit (0);
+                            }
+                            exit (0);
+                        }
+                        else{
+                            // setgpid() goes here
+                            setpgid(pid, 0);
+                            printf("parent's process group id is now %d\n", (int) getpgrp());
+                        }
+                    }
+                    else{
+                        if((pid = fork()) == 0){ // Child Process
+                            int fd[2];
+                            if(pipe(fd) == -1){
+                                fprintf(stderr, "Cannot create pipe");
+                                // Handler
+                            }
+                            if((pid = fork()) == 0){ // Child Process
+                                // actually stuff goes here
+                                exit (0);
+                            }
+                            else{ // Parent Process
+                                exit (0);
+                            }
+                        }
+                        else{
+                            // setgpid() goes here
+                            setpgid(pid, 0);
+                        }
+                    }
+                }
+            }
+        }
         // CONVERSION** owo=  find_conversion_path("aaa", "ccc");
         // printf("%p\n", owo);
         end_free:

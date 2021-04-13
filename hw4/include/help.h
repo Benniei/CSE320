@@ -26,10 +26,12 @@ typedef struct job {
 	time_t create_time;
 	int eligible;
 	char* file_name;
-	int pgid;
 	int num_eligible;
 	char* eligible_printers[MAX_PRINTERS];
-	char* printer_used;
+	/* fork */
+	int pgid;
+	int printer_id;
+	int num_conversions;
 }JOB;
 
 JOB jobs[MAX_JOBS];
@@ -54,3 +56,5 @@ void free_names(void);
 void free_job_file(void);
 
 int strtoint(char* number);
+
+int check_conversion(char* type1, char* type2);
