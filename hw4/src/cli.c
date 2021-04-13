@@ -424,7 +424,6 @@ int run_cli(FILE *in, FILE *out)
                     int pid;
                     if(num_conv == 0){
                         if((pid = fork()) == 0){ // Child Process
-                            printf("In the main");
                             jobs[i].status = JOB_RUNNING;
                             sf_job_status(jobs[i].id, JOB_RUNNING);
                             printers[jobs[i].printer_id].status = PRINTER_BUSY;
@@ -469,11 +468,21 @@ int run_cli(FILE *in, FILE *out)
                     }
                     else{
                         if((pid = fork()) == 0){ // Child Process
-                            int fd[2];
+                            jobs[i].status = JOB_RUNNING;
+                            sf_job_status(jobs[i].id, JOB_RUNNING);
+                            printers[jobs[i].printer_id].status = PRINTER_BUSY;
+                            int fd[2];// 0 is read, 1 is write
+                            int printer_fd = imp_connect_to_printer(printers[jobs[i].printer_id].name, printers[jobs[i].printer_id].type->name, PRINTER_NORMAL);
+
+                            char* term_commands[3] = {"cat", "/bin/cat", NULL};
+                            sf_job_started(jobs[i].id, printers[jobs[i].printer_id].name, (int) getpgrp(), term_commands);
+
                             if(pipe(fd) == -1){
                                 fprintf(stderr, "Cannot create pipe");
                                 // Handler
                             }
+
+                            dup2(printer_fd, 1);
                             if((pid = fork()) == 0){ // Child Process
                                 // actually stuff goes here
                                 exit (0);
@@ -485,6 +494,7 @@ int run_cli(FILE *in, FILE *out)
                         else{
                             // setgpid() goes here
                             setpgid(pid, 0);
+                            printf("parent's process group id is now %d\n", (int) getpgrp());
                         }
                     }
                 }
