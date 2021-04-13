@@ -98,3 +98,19 @@ int strtoint(char *number){
 	}
 	return result;
 }
+
+int check_conversion(char* type1, char* type2){
+	if(strcmp(type1, type2) == 0){
+		return 0;
+	}
+	CONVERSION** temp;
+	if((temp = find_conversion_path(type1, type2)) == NULL){
+		return -1;
+	}
+	int conv_counter = 1;
+	while(temp[0] != NULL){
+		temp = find_conversion_path((*temp)->from->name, type2);
+		conv_counter++;
+	}
+	return conv_counter;
+}
