@@ -163,6 +163,11 @@ int run_cli(FILE *in, FILE *out)
                 status_flag = 1;
                 //printf("conversion: %s, %s, %s..\n", file_type1, file_type2, *conversion_pgm);
                 define_conversion(file_type1, file_type2, conversion_pgm);
+
+                // CONVERSION** owo=  find_conversion_path("aaa", file_type2);
+                // int num = check_conversion("aaa",file_type2);
+                // printf("%p %d\n", owo, num);
+
                 sf_cmd_ok();
             }
         }
@@ -422,19 +427,26 @@ int run_cli(FILE *in, FILE *out)
                     // forking and pipelining
                     // remember to free file name before deleting
                     int pid;
-                    if(num_conv == 0){
+                    // MASTER 1
+                    if(num_conv == 0){ // if there are no conversions
                         if((pid = fork()) == 0){ // Child Process
                             jobs[i].status = JOB_RUNNING;
                             sf_job_status(jobs[i].id, JOB_RUNNING);
+                            sf_printer_status(printers[jobs[i].printer_id].name, PRINTER_BUSY);
                             printers[jobs[i].printer_id].status = PRINTER_BUSY;
                             int fd[2];// 0 is read, 1 is write
                             int printer_fd = imp_connect_to_printer(printers[jobs[i].printer_id].name, printers[jobs[i].printer_id].type->name, PRINTER_NORMAL);
+                            if(printer_fd == -1){
+                                fprintf(stderr, "unable to connect to printer");
+                                exit (1);
+                            }
+
                             char* cat[3]; // used to read the file
                             cat[0] = "cat";
                             cat[1] = jobs[i].file_name;
                             cat[2] = NULL;
                             char* bincat[2] = {"/bin/cat", NULL};
-                            char* term_commands[3] = {"cat", "/bin/cat", NULL};
+                            char* term_commands[2] = {"/bin/cat", NULL};
                             sf_job_started(jobs[i].id, printers[jobs[i].printer_id].name, (int) getpgrp(), term_commands);
 
                             if(pipe(fd) == -1){
@@ -448,14 +460,14 @@ int run_cli(FILE *in, FILE *out)
                                 // writes into the pipe
                                 dup2(fd[1], 1); // replace stdout with writing to pipe
                                 close(fd[0]); // close read part of pipe
-                                execvp("cat", cat);
+                                execvp(*cat, cat);
                                 exit (0);
                             }
                             else{ // Parent Process
                                 // reads from the pipe
                                 dup2(fd[0], 0);  // replace stdin with reading from pipe
                                 close(fd[1]); // close write part of pipe
-                                execvp("/bin/cat", bincat);
+                                execvp(*bincat, bincat);
                                 exit (0);
                             }
                             exit (0);
@@ -466,28 +478,84 @@ int run_cli(FILE *in, FILE *out)
                             printf("parent's process group id is now %d\n", (int) getpgrp());
                         }
                     }
+                    // MASTER 2
                     else{
                         if((pid = fork()) == 0){ // Child Process
                             jobs[i].status = JOB_RUNNING;
                             sf_job_status(jobs[i].id, JOB_RUNNING);
+                            sf_printer_status(printers[jobs[i].printer_id].name, PRINTER_BUSY);
                             printers[jobs[i].printer_id].status = PRINTER_BUSY;
-                            int fd[2];// 0 is read, 1 is write
-                            int printer_fd = imp_connect_to_printer(printers[jobs[i].printer_id].name, printers[jobs[i].printer_id].type->name, PRINTER_NORMAL);
 
-                            char* term_commands[3] = {"cat", "/bin/cat", NULL};
+                            int printer_fd = imp_connect_to_printer(printers[jobs[i].printer_id].name, printers[jobs[i].printer_id].type->name, PRINTER_NORMAL);
+                            if(printer_fd == -1){
+                                fprintf(stderr, "unable to connect to printer");
+                                exit (1);
+                            }
+
+                            char* term_commands[num_conv + 1];
+                            CONVERSION** temp = find_conversion_path(jobs[i].type->name, printers[jobs[i].printer_id].type->name);
+                            term_commands[0] = (*temp)->cmd_and_args[0];
+
+                            for(int m = 1; m < num_conv; m++){
+                                temp = find_conversion_path(jobs[i].type->name, printers[jobs[i].printer_id].type->name);
+                                term_commands[m] = (*temp)->cmd_and_args[0];
+                            }
+                            char* cat[3]; // used to read the file
+                            cat[0] = "cat";
+                            cat[1] = jobs[i].file_name;
+                            cat[2] = NULL;
+                            term_commands[num_conv] = NULL;
                             sf_job_started(jobs[i].id, printers[jobs[i].printer_id].name, (int) getpgrp(), term_commands);
 
+                            int num_pipes = num_conv *2;
+                            int fd[num_pipes];// 0 is read, 1 is write
                             if(pipe(fd) == -1){
                                 fprintf(stderr, "Cannot create pipe");
                                 // Handler
                             }
 
                             dup2(printer_fd, 1);
+
                             if((pid = fork()) == 0){ // Child Process
                                 // actually stuff goes here
+                                char* begarg = jobs[i].type->name;
+                                for(int c = 0; c < num_conv; c++){
+                                    int read_from = c;
+                                    int write_to = c + 3;
+                                    temp = find_conversion_path(begarg, printers[jobs[i].printer_id].type->name);
+                                    begarg = (*temp)->to->name;
+                                    char** comm = (*temp)->cmd_and_args;
+                                    if(c == num_conv - 1){
+                                        if(fork() == 0){
+                                            dup2(fd[num_pipes - 2], 0);
+                                            for(int pnum = 0; pnum < num_pipes; pnum++){
+                                                close(fd[pnum]);
+                                            }
+                                            // execvp
+                                            execvp(*comm, comm);
+                                        }
+                                    }
+                                    else{
+                                        if(fork() == 0){
+                                            dup2(fd[read_from], 0);
+                                            dup2(fd[write_to], 1);
+                                            for(int pnum = 0; pnum < num_pipes; pnum++){
+                                                close(fd[pnum]);
+                                            }
+                                            // execvp
+                                            execvp(*comm, comm);
+                                        }
+                                    }
+                                }
                                 exit (0);
                             }
                             else{ // Parent Process
+                                //start the writing to the pipe
+                                dup2(fd[1], 1);
+                                for(int pnum = 0; pnum < num_pipes; pnum++){
+                                    close(fd[pnum]);
+                                }
+                                execvp(*cat, cat);
                                 exit (0);
                             }
                         }
@@ -500,8 +568,6 @@ int run_cli(FILE *in, FILE *out)
                 }
             }
         }
-        // CONVERSION** owo=  find_conversion_path("aaa", "ccc");
-        // printf("%p\n", owo);
         end_free:
         if(in == stdin || in == NULL)
             free(command);
