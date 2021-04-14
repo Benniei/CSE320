@@ -385,7 +385,6 @@ int run_cli(FILE *in, FILE *out)
             goto end_free;
         }
         if(status_flag == 1){
-            fprintf(out, "owo");
             int i;
             int num_conv;
             for(i = 0; i < global_jobptr; i++){
@@ -400,7 +399,6 @@ int run_cli(FILE *in, FILE *out)
 
                         // check if conversion exist
                         num_conv = check_conversion(jobs[i].type->name, printers[k].type->name);
-                        fprintf(out, "%d", num_conv);
                         if(num_conv == -1)
                             continue;
                         match_flag = 1;
@@ -416,11 +414,11 @@ int run_cli(FILE *in, FILE *out)
                         if(printers[pos].status != PRINTER_IDLE)
                             continue;
                         // check if conversion exist
-                        num_conv = check_conversion(jobs[i].type->name, printers[k].type->name);
+                        num_conv = check_conversion(jobs[i].type->name, printers[pos].type->name);
                         if(num_conv == -1)
                             continue;
                         match_flag = 1;
-                        jobs[i].printer_id = k;
+                        jobs[i].printer_id = pos;
                         jobs[i].num_conversions = num_conv;
                     }
                 }
@@ -431,16 +429,17 @@ int run_cli(FILE *in, FILE *out)
                     // MASTER 1
                     if(num_conv == 0){ // if there are no conversions
                         if((pid = fork()) == 0){ // Child Process
-                            jobs[i].status = JOB_RUNNING;
-                            sf_job_status(jobs[i].id, JOB_RUNNING);
-                            sf_printer_status(printers[jobs[i].printer_id].name, PRINTER_BUSY);
-                            printers[jobs[i].printer_id].status = PRINTER_BUSY;
-                            int fd[2];// 0 is read, 1 is write
                             int printer_fd = imp_connect_to_printer(printers[jobs[i].printer_id].name, printers[jobs[i].printer_id].type->name, PRINTER_NORMAL);
                             if(printer_fd == -1){
                                 fprintf(stderr, "unable to connect to printer");
                                 exit (1);
                             }
+
+                            jobs[i].status = JOB_RUNNING;
+                            sf_job_status(jobs[i].id, JOB_RUNNING);
+                            sf_printer_status(printers[jobs[i].printer_id].name, PRINTER_BUSY);
+                            printers[jobs[i].printer_id].status = PRINTER_BUSY;
+                            int fd[2];// 0 is read, 1 is write
 
                             char* cat[3]; // used to read the file
                             cat[0] = "cat";
@@ -483,16 +482,16 @@ int run_cli(FILE *in, FILE *out)
                     // MASTER 2
                     else{
                         if((pid = fork()) == 0){ // Child Process
-                            jobs[i].status = JOB_RUNNING;
-                            sf_job_status(jobs[i].id, JOB_RUNNING);
-                            sf_printer_status(printers[jobs[i].printer_id].name, PRINTER_BUSY);
-                            printers[jobs[i].printer_id].status = PRINTER_BUSY;
-
                             int printer_fd = imp_connect_to_printer(printers[jobs[i].printer_id].name, printers[jobs[i].printer_id].type->name, PRINTER_NORMAL);
                             if(printer_fd == -1){
                                 fprintf(stderr, "unable to connect to printer");
                                 exit (1);
                             }
+
+                            jobs[i].status = JOB_RUNNING;
+                            sf_job_status(jobs[i].id, JOB_RUNNING);
+                            sf_printer_status(printers[jobs[i].printer_id].name, PRINTER_BUSY);
+                            printers[jobs[i].printer_id].status = PRINTER_BUSY;
 
                             char* term_commands[num_conv + 1];
                             CONVERSION** temp = find_conversion_path(jobs[i].type->name, printers[jobs[i].printer_id].type->name);

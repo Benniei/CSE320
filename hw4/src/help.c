@@ -108,9 +108,11 @@ int check_conversion(char* type1, char* type2){
 		return -1;
 	}
 	int conv_counter = 0;
+	CONVERSION** other;
 	while(temp[0] != NULL){
-		free(temp);
+		other = temp;
 		temp = find_conversion_path((*temp)->to->name, type2);
+		free(other);
 		conv_counter++;
 	}
 	free(temp);
