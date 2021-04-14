@@ -385,7 +385,7 @@ int run_cli(FILE *in, FILE *out)
             goto end_free;
         }
         if(status_flag == 1){
-
+            fprintf(out, "owo");
             int i;
             int num_conv;
             for(i = 0; i < global_jobptr; i++){
@@ -400,6 +400,7 @@ int run_cli(FILE *in, FILE *out)
 
                         // check if conversion exist
                         num_conv = check_conversion(jobs[i].type->name, printers[k].type->name);
+                        fprintf(out, "%d", num_conv);
                         if(num_conv == -1)
                             continue;
                         match_flag = 1;
@@ -470,6 +471,7 @@ int run_cli(FILE *in, FILE *out)
                                 execvp(*bincat, bincat);
                                 exit (0);
                             }
+                            close(printer_fd);
                             exit (0);
                         }
                         else{
@@ -497,9 +499,11 @@ int run_cli(FILE *in, FILE *out)
                             term_commands[0] = (*temp)->cmd_and_args[0];
 
                             for(int m = 1; m < num_conv; m++){
+                                free(temp);
                                 temp = find_conversion_path(jobs[i].type->name, printers[jobs[i].printer_id].type->name);
                                 term_commands[m] = (*temp)->cmd_and_args[0];
                             }
+                            free(temp);
                             char* cat[3]; // used to read the file
                             cat[0] = "cat";
                             cat[1] = jobs[i].file_name;
@@ -509,9 +513,11 @@ int run_cli(FILE *in, FILE *out)
 
                             int num_pipes = num_conv *2;
                             int fd[num_pipes];// 0 is read, 1 is write
-                            if(pipe(fd) == -1){
-                                fprintf(stderr, "Cannot create pipe");
-                                // Handler
+                            for(int f = 0; f < num_conv; f++){
+                                if(pipe(fd + (2*f)) == -1){
+                                    fprintf(stderr, "Cannot create pipe");
+                                    // Handler
+                                }
                             }
 
                             dup2(printer_fd, 1);
@@ -546,6 +552,7 @@ int run_cli(FILE *in, FILE *out)
                                             execvp(*comm, comm);
                                         }
                                     }
+                                    free(temp);
                                 }
                                 exit (0);
                             }
@@ -558,6 +565,8 @@ int run_cli(FILE *in, FILE *out)
                                 execvp(*cat, cat);
                                 exit (0);
                             }
+                            close(printer_fd);
+                            exit (0);
                         }
                         else{
                             // setgpid() goes here

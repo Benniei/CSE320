@@ -1,0 +1,6 @@
+type aaa
+type bbb
+conversion aaa bbb util/convert aaa bbb
+printer owo bbb
+print test_scripts/testfile.aaa
+enable owo
