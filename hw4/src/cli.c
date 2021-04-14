@@ -422,6 +422,7 @@ int run_cli(FILE *in, FILE *out)
                         jobs[i].num_conversions = num_conv;
                     }
                 }
+                // fprintf(out, "Number conversion: %d\n", num_conv);
                 if(match_flag == 1){
                     // forking and pipelining
                     // remember to free file name before deleting
@@ -511,6 +512,9 @@ int run_cli(FILE *in, FILE *out)
                             sf_job_started(jobs[i].id, printers[jobs[i].printer_id].name, (int) getpgrp(), term_commands);
 
                             int num_pipes = num_conv *2;
+
+                            // fprintf(out, "Num pipes: %d\n", num_pipes);
+
                             int fd[num_pipes];// 0 is read, 1 is write
                             for(int f = 0; f < num_conv; f++){
                                 if(pipe(fd + (2*f)) == -1){
@@ -525,15 +529,18 @@ int run_cli(FILE *in, FILE *out)
                                 // actually stuff goes here
                                 char* begarg = jobs[i].type->name;
                                 for(int c = 0; c < num_conv; c++){
-                                    int read_from = c;
-                                    int write_to = c + 3;
+                                    int read_from = c*2;
+                                    int write_to = read_from + 3;
                                     temp = find_conversion_path(begarg, printers[jobs[i].printer_id].type->name);
                                     begarg = (*temp)->to->name;
+                                    // fprintf(out, "doing conversion %s -> %s\n", (*temp)->from->name, (*temp)->to->name);
                                     char** comm = (*temp)->cmd_and_args;
                                     if(c == num_conv - 1){
                                         if(fork() == 0){
                                             dup2(fd[num_pipes - 2], 0);
                                             for(int pnum = 0; pnum < num_pipes; pnum++){
+                                                if(pnum == (num_pipes-2))
+                                                    continue;
                                                 close(fd[pnum]);
                                             }
                                             // execvp
@@ -542,9 +549,13 @@ int run_cli(FILE *in, FILE *out)
                                     }
                                     else{
                                         if(fork() == 0){
+                                            // fprintf(out, "piping READ %d -> WRITE %d\n", read_from, write_to);
                                             dup2(fd[read_from], 0);
                                             dup2(fd[write_to], 1);
+
                                             for(int pnum = 0; pnum < num_pipes; pnum++){
+                                                if(pnum == read_from || pnum == write_to)
+                                                    continue;
                                                 close(fd[pnum]);
                                             }
                                             // execvp
@@ -559,6 +570,8 @@ int run_cli(FILE *in, FILE *out)
                                 //start the writing to the pipe
                                 dup2(fd[1], 1);
                                 for(int pnum = 0; pnum < num_pipes; pnum++){
+                                    if(pnum == 1)
+                                        continue;
                                     close(fd[pnum]);
                                 }
                                 execvp(*cat, cat);
