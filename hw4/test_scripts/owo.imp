@@ -5,6 +5,10 @@ type ddd
 conversion aaa bbb util/convert aaa bbb
 conversion bbb ccc util/convert bbb ccc
 conversion ccc ddd util/convert ccc ddd
-printer test ddd
-print test_scripts/testfile.aaa
+printer testone ddd
+printer testtwo bbb
 enable test
+enable testone
+enable testtwo
+print test_scripts/testfile.bbb
+

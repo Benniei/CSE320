@@ -203,7 +203,6 @@ int run_cli(FILE *in, FILE *out)
                     i++;
                 }
                 conversion_pgm[i] = NULL;
-                status_flag = 1;
                 //printf("conversion: %s, %s, %s..\n", file_type1, file_type2, *conversion_pgm);
                 define_conversion(file_type1, file_type2, conversion_pgm);
 
@@ -516,17 +515,27 @@ void job_check(){
             sf_job_status(jobs[i].id, JOB_RUNNING);
             sf_printer_status(printers[jobs[i].printer_id].name, PRINTER_BUSY);
             printers[jobs[i].printer_id].status = PRINTER_BUSY;
-            if(num_conv == 0){ // if there are no conversions
-
-                if((jobs[i].pgid = pid = fork()) == 0){ // Child Process
-                    setpgid(pid, 0);
-                    int printer_fd = imp_connect_to_printer(printers[jobs[i].printer_id].name, printers[jobs[i].printer_id].type->name, PRINTER_NORMAL);
-                    if(printer_fd == -1){
-                        fprintf(stderr, "unable to connect to printer");
-                        exit (1);
-                    }
 
 
+            pid_t child_pid[num_conv];
+            int chp = 0;
+            //status
+            jobs[i].status = JOB_RUNNING;
+            sf_job_status(jobs[i].id, JOB_RUNNING);
+            sf_printer_status(printers[jobs[i].printer_id].name, PRINTER_BUSY);
+            printers[jobs[i].printer_id].status = PRINTER_BUSY;
+            if((jobs[i].pgid = pid = fork()) == 0){ // Child Process
+                setpgid(pid, 0);
+                int printer_fd = imp_connect_to_printer(printers[jobs[i].printer_id].name, printers[jobs[i].printer_id].type->name, PRINTER_NORMAL);
+                if(printer_fd == -1){
+                    free_names();
+                    free_job_file();
+                    conversions_fini();
+                    fprintf(stderr, "unable to connect to printer");
+                    exit (1);
+                }
+                // same type to same type
+                if(num_conv == 0){
                     int fd[2];// 0 is read, 1 is write
 
                     char* cat[3]; // used to read the file
@@ -566,32 +575,8 @@ void job_check(){
                     conversions_fini();
                     exit (0);
                 }
+                // conversion pipeline
                 else{
-                    // setgpid() goes here
-                    //printf("parent's process group id is now %d\n", (int) getpgrp());
-                    waitpid(pid, &child_status, 0);
-
-                }
-            }
-            // MASTER 2
-            else{
-                int child_status;
-                //status
-                jobs[i].status = JOB_RUNNING;
-                sf_job_status(jobs[i].id, JOB_RUNNING);
-                sf_printer_status(printers[jobs[i].printer_id].name, PRINTER_BUSY);
-                printers[jobs[i].printer_id].status = PRINTER_BUSY;
-                if((jobs[i].pgid = pid = fork()) == 0){ // Child Process
-                    setpgid(pid, 0);
-                    int printer_fd = imp_connect_to_printer(printers[jobs[i].printer_id].name, printers[jobs[i].printer_id].type->name, PRINTER_NORMAL);
-                    if(printer_fd == -1){
-                        free_names();
-                        free_job_file();
-                        conversions_fini();
-                        fprintf(stderr, "unable to connect to printer");
-                        exit (1);
-                    }
-                    // fill in array
                     char* term_commands[num_conv + 1];
                     CONVERSION** temp = find_conversion_path(jobs[i].type->name, printers[jobs[i].printer_id].type->name);
                     term_commands[0] = (*temp)->cmd_and_args[0];
@@ -623,9 +608,6 @@ void job_check(){
 
 
                     dup2(printer_fd, 1);
-
-                    pid_t child_pid[num_conv];
-                    int chp = 0;
 
                     if((pid = fork()) == 0){ // Child Process
                         // actually stuff goes here
@@ -718,21 +700,22 @@ void job_check(){
                         //printf( "reaped child %d\n", child_pid[cp]);
                         waitpid(child_pid[cp], &child_status, 0);
                     }
-                    close(printer_fd);
-                    free_names();
-                    free_job_file();
-                    conversions_fini();
-
-                    exit (0);
                 }
-                else{
-                    // setgpid() goes here
-                    // printf("parent's process group id is now %d\n", (int) getpgrp());
-                    // printf("reaped child %d\n", pid);
-                    // waitpid(pid, &child_status, 0);
-                }
+                close(printer_fd);
+                free_names();
+                free_job_file();
+                conversions_fini();
 
+                exit (0);
             }
+            else{
+                // setgpid() goes here
+                // printf("parent's process group id is now %d\n", (int) getpgrp());
+                // printf("reaped child %d\n", pid);
+                // waitpid(pid, &child_status, 0);
+            }
+
+
         }
     }
 }
