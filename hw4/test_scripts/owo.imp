@@ -6,9 +6,6 @@ conversion aaa bbb util/convert aaa bbb
 conversion bbb ccc util/convert bbb ccc
 conversion ccc ddd util/convert ccc ddd
 printer testone ddd
-printer testtwo bbb
-enable test
 enable testone
-enable testtwo
-print test_scripts/testfile.bbb
+print test_scripts/testfile.aaa
 

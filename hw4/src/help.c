@@ -15,6 +15,11 @@ int global_jobptr = 0;
 int global_jobfill = 0;
 
 /* Functions */
+void delay(unsigned int sec){
+	unsigned int f_time = time(0) + sec;
+	while(time(0) < f_time);
+}
+
 int num_args(char* command){
 	char* token;
 	int word = 0;
