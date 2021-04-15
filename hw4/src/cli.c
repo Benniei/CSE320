@@ -489,7 +489,7 @@ void job_check(){
             if(num_conv == 0){ // if there are no conversions
 
                 if((pid = fork()) == 0){ // Child Process
-                    setpgid(pid, 0);
+
                     int printer_fd = imp_connect_to_printer(printers[jobs[i].printer_id].name, printers[jobs[i].printer_id].type->name, PRINTER_NORMAL);
                     if(printer_fd == -1){
                         fprintf(stderr, "unable to connect to printer");
@@ -534,16 +534,17 @@ void job_check(){
                         exit (0);
                     }
                     close(printer_fd);
+                    free_names();
+                    free_job_file();
+                    conversions_fini();
                     exit (0);
                 }
                 else{
                     // setgpid() goes here
-
+                    setpgid(pid, 0);
                     //printf("parent's process group id is now %d\n", (int) getpgrp());
                     waitpid(pid, &child_status, 0);
-                    free_names();
-                    free_job_file();
-                    conversions_fini();
+
                 }
             }
             // MASTER 2
@@ -620,7 +621,12 @@ void job_check(){
                                     // execvp
                                     if(execvp(*comm, comm) == -1)
                                         fprintf(stderr, "unable to perform command");
+                                    free_names();
+                                    free_job_file();
+                                    conversions_fini();
+                                    exit(0);
                                 }
+
                                 //printf("pid %d\n", child_pid[i - 1]);
 
                             }
@@ -639,6 +645,7 @@ void job_check(){
                                     // execvp
                                     if(execvp(*comm, comm) == -1)
                                         fprintf(stderr, "unable to perform command");
+                                    exit(0);
                                 }
                                 //printf("pid %d\n", child_pid[i - 1]);
                             }
@@ -647,10 +654,6 @@ void job_check(){
 
                         for(int pnum = 0; pnum < num_pipes; pnum++){
                             close(fd[pnum]);
-                        }
-                        for(int cp = 0; cp < num_conv; cp--){
-                            // printf( "reaped child %d\n", child_pid[cp]);
-                            waitpid(child_pid[cp], &child_status, 0);
                         }
                         free_names();
                         free_job_file();
@@ -670,7 +673,15 @@ void job_check(){
 
                         exit (0);
                     }
+                    for(int cp = 0; cp < num_conv; cp--){
+                        printf( "reaped child %d\n", child_pid[cp]);
+                        waitpid(child_pid[cp], &child_status, 0);
+                    }
                     close(printer_fd);
+                    free_names();
+                    free_job_file();
+                    conversions_fini();
+                    fclose(in);
                     exit (0);
                 }
                 else{
@@ -679,9 +690,8 @@ void job_check(){
                     // printf("parent's process group id is now %d\n", (int) getpgrp());
                     // printf("reaped child %d\n", pid);
                     waitpid(pid, &child_status, 0);
-
-
                 }
+
             }
         }
     }
