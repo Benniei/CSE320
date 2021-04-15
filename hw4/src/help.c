@@ -118,3 +118,4 @@ int check_conversion(char* type1, char* type2){
 	free(temp);
 	return conv_counter;
 }
+

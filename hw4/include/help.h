@@ -58,3 +58,4 @@ void free_job_file(void);
 int strtoint(char* number);
 
 int check_conversion(char* type1, char* type2);
+

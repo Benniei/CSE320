@@ -8,11 +8,28 @@
 #include <string.h>
 #include <time.h>
 #include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
 
 #include "imprimer.h"
 #include "conversions.h"
 #include "sf_readline.h"
 #include "help.h"
+
+void job_check();
+
+int job_complete;
+
+void sigchild_handler(){
+    job_complete = 1;
+}
+
+void readline_callback(){
+    if(job_complete == 1){
+        job_complete = 0;
+        job_check();
+    }
+}
 
 int run_cli(FILE *in, FILE *out)
 {
@@ -81,7 +98,11 @@ int run_cli(FILE *in, FILE *out)
             else{
                 char* file_type;
                 file_type = strtok(NULL, " ");
-                define_type(file_type);
+                if(define_type(file_type) == NULL){
+                    fprintf(out, "Type not defined (ran out of memory)");
+                    sf_cmd_error("type (out of memory)");
+                    goto end_free;
+                }
                 sf_cmd_ok();
             }
 
@@ -384,215 +405,284 @@ int run_cli(FILE *in, FILE *out)
             sf_cmd_error("unrecognized command");
             goto end_free;
         }
-        if(status_flag == 1){
-            int i;
-            int num_conv;
-            for(i = 0; i < global_jobptr; i++){
-                char match_flag = 0;
-                if(jobs[i].status != JOB_CREATED)
-                    continue;
-                if(jobs[i].num_eligible == 0){
-                    // Check through all the printers
-                    for(int k = 0; k < global_jobptr; k++){
-                        if(printers[k].status != PRINTER_IDLE)
-                            continue;
-
-                        // check if conversion exist
-                        num_conv = check_conversion(jobs[i].type->name, printers[k].type->name);
-                        if(num_conv == -1)
-                            continue;
-                        match_flag = 1;
-                        jobs[i].printer_id = k;
-                        jobs[i].num_conversions = num_conv;
-                    }
-                }
-                else{
-                    for(int k = 0; k < jobs[i].num_eligible; k++){
-                        int pos = find_printer(jobs[i].eligible_printers[k]);
-                        if(pos == -1)
-                            continue;
-                        if(printers[pos].status != PRINTER_IDLE)
-                            continue;
-                        // check if conversion exist
-                        num_conv = check_conversion(jobs[i].type->name, printers[pos].type->name);
-                        if(num_conv == -1)
-                            continue;
-                        match_flag = 1;
-                        jobs[i].printer_id = pos;
-                        jobs[i].num_conversions = num_conv;
-                    }
-                }
-                // fprintf(out, "Number conversion: %d\n", num_conv);
-                if(match_flag == 1){
-                    // forking and pipelining
-                    // remember to free file name before deleting
-                    int pid;
-                    // MASTER 1
-                    if(num_conv == 0){ // if there are no conversions
-                        if((pid = fork()) == 0){ // Child Process
-                            int printer_fd = imp_connect_to_printer(printers[jobs[i].printer_id].name, printers[jobs[i].printer_id].type->name, PRINTER_NORMAL);
-                            if(printer_fd == -1){
-                                fprintf(stderr, "unable to connect to printer");
-                                exit (1);
-                            }
-
-                            jobs[i].status = JOB_RUNNING;
-                            sf_job_status(jobs[i].id, JOB_RUNNING);
-                            sf_printer_status(printers[jobs[i].printer_id].name, PRINTER_BUSY);
-                            printers[jobs[i].printer_id].status = PRINTER_BUSY;
-                            int fd[2];// 0 is read, 1 is write
-
-                            char* cat[3]; // used to read the file
-                            cat[0] = "cat";
-                            cat[1] = jobs[i].file_name;
-                            cat[2] = NULL;
-                            char* bincat[2] = {"/bin/cat", NULL};
-                            char* term_commands[2] = {"/bin/cat", NULL};
-                            sf_job_started(jobs[i].id, printers[jobs[i].printer_id].name, (int) getpgrp(), term_commands);
-
-                            if(pipe(fd) == -1){
-                                fprintf(stderr, "Cannot create pipe");
-                                // Handler
-                                exit(1);
-                            }
-
-                            dup2(printer_fd, 1);
-                            if((pid = fork()) == 0){ // Child Process
-                                // writes into the pipe
-                                dup2(fd[1], 1); // replace stdout with writing to pipe
-                                close(fd[0]); // close read part of pipe
-                                execvp(*cat, cat);
-                                exit (0);
-                            }
-                            else{ // Parent Process
-                                // reads from the pipe
-                                dup2(fd[0], 0);  // replace stdin with reading from pipe
-                                close(fd[1]); // close write part of pipe
-                                execvp(*bincat, bincat);
-                                exit (0);
-                            }
-                            close(printer_fd);
-                            exit (0);
-                        }
-                        else{
-                            // setgpid() goes here
-                            setpgid(pid, 0);
-                            printf("parent's process group id is now %d\n", (int) getpgrp());
-                        }
-                    }
-                    // MASTER 2
-                    else{
-                        if((pid = fork()) == 0){ // Child Process
-                            int printer_fd = imp_connect_to_printer(printers[jobs[i].printer_id].name, printers[jobs[i].printer_id].type->name, PRINTER_NORMAL);
-                            if(printer_fd == -1){
-                                fprintf(stderr, "unable to connect to printer");
-                                exit (1);
-                            }
-
-                            jobs[i].status = JOB_RUNNING;
-                            sf_job_status(jobs[i].id, JOB_RUNNING);
-                            sf_printer_status(printers[jobs[i].printer_id].name, PRINTER_BUSY);
-                            printers[jobs[i].printer_id].status = PRINTER_BUSY;
-
-                            char* term_commands[num_conv + 1];
-                            CONVERSION** temp = find_conversion_path(jobs[i].type->name, printers[jobs[i].printer_id].type->name);
-                            term_commands[0] = (*temp)->cmd_and_args[0];
-
-                            for(int m = 1; m < num_conv; m++){
-                                free(temp);
-                                temp = find_conversion_path(jobs[i].type->name, printers[jobs[i].printer_id].type->name);
-                                term_commands[m] = (*temp)->cmd_and_args[0];
-                            }
-                            free(temp);
-                            char* cat[3]; // used to read the file
-                            cat[0] = "cat";
-                            cat[1] = jobs[i].file_name;
-                            cat[2] = NULL;
-                            term_commands[num_conv] = NULL;
-                            sf_job_started(jobs[i].id, printers[jobs[i].printer_id].name, (int) getpgrp(), term_commands);
-
-                            int num_pipes = num_conv *2;
-
-                            // fprintf(out, "Num pipes: %d\n", num_pipes);
-
-                            int fd[num_pipes];// 0 is read, 1 is write
-                            for(int f = 0; f < num_conv; f++){
-                                if(pipe(fd + (2*f)) == -1){
-                                    fprintf(stderr, "Cannot create pipe");
-                                    // Handler
-                                }
-                            }
-
-                            dup2(printer_fd, 1);
-
-                            if((pid = fork()) == 0){ // Child Process
-                                // actually stuff goes here
-                                char* begarg = jobs[i].type->name;
-                                for(int c = 0; c < num_conv; c++){
-                                    int read_from = c*2;
-                                    int write_to = read_from + 3;
-                                    temp = find_conversion_path(begarg, printers[jobs[i].printer_id].type->name);
-                                    begarg = (*temp)->to->name;
-                                    // fprintf(out, "doing conversion %s -> %s\n", (*temp)->from->name, (*temp)->to->name);
-                                    char** comm = (*temp)->cmd_and_args;
-                                    if(c == num_conv - 1){
-                                        if(fork() == 0){
-                                            dup2(fd[num_pipes - 2], 0);
-                                            for(int pnum = 0; pnum < num_pipes; pnum++){
-                                                if(pnum == (num_pipes-2))
-                                                    continue;
-                                                close(fd[pnum]);
-                                            }
-                                            // execvp
-                                            execvp(*comm, comm);
-                                        }
-                                    }
-                                    else{
-                                        if(fork() == 0){
-                                            // fprintf(out, "piping READ %d -> WRITE %d\n", read_from, write_to);
-                                            dup2(fd[read_from], 0);
-                                            dup2(fd[write_to], 1);
-
-                                            for(int pnum = 0; pnum < num_pipes; pnum++){
-                                                if(pnum == read_from || pnum == write_to)
-                                                    continue;
-                                                close(fd[pnum]);
-                                            }
-                                            // execvp
-                                            execvp(*comm, comm);
-                                        }
-                                    }
-                                    free(temp);
-                                }
-                                exit (0);
-                            }
-                            else{ // Parent Process
-                                //start the writing to the pipe
-                                dup2(fd[1], 1);
-                                for(int pnum = 0; pnum < num_pipes; pnum++){
-                                    if(pnum == 1)
-                                        continue;
-                                    close(fd[pnum]);
-                                }
-                                execvp(*cat, cat);
-                                exit (0);
-                            }
-                            close(printer_fd);
-                            exit (0);
-                        }
-                        else{
-                            // setgpid() goes here
-                            setpgid(pid, 0);
-                            printf("parent's process group id is now %d\n", (int) getpgrp());
-                        }
-                    }
-                }
-            }
-        }
         end_free:
         if(in == stdin || in == NULL)
             free(command);
+        if(status_flag == 1){
+            job_check();
+        }
     }
 
     abort();
+}
+
+int match_job_to_ptr(int i){ // i is the job id
+    int num_conv = -1;
+    int other_conv = -1;
+    char flag = 0;
+    if(jobs[i].status != JOB_CREATED)
+        return -1;
+    if(jobs[i].num_eligible == 0){
+        // Check through all the printers
+        for(int k = 0; k < global_jobptr; k++){
+            if(printers[k].status != PRINTER_IDLE)
+                continue;
+
+            // check if conversion exist
+            num_conv = check_conversion(jobs[i].type->name, printers[k].type->name);
+
+            if(num_conv == -1)
+                continue;
+            if(flag == 0){
+                flag = 1;
+                other_conv = num_conv;
+                jobs[i].printer_id = k;
+                jobs[i].num_conversions = num_conv;
+            }
+            if(num_conv < other_conv){
+                jobs[i].printer_id = k;
+                jobs[i].num_conversions = num_conv;
+                other_conv = num_conv;
+            }
+        }
+    }
+    else{
+        for(int k = 0; k < jobs[i].num_eligible; k++){
+            int pos = find_printer(jobs[i].eligible_printers[k]);
+            if(pos == -1)
+                continue;
+            if(printers[pos].status != PRINTER_IDLE)
+                continue;
+            // check if conversion exist
+            num_conv = check_conversion(jobs[pos].type->name, printers[pos].type->name);
+            if(num_conv == -1)
+                continue;
+            if(flag == 0){
+                flag = 1;
+                other_conv = num_conv;
+                jobs[pos].printer_id = k;
+                jobs[pos].num_conversions = num_conv;
+            }
+            if(num_conv <= other_conv){
+                jobs[pos].printer_id = pos;
+                jobs[pos].num_conversions = num_conv;
+                other_conv = num_conv;
+            }
+        }
+    }
+    return num_conv;
+}
+
+void job_check(){
+    int i;
+    int num_conv;
+    for(i = 0; i < global_jobptr; i++){
+        num_conv = match_job_to_ptr(i);
+        // top gives you number of conversions and sets the fields of jobs
+        // fprintf(out, "Number conversion: %d\n", num_conv);
+        if(num_conv != -1){
+            // forking and pipelining
+            // remember to free file name before deleting
+            pid_t pid = 0;
+            // MASTER 1
+            int child_status;
+            if(num_conv == 0){ // if there are no conversions
+
+                if((pid = fork()) == 0){ // Child Process
+                    setpgid(pid, 0);
+                    int printer_fd = imp_connect_to_printer(printers[jobs[i].printer_id].name, printers[jobs[i].printer_id].type->name, PRINTER_NORMAL);
+                    if(printer_fd == -1){
+                        fprintf(stderr, "unable to connect to printer");
+                        exit (1);
+                    }
+
+                    jobs[i].status = JOB_RUNNING;
+                    sf_job_status(jobs[i].id, JOB_RUNNING);
+                    sf_printer_status(printers[jobs[i].printer_id].name, PRINTER_BUSY);
+                    printers[jobs[i].printer_id].status = PRINTER_BUSY;
+                    int fd[2];// 0 is read, 1 is write
+
+                    char* cat[3]; // used to read the file
+                    cat[0] = "cat";
+                    cat[1] = jobs[i].file_name;
+                    cat[2] = NULL;
+                    char* bincat[2] = {"/bin/cat", NULL};
+                    char* term_commands[2] = {"/bin/cat", NULL};
+                    sf_job_started(jobs[i].id, printers[jobs[i].printer_id].name, (int) getpgrp(), term_commands);
+
+                    if(pipe(fd) == -1){
+                        fprintf(stderr, "Cannot create pipe");
+                        // Handler
+                        exit(1);
+                    }
+
+                    dup2(printer_fd, 1);
+                    if((pid = fork()) == 0){ // Child Process
+                        // writes into the pipe
+                        dup2(fd[1], 1); // replace stdout with writing to pipe
+                        close(fd[0]); // close read part of pipe
+                        if(execvp(*cat, cat) == -1)
+                            fprintf(stderr, "unable to perform command");
+                        exit (0);
+                    }
+                    else{ // Parent Process
+                        // reads from the pipe
+                        dup2(fd[0], 0);  // replace stdin with reading from pipe
+                        close(fd[1]); // close write part of pipe
+                        if(execvp(*bincat, bincat) == -1)
+                            fprintf(stderr, "unable to perform command");
+                        exit (0);
+                    }
+                    close(printer_fd);
+                    exit (0);
+                }
+                else{
+                    // setgpid() goes here
+
+                    //printf("parent's process group id is now %d\n", (int) getpgrp());
+                    waitpid(pid, &child_status, 0);
+                    free_names();
+                    free_job_file();
+                    conversions_fini();
+                }
+            }
+            // MASTER 2
+            else{
+                int child_status;
+
+
+                if((pid = fork()) == 0){ // Child Process
+
+                    int printer_fd = imp_connect_to_printer(printers[jobs[i].printer_id].name, printers[jobs[i].printer_id].type->name, PRINTER_NORMAL);
+                    if(printer_fd == -1){
+                        fprintf(stderr, "unable to connect to printer");
+                        exit (1);
+                    }
+                    // status
+                    jobs[i].status = JOB_RUNNING;
+                    sf_job_status(jobs[i].id, JOB_RUNNING);
+                    sf_printer_status(printers[jobs[i].printer_id].name, PRINTER_BUSY);
+                    printers[jobs[i].printer_id].status = PRINTER_BUSY;
+                    // fill in array
+                    char* term_commands[num_conv + 1];
+                    CONVERSION** temp = find_conversion_path(jobs[i].type->name, printers[jobs[i].printer_id].type->name);
+                    term_commands[0] = (*temp)->cmd_and_args[0];
+
+                    for(int m = 1; m < num_conv; m++){
+                        free(temp);
+                        temp = find_conversion_path(jobs[i].type->name, printers[jobs[i].printer_id].type->name);
+                        term_commands[m] = (*temp)->cmd_and_args[0];
+                    }
+                    free(temp);
+                    char* cat[3]; // used to read the file
+                    cat[0] = "cat";
+                    cat[1] = jobs[i].file_name;
+                    cat[2] = NULL;
+                    term_commands[num_conv] = NULL;
+                    sf_job_started(jobs[i].id, printers[jobs[i].printer_id].name, (int) getpgrp(), term_commands);
+
+                    int num_pipes = num_conv *2;
+
+                    // fprintf(out, "Num pipes: %d\n", num_pipes);
+
+                    int fd[num_pipes];// 0 is read, 1 is write
+                    for(int f = 0; f < num_conv; f++){
+                        if(pipe(fd + (2*f)) == -1){
+                            fprintf(stderr, "Cannot create pipe");
+                            // Handler
+                        }
+                    }
+
+
+                    dup2(printer_fd, 1);
+
+                    pid_t child_pid[num_conv];
+                    int i = 0;
+
+                    if((pid = fork()) == 0){ // Child Process
+                        // actually stuff goes here
+                        char* begarg = jobs[i].type->name;
+                        for(int c = 0; c < num_conv; c++){
+                            int read_from = c*2;
+                            int write_to = read_from + 3;
+                            temp = find_conversion_path(begarg, printers[jobs[i].printer_id].type->name);
+                            begarg = (*temp)->to->name;
+                            // fprintf(out, "doing conversion %s -> %s\n", (*temp)->from->name, (*temp)->to->name);
+                            char** comm = (*temp)->cmd_and_args;
+                            if(c == num_conv - 1){
+                                if((child_pid[i++] = fork()) == 0){
+                                    dup2(fd[num_pipes - 2], 0);
+                                    for(int pnum = 0; pnum < num_pipes; pnum++){
+                                        if(pnum == (num_pipes-2))
+                                            continue;
+                                        close(fd[pnum]);
+                                    }
+                                    // execvp
+                                    if(execvp(*comm, comm) == -1)
+                                        fprintf(stderr, "unable to perform command");
+                                }
+                                //printf("pid %d\n", child_pid[i - 1]);
+
+                            }
+                            else{
+                                if((child_pid[i++] = fork()) == 0){
+                                    // fprintf(out, "piping READ %d -> WRITE %d\n", read_from, write_to);
+
+                                    dup2(fd[read_from], 0);
+                                    dup2(fd[write_to], 1);
+
+                                    for(int pnum = 0; pnum < num_pipes; pnum++){
+                                        if(pnum == read_from || pnum == write_to)
+                                            continue;
+                                        close(fd[pnum]);
+                                    }
+                                    // execvp
+                                    if(execvp(*comm, comm) == -1)
+                                        fprintf(stderr, "unable to perform command");
+                                }
+                                //printf("pid %d\n", child_pid[i - 1]);
+                            }
+                            free(temp);
+                        }
+
+                        for(int pnum = 0; pnum < num_pipes; pnum++){
+                            close(fd[pnum]);
+                        }
+                        for(int cp = 0; cp < num_conv; cp--){
+                            // printf( "reaped child %d\n", child_pid[cp]);
+                            waitpid(child_pid[cp], &child_status, 0);
+                        }
+                        free_names();
+                        free_job_file();
+                        conversions_fini();
+                        exit (0);
+                    }
+                    else{ // Parent Process
+                        //start the writing to the pipe
+                        dup2(fd[1], 1);
+                        for(int pnum = 0; pnum < num_pipes; pnum++){
+                            if(pnum == 1)
+                                continue;
+                            close(fd[pnum]);
+                        }
+                        if(execvp(*cat, cat) == -1)
+                            fprintf(stderr, "unable to perform command");
+
+                        exit (0);
+                    }
+                    close(printer_fd);
+                    exit (0);
+                }
+                else{
+                    // setgpid() goes here
+                    setpgid(pid, 0);
+                    // printf("parent's process group id is now %d\n", (int) getpgrp());
+                    // printf("reaped child %d\n", pid);
+                    waitpid(pid, &child_status, 0);
+
+
+                }
+            }
+        }
+    }
 }
