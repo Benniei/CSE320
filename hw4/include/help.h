@@ -39,8 +39,6 @@ int global_jobptr; // pointer for end of array
 int global_jobfill; // how many jobs are filled (always <= jobptr)
 
 /* Functions */
-void delay(unsigned int sec);
-
 int num_args(char* command); /* returns the number of arguments */
 
 void add_printer(char* name, char* filetp);

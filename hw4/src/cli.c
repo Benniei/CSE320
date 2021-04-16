@@ -23,28 +23,13 @@ void job_check();
 
 volatile sig_atomic_t job_complete;
 
-void sigterm(){
-    printf("sigterm sent");
-    signal(SIGTERM, sigterm);
-}
-
-void sigcont(){
-    printf("sigcont sent");
-    signal(SIGCONT, sigcont);
-}
-
-void sigstop(){
-    printf("sigstop sent");
-    signal(SIGSTOP, sigstop);
-}
-
 void sigchild_handler(){
     // printf("sighandler\n");
     job_complete = 1;
     int status;
     pid_t pid;
     while((pid = waitpid(-1, &status, WNOHANG)) > 0){
-        // printf("pid: %d", pid);
+        // printf("pid: %d\n", pid);
         for(int i = 0; i < global_jobptr; i++){
             if(jobs[i].pgid == pid){
                 jobs[i].status = JOB_FINISHED;
@@ -78,6 +63,12 @@ int run_cli(FILE *in, FILE *out)
     while(1){
     	char* command;
         char line[256];
+        for(int i = 0; i < global_jobptr; i++){
+            if(jobs[i].status == JOB_FINISHED || jobs[i].status == JOB_ABORTED){
+                jobs[i].status = JOB_DELETED;
+                sf_job_deleted(i);
+            }
+        }
         if(in == stdin)
             command = sf_readline("imp> ");
         else{
@@ -258,7 +249,7 @@ int run_cli(FILE *in, FILE *out)
                             ctime(&jobs[i].create_time), job_status_names[jobs[i].status], jobs[i].eligible, jobs[i].file_name);
                     }
                     else{
-                        fprintf(out,"JOB[%d]: type=%s, creation(%.19s), status(%.19s)=%s, eligible=%08x, file=%s\n, pgid=%d, printer=%s\n", i, jobs[i].type->name, ctime(&jobs[i].create_time),
+                        fprintf(out,"JOB[%d]: type=%s, creation(%.19s), status(%.19s)=%s, eligible=%08x, file=%s, pgid=%d, printer=%s\n", i, jobs[i].type->name, ctime(&jobs[i].create_time),
                             ctime(&jobs[i].create_time), job_status_names[jobs[i].status], jobs[i].eligible, jobs[i].file_name, jobs[i].pgid, printers[jobs[i].printer_id].name);
                     }
                 }
@@ -341,12 +332,17 @@ int run_cli(FILE *in, FILE *out)
                 }
                 if(jobs[job_number].status == JOB_PAUSED){
                     //SIGTERM
+                    kill(jobs[job_number].pgid, SIGTERM);
                     //SIGCONT
+                    kill(jobs[job_number].pgid, SIGCONT);
                 }
                 else{
                     //SIGTERM
+                    kill(jobs[job_number].pgid, SIGTERM);
                 }
                 jobs[job_number].status = JOB_ABORTED;
+                sf_job_status(job_number, jobs[job_number].status);
+                sf_cmd_ok();
             }
         }
         else if(strcmp(token, "pause") == 0){
@@ -370,8 +366,10 @@ int run_cli(FILE *in, FILE *out)
                     goto end_free;
                 }
                 //SIGNAL SIGSTOP (READ DOC)
+                kill(jobs[job_number].pgid, SIGSTOP);
                 jobs[job_number].status = JOB_PAUSED;
-
+                sf_job_status(job_number, jobs[job_number].status);
+                sf_cmd_ok();
             }
         }
         else if(strcmp(token, "resume") == 0){
@@ -395,7 +393,10 @@ int run_cli(FILE *in, FILE *out)
                     goto end_free;
                 }
                 jobs[job_number].status = JOB_RUNNING;
+                sf_job_status(job_number, jobs[job_number].status);
                 //Send SIGCONT
+                kill(jobs[job_number].pgid, SIGCONT);
+                sf_cmd_ok();
             }
         }
         else if(strcmp(token, "disable") == 0){
@@ -514,7 +515,7 @@ int match_job_to_ptr(int i){ // i is the job id
             }
         }
     }
-    return num_conv;
+    return other_conv;
 }
 
 void job_check(){
@@ -535,8 +536,9 @@ void job_check(){
             sf_job_status(jobs[i].id, JOB_RUNNING);
             sf_printer_status(printers[jobs[i].printer_id].name, PRINTER_BUSY);
             printers[jobs[i].printer_id].status = PRINTER_BUSY;
-
             if((jobs[i].pgid = fork()) == 0){ // Child Process
+                //signals
+
                 setpgid(pid, 0);
                 int printer_fd = imp_connect_to_printer(printers[jobs[i].printer_id].name, printers[jobs[i].printer_id].type->name, PRINTER_NORMAL);
                 if(printer_fd == -1){
@@ -546,10 +548,10 @@ void job_check(){
                     fprintf(stderr, "unable to connect to printer");
                     exit (1);
                 }
+
                 // same type to same type
                 if(num_conv == 0){
                     int fd[2];// 0 is read, 1 is write
-
                     char* cat[3]; // used to read the file
                     cat[0] = "cat";
                     cat[1] = jobs[i].file_name;
@@ -560,7 +562,7 @@ void job_check(){
 
                     if(pipe(fd) == -1){
                         fprintf(stderr, "Cannot create pipe");
-                        // Handler
+                        sf_job_aborted(i, jobs[i].status);
                         exit(1);
                     }
 
@@ -614,7 +616,7 @@ void job_check(){
                     for(int f = 0; f < num_conv; f++){
                         if(pipe(fd + (2*f)) == -1){
                             fprintf(stderr, "Cannot create pipe");
-                            // Handler
+                            sf_job_aborted(i, jobs[i].status);
                         }
                     }
 
@@ -645,6 +647,7 @@ void job_check(){
                                         free_names();
                                         free_job_file();
                                         conversions_fini();
+                                        sf_job_aborted(i, jobs[i].status);
                                         exit(1);
                                     }
                                     exit(0);
@@ -671,6 +674,7 @@ void job_check(){
                                         free_names();
                                         free_job_file();
                                         conversions_fini();
+                                        sf_job_aborted(i, jobs[i].status);
                                         exit(1);
                                     }
                                     exit(0);
@@ -701,6 +705,7 @@ void job_check(){
                             free_names();
                             free_job_file();
                             conversions_fini();
+                            sf_job_aborted(i, jobs[i].status);
                             fprintf(stderr, "unable to perform command");
                             exit(1);
                         }
@@ -717,13 +722,6 @@ void job_check(){
                 if(input != stdin || input != NULL)
                     fclose(input);
                 exit (0);
-            }
-            else{
-                // setgpid() goes here
-                // printf("parent's process group id is now %d\n", (int) getpgrp());
-                // printf("reaped child %d\n", pid);
-                // waitpid(jobs[i].pgid, &child_status, 0);
-
             }
         }
     }
