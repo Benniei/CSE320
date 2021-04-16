@@ -113,6 +113,21 @@ int run_cli(FILE *in, FILE *out)
                 goto end_free;
             }
             else{
+                for(int i = 0; i < global_jobptr; i++){
+                    int child_status;
+                     if(jobs[i].status == JOB_PAUSED){
+                    //SIGTERM
+                        kill(jobs[i].pgid, SIGTERM);
+                    //SIGCONT
+                        kill(jobs[i].pgid, SIGCONT);
+                    }
+                    else if(jobs[i].status == JOB_RUNNING){
+                    //SIGTERM
+                        kill(jobs[i].pgid, SIGTERM);
+                    }
+                    waitpid(jobs[i].pgid, &child_status, 0);
+                }
+
                 free_names();
                 free_job_file();
                 sf_cmd_ok();
@@ -336,7 +351,7 @@ int run_cli(FILE *in, FILE *out)
                     //SIGCONT
                     kill(jobs[job_number].pgid, SIGCONT);
                 }
-                else{
+                else if(jobs[job_number].status == JOB_RUNNING){
                     //SIGTERM
                     kill(jobs[job_number].pgid, SIGTERM);
                 }
