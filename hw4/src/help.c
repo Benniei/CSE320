@@ -80,9 +80,19 @@ void free_names(void){
 		free(printers[i].name);
 }
 
+void free_single_job(int i){
+	free(jobs[i].file_name);
+	if(jobs[i].num_eligible > 0){
+		for(int j = 0; j < jobs[i].num_eligible; j++){
+			free(jobs[i].eligible_printers[j]);
+		}
+	}
+}
+
 void free_job_file(void){
-	for(int i = 0; i < global_jobptr;i++)
-		free(jobs[i].file_name);
+	for(int i = 0; i < global_jobptr;i++){
+		free_single_job(i);
+	}
 }
 
 int strtoint(char *number){

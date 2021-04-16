@@ -53,6 +53,8 @@ int find_job(int pos);
 
 void free_names(void);
 
+void free_single_job(int i);
+
 void free_job_file(void);
 
 int strtoint(char* number);
