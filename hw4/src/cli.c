@@ -60,10 +60,10 @@ int run_cli(FILE *in, FILE *out)
     output = out;
     // TO BE IMPLEMENTED
 	// fprintf(stderr, "You have to implement run_cli() before the application will function.\n");
-    sigset_t mask, prev;
+    // sigset_t mask, prev;
     signal(SIGCHLD, sigchild_handler);
-    sigemptyset(&mask);
-    sigaddset(&mask, SIGCHLD);
+    // sigemptyset(&mask);
+    // sigaddset(&mask, SIGCHLD);
     sf_set_readline_signal_hook(readline_callback);
     int args_counter;
     while(1){
@@ -120,24 +120,6 @@ int run_cli(FILE *in, FILE *out)
                 goto end_free;
             }
             else{
-                sigprocmask(SIG_BLOCK, &mask, &prev);
-                for(int i = 0; i < global_jobptr; i++){
-                    int child_status;
-                     if(jobs[i].status == JOB_PAUSED){
-                    //SIGTERM
-                        kill(jobs[i].pgid, SIGTERM);
-                    //SIGCONT
-                        kill(jobs[i].pgid, SIGCONT);
-                    }
-                    else if(jobs[i].status == JOB_RUNNING){
-                    //SIGTERM
-                        kill(jobs[i].pgid, SIGTERM);
-                    }
-                    waitpid(jobs[i].pgid, &child_status, 0);
-                }
-                fclose(stdin);
-                fclose(stdout);
-                fclose(stderr);
                 free_names();
                 free_job_file();
                 sf_cmd_ok();
