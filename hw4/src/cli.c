@@ -9,6 +9,7 @@
 #include <time.h>
 #include <unistd.h>
 #include <sys/types.h>
+#include <sys/signal.h>
 #include <sys/wait.h>
 #include <signal.h>
 
@@ -18,6 +19,7 @@
 #include "help.h"
 
 FILE* input;
+FILE* output;
 
 void job_check();
 
@@ -55,9 +57,13 @@ void readline_callback(){
 int run_cli(FILE *in, FILE *out)
 {
     input = in;
+    output = out;
     // TO BE IMPLEMENTED
 	// fprintf(stderr, "You have to implement run_cli() before the application will function.\n");
+    sigset_t mask, prev;
     signal(SIGCHLD, sigchild_handler);
+    sigemptyset(&mask);
+    sigaddset(&mask, SIGCHLD);
     sf_set_readline_signal_hook(readline_callback);
     int args_counter;
     while(1){
@@ -66,6 +72,7 @@ int run_cli(FILE *in, FILE *out)
         for(int i = 0; i < global_jobptr; i++){
             if(jobs[i].status == JOB_FINISHED || jobs[i].status == JOB_ABORTED){
                 jobs[i].status = JOB_DELETED;
+                free_single_job(i);
                 sf_job_deleted(i);
             }
         }
@@ -113,6 +120,7 @@ int run_cli(FILE *in, FILE *out)
                 goto end_free;
             }
             else{
+                sigprocmask(SIG_BLOCK, &mask, &prev);
                 for(int i = 0; i < global_jobptr; i++){
                     int child_status;
                      if(jobs[i].status == JOB_PAUSED){
@@ -127,7 +135,9 @@ int run_cli(FILE *in, FILE *out)
                     }
                     waitpid(jobs[i].pgid, &child_status, 0);
                 }
-
+                fclose(stdin);
+                fclose(stdout);
+                fclose(stderr);
                 free_names();
                 free_job_file();
                 sf_cmd_ok();
@@ -307,12 +317,12 @@ int run_cli(FILE *in, FILE *out)
                 while(printer != NULL){
                     int printer_pos = find_printer(printer);
                     if(printer_pos == -1){
-                        jobs[pos].eligible_printers[counter++]=printer;
+                        fprintf(out, "Invalid printer \'%s\'", printer);
                         printer = strtok(NULL, " ");
                         continue;
                     }
                     jobs[pos].eligible = jobs[pos].eligible | (1<<printer_pos);
-                    jobs[pos].eligible_printers[counter++] = printer; //findprinter
+                    jobs[pos].eligible_printers[counter++] = printers[printer_pos].name; //findprinter
                     printer = strtok(NULL, " ");
                 }
                 jobs[pos].num_eligible = counter;
@@ -438,7 +448,7 @@ int run_cli(FILE *in, FILE *out)
         }
         else if(strcmp(token, "enable") == 0){
             if(args_counter != 1){
-                fprintf(out, "Wrong number of args(given: %d, required: %d) for CLI command \'disable\'\n", args_counter, 1);
+                fprintf(out, "Wrong number of args(given: %d, required: %d) for CLI command \'enable\'\n", args_counter, 1);
                 sf_cmd_error("arg count");
                 goto end_free;
             }
@@ -548,8 +558,6 @@ void job_check(){
             // remember to free file name before deleting
             pid_t pid = 0;
             int child_status;
-            pid_t child_pid[num_conv];
-            int chp = 0;
             jobs[i].status = JOB_RUNNING;
             sf_job_status(jobs[i].id, JOB_RUNNING);
             sf_printer_status(printers[jobs[i].printer_id].name, PRINTER_BUSY);
@@ -589,8 +597,9 @@ void job_check(){
                         // writes into the pipe
                         dup2(fd[1], 1); // replace stdout with writing to pipe
                         close(fd[0]); // close read part of pipe
-                        if(execvp(*cat, cat) == -1)
+                        if(execvp(*cat, cat) == -1){
                             fprintf(stderr, "unable to perform command");
+                        }
                         exit (0);
                     }
                     else{ // Parent Process
@@ -599,12 +608,15 @@ void job_check(){
                         close(fd[1]); // close write part of pipe
                         if(execvp(*bincat, bincat) == -1)
                             fprintf(stderr, "unable to perform command");
+                        close(printer_fd);
                         exit (0);
                     }
                     close(printer_fd);
                     free_names();
                     free_job_file();
                     conversions_fini();
+                    if(input != stdin || input != NULL)
+                        fclose(input);
                     exit (0);
                 }
                 // conversion pipeline
@@ -635,14 +647,24 @@ void job_check(){
                         if(pipe(fd + (2*f)) == -1){
                             fprintf(stderr, "Cannot create pipe");
                             sf_job_aborted(i, jobs[i].status);
+                            close(printer_fd);
+                            free_names();
+                            free_job_file();
+                            conversions_fini();
+                            fclose(input);
+                            exit(1);
                         }
                     }
 
-
+                    pid_t pid2;
+                    
                     dup2(printer_fd, 1);
 
-                    if((pid = fork()) == 0){ // Child Process
+                    if((pid2 = fork()) == 0){ // Child Process
                         // actually stuff goes here
+                        pid_t child_pid[num_conv];
+                        int chp = 0;
+
                         char* begarg = jobs[i].type->name;
                         for(int c = 0; c < num_conv; c++){
                             int read_from = c*2;
@@ -661,11 +683,6 @@ void job_check(){
                                     }
                                     // execvp
                                     if(execvp(*comm, comm) == -1){
-                                        fprintf(stderr, "unable to perform command");
-                                        free_names();
-                                        free_job_file();
-                                        conversions_fini();
-                                        sf_job_aborted(i, jobs[i].status);
                                         exit(1);
                                     }
                                     exit(0);
@@ -688,11 +705,6 @@ void job_check(){
                                     }
                                     // execvp
                                     if(execvp(*comm, comm) == -1){
-                                        fprintf(stderr, "unable to perform command");
-                                        free_names();
-                                        free_job_file();
-                                        conversions_fini();
-                                        sf_job_aborted(i, jobs[i].status);
                                         exit(1);
                                     }
                                     exit(0);
@@ -704,9 +716,32 @@ void job_check(){
                         for(int pnum = 0; pnum < num_pipes; pnum++){
                             close(fd[pnum]);
                         }
+                        for(int p = 0; p < num_conv; p++){
+                            // fprintf(stdout, "pid[%d]: %d\n", p, child_pid[p]);
+                            waitpid(child_pid[p], &child_status, 0);
+                            if(WIFEXITED(child_status)){
+                                continue;
+                            }
+                            else{
+                                close(printer_fd);
+                                free_names();
+                                free_job_file();
+                                conversions_fini();
+                                fclose(stdout);
+                                fclose(stdin);
+                                fclose(stderr);
+                                if(input != stdin || input != NULL)
+                                    fclose(input);
+                                exit (1);
+                            }
+                        }
+                        close(printer_fd);
                         free_names();
                         free_job_file();
                         conversions_fini();
+                        fclose(stdout);
+                        fclose(stdin);
+                        fclose(stderr);
                         if(input != stdin || input != NULL)
                             fclose(input);
                         exit (0);
@@ -724,23 +759,49 @@ void job_check(){
                             free_job_file();
                             conversions_fini();
                             sf_job_aborted(i, jobs[i].status);
+                            if(input != stdin || input != NULL)
+                                fclose(input);
                             fprintf(stderr, "unable to perform command");
                             exit(1);
                         }
-                        exit (0);
                     }
+                    waitpid(pid2, &child_status, 0);
+                    if(WIFEXITED(child_status)){
+                        continue;
+                    }
+                    else{
+                        close(printer_fd);
+                        fclose(stdout);
+                        fclose(stdin);
+                        fclose(stderr);
+                        free_names();
+                        free_job_file();
+                        conversions_fini();
+                        if(input != stdin || input != NULL)
+                            fclose(input);
+                        exit (1);
+                    }
+                    close(printer_fd);
+                    fclose(stdout);
+                    fclose(stdin);
+                    fclose(stderr);
+                    free_names();
+                    free_job_file();
+                    conversions_fini();
+                    if(input != stdin || input != NULL)
+                        fclose(input);
+                    exit (0);
                 }
-                for(int cp = 0; cp < num_conv; cp++){
-                    waitpid(child_pid[cp], &child_status, 0);
-                }
-                close(printer_fd);
-                free_names();
-                free_job_file();
-                conversions_fini();
-                if(input != stdin || input != NULL)
-                    fclose(input);
-                exit (0);
             }
+            
+            // waitpid(jobs[i].pgid, &child_status, 0);
+            // if(WIFEXITED(child_status)){
+
+            // }
+            // else{
+            //     jobs[i].status = JOB_ABORTED;
+            //     sf_job_aborted(i, jobs[i].status);
+            // }
         }
     }
 }
