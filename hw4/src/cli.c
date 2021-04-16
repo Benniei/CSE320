@@ -523,7 +523,7 @@ int match_job_to_ptr(int i){ // i is the job id
                 jobs[i].printer_id = pos;
                 jobs[i].num_conversions = num_conv;
             }
-            if(num_conv <= other_conv){
+            if(num_conv < other_conv){
                 jobs[i].printer_id = pos;
                 jobs[i].num_conversions = num_conv;
                 other_conv = num_conv;
