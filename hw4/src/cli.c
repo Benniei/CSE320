@@ -514,18 +514,18 @@ int match_job_to_ptr(int i){ // i is the job id
             if(printers[pos].status != PRINTER_IDLE)
                 continue;
             // check if conversion exist
-            num_conv = check_conversion(jobs[pos].type->name, printers[pos].type->name);
+            num_conv = check_conversion(jobs[i].type->name, printers[pos].type->name);
             if(num_conv == -1)
                 continue;
             if(flag == 0){
                 flag = 1;
                 other_conv = num_conv;
-                jobs[pos].printer_id = k;
-                jobs[pos].num_conversions = num_conv;
+                jobs[i].printer_id = pos;
+                jobs[i].num_conversions = num_conv;
             }
             if(num_conv <= other_conv){
-                jobs[pos].printer_id = pos;
-                jobs[pos].num_conversions = num_conv;
+                jobs[i].printer_id = pos;
+                jobs[i].num_conversions = num_conv;
                 other_conv = num_conv;
             }
         }
