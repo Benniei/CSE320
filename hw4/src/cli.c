@@ -485,6 +485,7 @@ int match_job_to_ptr(int i){ // i is the job id
     if(jobs[i].num_eligible == 0){
         // Check through all the printers
         for(int k = 0; k < global_printerct; k++){
+            // printf("use global\n");
             if(printers[k].status != PRINTER_IDLE)
                 continue;
 
@@ -508,6 +509,7 @@ int match_job_to_ptr(int i){ // i is the job id
     }
     else{
         for(int k = 0; k < jobs[i].num_eligible; k++){
+            // printf("use eligible\n");
             int pos = find_printer(jobs[i].eligible_printers[k]);
             if(pos == -1)
                 continue;
@@ -541,6 +543,7 @@ void job_check(){
         // top gives you number of conversions and sets the fields of jobs
         // fprintf(out, "Number conversion: %d\n", num_conv);
         if(num_conv != -1){
+            // printf("Job[%d] matched with %s (Conversions: %d)\n", i, printers[jobs[i].printer_id].name, jobs[i].num_conversions);
             // forking and pipelining
             // remember to free file name before deleting
             pid_t pid = 0;
