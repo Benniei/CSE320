@@ -1,0 +1,3 @@
+Unrecognized Command: hehe
+Unrecognized Command: teehehe
+Wrong number of args(given: 1, required: 2) for CLI command 'printer'
