@@ -20,14 +20,15 @@ static void terminate(int);
 /*
  * "Charla" chat server.
  *
- * Usage: charla <port>
+ * Usage: charla <port>=
  */
 int main(int argc, char* argv[]){
     // Option processing should be performed here.
     // Option '-p <port>' is required in order to specify the port number
     // on which the server should listen.
     int counter = 1; // counters the amount of variables being used
-    char hflag = 0, pflag = 0, dflag = 0, qflag = 0;
+    char hflag = 0, pflag = 0, dflag = 0, qflag = 0, pdec = 0;
+    char* port;
     while(*(argv + counter) != NULL){
         if(counter == argc){
             printf("USAGE: -h <hostname> (optional), -p <port> (required), -d, -q\n");
@@ -69,6 +70,8 @@ int main(int argc, char* argv[]){
                 exit(EXIT_FAILURE);
             }
             printf("Portname: %s\n", *(argv + counter));
+            pdec = 1;
+            port = *(argv + counter);
             counter++;
         }
         else if(strcmp(*(argv + counter), "-d") == 0){
@@ -99,6 +102,10 @@ int main(int argc, char* argv[]){
             exit(EXIT_FAILURE);
         }
     }
+    if(pdec == 0){
+        printf("Port number was not provided");
+        exit(EXIT_FAILURE);
+    }
     // Perform required initializations of the client_registry and
     // player_registry.
     user_registry = ureg_init();
@@ -110,8 +117,20 @@ int main(int argc, char* argv[]){
     // a SIGHUP handler, so that receipt of SIGHUP will perform a clean
     // shutdown of the server.
 
-    fprintf(stderr, "You have to finish implementing main() "
-	    "before the server will function.\n");
+    // SIGHUP handler using sigaction
+    int *connfdp;
+    socklen_t clientlen;
+    struct sockaddr_storage clientaddr;
+    pthread_t tid;
+    int listenfd = Open_listenfd(port);
+    while(1){
+        clientlen = sizeof(struct sockaddr_storage);
+        connfdp = malloc(sizeof(int));
+        *connfdp = Accept(listenfd, (SA*) &clientaddr, &clientlen);
+        Pthread_create(&tid, NULL, chla_client_service, connfdp);
+    }
+    // fprintf(stderr, "You have to finish implementing main() "
+	   //  "before the server will function.\n");
 
     terminate(EXIT_FAILURE);
 }
