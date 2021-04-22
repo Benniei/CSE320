@@ -17,6 +17,10 @@
 
 static void terminate(int);
 
+void handler(int sig){
+    // Clean termination of the server
+    terminate(EXIT_SUCCESS);
+}
 /*
  * "Charla" chat server.
  *
@@ -64,7 +68,13 @@ int main(int argc, char* argv[]){
     socklen_t clientlen;
     struct sockaddr_storage clientaddr;
     pthread_t tid;
-    int listenfd = Open_listenfd(port);
+    int listenfd;
+
+    Signal(SIGHUP, handler);
+
+    if((listenfd = Open_listenfd(port)) < 0){
+        terminate(EXIT_FAILURE);
+    }
     while(1){
         clientlen = sizeof(struct sockaddr_storage);
         connfdp = malloc(sizeof(int));
