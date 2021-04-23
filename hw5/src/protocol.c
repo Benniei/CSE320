@@ -12,11 +12,10 @@
 #include "debug.h"
 #include "server.h"
 #include "globals.h"
-#include "help.h"
 #include "csapp.h"
 
 int proto_send_packet(int fd, CHLA_PACKET_HEADER *hdr, void *payload){
-	fprintf(stderr, "send packet\n");
+	// fprintf(stderr, "send packet\n");
 	if(rio_writen(fd, hdr, sizeof(CHLA_PACKET_HEADER)) < 0){
 		debug("Send Packet Failed [header]\n");
 		// set errno
@@ -35,8 +34,7 @@ int proto_send_packet(int fd, CHLA_PACKET_HEADER *hdr, void *payload){
 }
 
 int proto_recv_packet(int fd, CHLA_PACKET_HEADER *hdr, void **payload){
-	fprintf(stderr, "recieve packet\n");
-
+	// fprintf(stderr, "recieve packet\n");
 	if(rio_readn(fd, hdr, sizeof(CHLA_PACKET_HEADER)) < 0){
 		debug("Recieve Packet Failed [header]\n");
 		// set errno

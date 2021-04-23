@@ -12,7 +12,6 @@
 #include "debug.h"
 #include "server.h"
 #include "globals.h"
-#include "help.h"
 #include "csapp.h"
 
 static void terminate(int);
