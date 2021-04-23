@@ -9,3 +9,10 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 
+#include "user.h"
+
+typedef struct user {
+	char* handler;
+	int fd;
+	int reference_count;
+}USER;
