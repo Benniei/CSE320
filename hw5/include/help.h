@@ -10,9 +10,11 @@
 #include <sys/socket.h>
 
 #include "user.h"
+#include "csapp.h"
 
 typedef struct user {
-	char* handler;
+	char* handle;
 	int fd;
-	int reference_count;
+	int ref_count;
+	sem_t mutex; /* protects access to reference count*/
 }USER;
