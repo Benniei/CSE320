@@ -12,9 +12,15 @@
 #include "user.h"
 #include "csapp.h"
 
+/* User Struct */
 typedef struct user {
 	char* handle;
 	int fd;
 	int ref_count;
 	sem_t mutex; /* protects access to reference count*/
 }USER;
+
+/* User_registry Struct */
+typedef struct user_registry{
+
+}USER_REGISTRY;

@@ -30,14 +30,15 @@ USER* user_create(char* handle){
 	strcpy(p_handle, handle);
 	new_user->handle = p_handle;
 	Sem_init(&new_user->mutex, 0, 1); /* Binary semaphore for locking ref_count*/
-	new_user->ref_count = 0;
+	new_user->ref_count = 0; 
+	user_ref(new_user, "newly created user");
 	return new_user;
 }
 
 USER* user_ref(USER* user, char* why){
 	P(&user->mutex);
 	debug("Increase reference count on user %p [%s] (%d -> %d) for %s", user, user->handle,
-		user->ref_count, user->ref_count++, why);
+		user->ref_count, user->ref_count + 1, why);
 	user->ref_count = user->ref_count + 1;
 	V(&user->mutex);
 	return user;

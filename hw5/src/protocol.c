@@ -44,7 +44,7 @@ int proto_recv_packet(int fd, CHLA_PACKET_HEADER *hdr, void **payload){
 		//uint32_t temp = hdr->payload_length;
 		uint32_t hbo = ntohl(hdr->payload_length);
 
-		fprintf(stderr, "down here %d\n", hbo);
+		// fprintf(stderr, "down here %d\n", hbo);
 		*payload = malloc(hbo);
 		if(rio_readn(fd, *payload, hbo) <= 0){
 			debug("Recieve Packet Failed [payload]\n");
