@@ -17,10 +17,10 @@
 #include "help.h"
 
 USER_REGISTRY* ureg_init(void){
+    debug("Initialize User Registry");
     USER_REGISTRY* head = malloc(sizeof(USER_REGISTRY));
     head->next = NULL;
     Sem_init(&head->mutex, 0, 1);
-    debug("Initialize User Registry");
     return head;
 }
 
@@ -29,7 +29,9 @@ void ureg_fini(USER_REGISTRY* ureg){
     USER_REG_NODE* temp;
     while(loc != NULL){
         temp = loc;
-        loc = temp->next;    debug("ureg");
+        loc = temp->next; 
+        while(temp->user->ref_count > 0)
+            user_unref(temp->user, "being removed from the now-logged-out client");   
         free(temp->user->handle);
         free(temp);
     }
@@ -37,6 +39,7 @@ void ureg_fini(USER_REGISTRY* ureg){
 }
 
 USER* ureg_register(USER_REGISTRY* ureg, char* handle){
+    // fprintf(stderr, "register user\n");
     USER_REG_NODE* loc = ureg->next;
     while(loc != NULL){
         if(strcmp(handle, loc->user->handle) == 0){
@@ -44,6 +47,7 @@ USER* ureg_register(USER_REGISTRY* ureg, char* handle){
         }
         loc = loc->next;
     }
+    fprintf(stderr,"new user");
     USER* new_user = user_create(handle); 
     USER_REG_NODE* new_node = malloc(sizeof(USER_REG_NODE));
     loc = new_node;
@@ -56,6 +60,7 @@ USER* ureg_register(USER_REGISTRY* ureg, char* handle){
 
 void ureg_unregister(USER_REGISTRY* ureg, char* handle){
     USER_REG_NODE* loc = ureg->next;
+    printf("unregister \n");
     USER_REG_NODE* prev;
     while(loc != NULL){
         if(strcmp(handle, loc->user->handle) == 0){

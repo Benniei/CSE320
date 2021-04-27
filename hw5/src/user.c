@@ -31,6 +31,7 @@ USER* user_create(char* handle){
 	new_user->handle = p_handle;
 	Sem_init(&new_user->mutex, 0, 1); /* Binary semaphore for locking ref_count*/
 	new_user->ref_count = 0; 
+	// printf("before debug\n");
 	user_ref(new_user, "newly created user");
 	return new_user;
 }

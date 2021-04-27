@@ -14,11 +14,12 @@
 #include "globals.h"
 #include "csapp.h"
 
-static void terminate(int);
 
+static void terminate(int);
+volatile sig_atomic_t flag;
 void handler(int sig){
     // Clean termination of the server
-    terminate(EXIT_SUCCESS);
+    flag = 1;
 }
 /*
  * "Charla" chat server.
@@ -70,11 +71,12 @@ int main(int argc, char* argv[]){
     int listenfd;
 
     Signal(SIGHUP, handler);
-
+    Signal(SIGPIPE, handler);
+    
     if((listenfd = Open_listenfd(port)) < 0){
         terminate(EXIT_FAILURE);
     }
-    while(1){
+    while(!flag){
         clientlen = sizeof(struct sockaddr_storage);
         connfdp = malloc(sizeof(int));
         *connfdp = Accept(listenfd, (SA*) &clientaddr, &clientlen);

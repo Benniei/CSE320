@@ -9,8 +9,10 @@
 #include <arpa/inet.h>
 #include <sys/socket.h>
 
-#include "user.h"
 #include "csapp.h"
+#include "user.h"
+#include "user_registry.h"
+
 
 /* User Struct */
 typedef struct user {
@@ -32,3 +34,12 @@ typedef struct user_reg_node{
 	USER_REG_NODE* next;
 	sem_t mutex;
 }USER_REG_NODE;
+
+/* Client Struct */
+typedef struct client{
+
+}CLIENT;
+
+typedef struct client_registry{
+	
+}CLIENT_REGISTRY;
