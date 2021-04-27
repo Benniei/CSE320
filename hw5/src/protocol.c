@@ -14,8 +14,14 @@
 #include "globals.h"
 #include "csapp.h"
 
+void handler2(int sig){
+    // Clean termination of the server
+    debug("client has quit");
+}
+
 int proto_send_packet(int fd, CHLA_PACKET_HEADER *hdr, void *payload){
 	// fprintf(stderr, "send packet\n");
+	Signal(SIGPIPE, handler2);
 	if(rio_writen(fd, hdr, sizeof(CHLA_PACKET_HEADER)) < 0){
 		debug("Send Packet Failed [header]\n");
 		// set errno
@@ -35,6 +41,7 @@ int proto_send_packet(int fd, CHLA_PACKET_HEADER *hdr, void *payload){
 
 int proto_recv_packet(int fd, CHLA_PACKET_HEADER *hdr, void **payload){
 	// fprintf(stderr, "recieve packet\n");
+	Signal(SIGPIPE, handler2);
 	if(rio_readn(fd, hdr, sizeof(CHLA_PACKET_HEADER)) < 0){
 		debug("Recieve Packet Failed [header]\n");
 		// set errno
@@ -45,7 +52,7 @@ int proto_recv_packet(int fd, CHLA_PACKET_HEADER *hdr, void **payload){
 		uint32_t hbo = ntohl(hdr->payload_length);
 
 		// fprintf(stderr, "down here %d\n", hbo);
-		*payload = malloc(hbo);
+		*payload = malloc(hbo + 1);
 		if(rio_readn(fd, *payload, hbo) <= 0){
 			debug("Recieve Packet Failed [payload]\n");
 			// set errno
@@ -53,7 +60,7 @@ int proto_recv_packet(int fd, CHLA_PACKET_HEADER *hdr, void **payload){
 			// *payload = NULL;
 			return -1;
 		}
-		fprintf(stderr, "payload: %s", (char*)*payload);
+		// fprintf(stderr, "payload: %s", (char*)*payload);
 	}
 	return 0;
 }

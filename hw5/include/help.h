@@ -15,12 +15,20 @@
 /* User Struct */
 typedef struct user {
 	char* handle;
-	int fd;
 	int ref_count;
 	sem_t mutex; /* protects access to reference count*/
 }USER;
 
 /* User_registry Struct */
-typedef struct user_registry{
+typedef struct user_reg_node USER_REG_NODE;
 
+typedef struct user_registry{
+	USER_REG_NODE* next;
+	sem_t mutex;
 }USER_REGISTRY;
+
+typedef struct user_reg_node{
+	USER* user;
+	USER_REG_NODE* next;
+	sem_t mutex;
+}USER_REG_NODE;
