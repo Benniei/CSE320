@@ -71,7 +71,6 @@ int main(int argc, char* argv[]){
     int listenfd;
 
     Signal(SIGHUP, handler);
-    Signal(SIGPIPE, handler);
     
     if((listenfd = Open_listenfd(port)) < 0){
         terminate(EXIT_FAILURE);

@@ -30,10 +30,9 @@ void ureg_fini(USER_REGISTRY* ureg){
     while(loc != NULL){
         temp = loc;
         loc = temp->next; 
-        while(temp->user->ref_count > 0)
+        while(temp->user->ref_count > 1)
             user_unref(temp->user, "being removed from the now-logged-out client");   
-        free(temp->user->handle);
-        free(temp);
+        user_unref(temp->user, "being removed from the now-logged-out client");
     }
     free(ureg);
 }
@@ -69,8 +68,6 @@ void ureg_unregister(USER_REGISTRY* ureg, char* handle){
             else
                 prev->next = loc->next;
             user_unref(loc->user, "reference being unregistered in user registry");
-            free(loc->user->handle);
-            free(loc->user);
             break;
         }
         prev = loc;

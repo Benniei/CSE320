@@ -55,6 +55,10 @@ void user_unref(USER* user, char* why){
 	debug("Decrease reference count on user %p [%s] (%d -> %d) for %s", user, user->handle,
 		user->ref_count, user->ref_count - 1, why);
 	user->ref_count = user->ref_count - 1;
+	if(user->ref_count == 0){
+		free(user->handle);
+		free(user);
+	}
 	V(&user->mutex);
 }
 
