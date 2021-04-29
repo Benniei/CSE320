@@ -17,7 +17,12 @@
 #include "csapp.h"
 
 CLIENT *client_create(CLIENT_REGISTRY *creg, int fd){
-    return NULL;
+    CLIENT* client = malloc(sizeof(CLIENT));
+    if(client == NULL){
+        debug("client create malloc fail");
+        return NULL;
+    }
+    return client;
 }
 
 CLIENT *client_ref(CLIENT *client, char *why){

@@ -12,6 +12,9 @@
 #include "csapp.h"
 #include "user.h"
 #include "user_registry.h"
+#include "client.h"
+#include "client_registry.h"
+#include "mailbox.h"
 
 
 /* User Struct */
@@ -37,9 +40,20 @@ typedef struct user_reg_node{
 
 /* Client Struct */
 typedef struct client{
-
+	int fd;
+	int ref_count;
+	USER* user;
+	char state; // state of the client 0-> logout 1->login
+	sem_t mutex;
+	// MAILBOX mailbox;
 }CLIENT;
 
-typedef struct client_registry{
+/* Client Registry Struct */
+// typedef struct client_registry{
 	
-}CLIENT_REGISTRY;
+// }CLIENT_REGISTRY;
+
+/* Mailbox Struct */
+// typedef struct mailbox{
+
+// } MAILBOX;
