@@ -10,12 +10,13 @@
 #include <sys/socket.h>
 
 #include "csapp.h"
-#include "user.h"
+#include "globals.h"
 #include "user_registry.h"
 #include "client.h"
-#include "client_registry.h"
+#include "protocol.h"
+#include "user.h"
 #include "mailbox.h"
-
+#include "client_registry.h"
 
 /* User Struct */
 typedef struct user {
@@ -42,10 +43,10 @@ typedef struct user_reg_node{
 typedef struct client{
 	int fd;
 	int ref_count;
-	USER* user;
 	char state; // state of the client 0-> logout 1->login
+	USER* user;
+	MAILBOX* mailbox;
 	sem_t mutex;
-	// MAILBOX mailbox;
 }CLIENT;
 
 /* Client Registry Struct */
@@ -55,5 +56,5 @@ typedef struct client{
 
 /* Mailbox Struct */
 // typedef struct mailbox{
-
+// 	sem_t mutex;
 // } MAILBOX;
