@@ -40,6 +40,13 @@ void ureg_fini(USER_REGISTRY* ureg){
 USER* ureg_register(USER_REGISTRY* ureg, char* handle){
     // fprintf(stderr, "register user\n");
     USER_REG_NODE* loc = ureg->next;
+    // lock 
+    P(&ureg->mutex);
+    while(loc != NULL){
+        P(&loc->mutex);
+        loc = loc->next;
+    }
+    loc = ureg->next;
     while(loc != NULL){
         if(strcmp(handle, loc->user->handle) == 0){
             return loc->user;
@@ -54,13 +61,27 @@ USER* ureg_register(USER_REGISTRY* ureg, char* handle){
     new_node->next = NULL;
     Sem_init(&new_node->mutex, 0, 1);
     user_ref(new_user, "reference being retained by user registry");
+    // unlock
+    loc = ureg->next;
+    while(loc != NULL){
+        V(&loc->mutex);
+        loc = loc->next;
+    }
+    V(&ureg->mutex);
     return new_user;
 }
 
 void ureg_unregister(USER_REGISTRY* ureg, char* handle){
     USER_REG_NODE* loc = ureg->next;
-    printf("unregister \n");
     USER_REG_NODE* prev;
+    // lock
+    P(&ureg->mutex);
+    while(loc != NULL){
+        P(&loc->mutex);
+        loc = loc->next;
+    }
+
+    loc = ureg->next;
     while(loc != NULL){
         if(strcmp(handle, loc->user->handle) == 0){
             if(prev == NULL)
@@ -76,4 +97,11 @@ void ureg_unregister(USER_REGISTRY* ureg, char* handle){
     if(loc == NULL){
         debug("User not found [ureg_unregister]");
     }
+    // unlock
+    loc = ureg->next;
+    while(loc != NULL){
+        V(&loc->mutex);
+        loc = loc->next;
+    }
+    V(&ureg->mutex);
 }
