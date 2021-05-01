@@ -10,6 +10,7 @@
 #include <sys/socket.h>
 
 #include "debug.h"
+#include "globals.h"
 #include "protocol.h"
 #include "user.h"
 #include "mailbox.h"
@@ -17,18 +18,22 @@
 #include "csapp.h"
 #include "help.h"
 
+static sem_t client_mutex;
+
 CLIENT *client_create(CLIENT_REGISTRY *creg, int fd){
     CLIENT* client = malloc(sizeof(CLIENT));
     if(client == NULL){
         debug("client create malloc fail");
         return NULL;
     }
+    debug("Starting client service for fd: %d\n", fd);
     client->fd = fd;
     client->ref_count = 0;
     client->state = 0;
     client->user = NULL;
     client->mailbox = NULL;
     Sem_init(&client->mutex, 0, 1);
+    Sem_init(&client_mutex, 0, 1);
     client_ref(client, "newly created client");
     return client;
 }
@@ -58,23 +63,50 @@ void client_unref(CLIENT *client, char *why){
 }
 
 int client_login(CLIENT *client, char *handle){
-    return -1;
+    // TODO: CHECK IF USER IS LOGGED IN
+    P(&client_mutex);
+    if(client->state == 1){
+        return -1;
+    }
+    USER* user;
+    if((user = ureg_register(user_registry, handle)) == NULL){
+        debug("CLIENT LOGIN ERORR");
+        return -1;
+    }
+    client->user = user;
+    client->mailbox = mb_init(handle); 
+    client->state = 1;
+    debug("Log in client %p as user %p [%s] with mailbox %p", client, client->user, handle, client->mailbox);
+    V(&client_mutex);
+   
+    return 0;
 }
 
 int client_logout(CLIENT *client){
+    if(client->state == 0){
+        return -1;
+    }
     return -1;
 }
 
 USER *client_get_user(CLIENT *client, int no_ref){
-    return NULL;
+    if(client->user == NULL)
+        return NULL;
+    if(no_ref == 0)
+        user_ref(client->user, "refrenced by client_get_user()");
+    return client->user;
 }
 
 MAILBOX *client_get_mailbox(CLIENT *client, int no_ref){
-    return NULL;
+    if(client->mailbox == NULL)
+        return NULL;
+    if(no_ref == 0)
+        mb_ref(client->mailbox, "referenced by client_get_mainbox()");
+    return client->mailbox;
 }
 
 int client_get_fd(CLIENT *client){
-    return -1;
+    return client->fd;
 }
 
 int client_send_packet(CLIENT *user, CHLA_PACKET_HEADER *pkt, void *data){

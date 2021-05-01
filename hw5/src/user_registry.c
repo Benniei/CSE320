@@ -11,7 +11,6 @@
 
 #include "debug.h"
 #include "server.h"
-#include "globals.h"
 #include "csapp.h"
 #include "user_registry.h"
 #include "help.h"
@@ -53,7 +52,7 @@ USER* ureg_register(USER_REGISTRY* ureg, char* handle){
         }
         loc = loc->next;
     }
-    fprintf(stderr,"new user");
+    debug("User with handle \'%s\' does not yet exist", handle);
     USER* new_user = user_create(handle); 
     USER_REG_NODE* new_node = malloc(sizeof(USER_REG_NODE));
     loc = new_node;
