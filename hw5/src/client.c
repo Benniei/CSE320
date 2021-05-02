@@ -8,6 +8,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <sys/socket.h>
+#include <time.h>
 
 #include "debug.h"
 #include "globals.h"
@@ -17,6 +18,7 @@
 #include "client_registry.h"
 #include "csapp.h"
 #include "help.h"
+
 
 static sem_t client_mutex;
 sem_t network_mutex;
@@ -53,15 +55,15 @@ CLIENT *client_ref(CLIENT *client, char *why){
 void client_unref(CLIENT *client, char *why){
     P(&client->mutex);
     debug("Decrease reference count on client %p (%d -> %d) for %s", client, 
-		client->ref_count, client->ref_count + 1, why);
+		client->ref_count, client->ref_count - 1, why);
     client->ref_count = client->ref_count - 1;
     if(client->ref_count == 0){
         // freeing things 
         // not sure if need to free mailbox 
         if(client->user != NULL)
             user_unref(client->user, "reference being removed from now-logged-out client");
-        if(client->mailbox !== NULL)
-            mailbox_unref(client->mailbox, "reference being removed from now-logged-out client");
+        if(client->mailbox != NULL)
+            mb_unref(client->mailbox, "reference being removed from now-logged-out client");
         mb_shutdown(client->mailbox);
         free(client);
     }
@@ -78,18 +80,19 @@ int client_login(CLIENT *client, char *handle){
     if((user = ureg_register(user_registry, handle)) == NULL){
         debug("CLIENT LOGIN ERORR from client_login()");
         client_send_nack(client, client->msgid++);
+        V(&client_mutex);
         return -1;
     }
     if(user->ref_count != 2){
         debug("Client already logged in from client_login()");
         client_send_nack(client, client->msgid++);
+        V(&client_mutex);
         return -1;
     }
     client->user = user;
     client->mailbox = mb_init(handle); 
     client->state = 1;
     debug("Log in client %p as user %p [%s] with mailbox %p", client, client->user, handle, client->mailbox);
-    client_send_ack(client, client->msgid++, handle, strlen(handle) + 2);
     V(&client_mutex); 
     return 0;
 }
@@ -97,18 +100,23 @@ int client_login(CLIENT *client, char *handle){
 int client_logout(CLIENT *client){
     P(&client_mutex);
     if(client->state == 0){
+        client_send_nack(client, client->msgid++);
+        V(&client_mutex);
         return -1;
     }
     while(client->ref_count > 1)
-        client_unref(client, )
+        client_unref(client, "reference being discarded");
+    client_unref(client, "reference being discarded");
     V(&client_mutex);
     return -1;
 }
 
 USER *client_get_user(CLIENT *client, int no_ref){
     P(&client->mutex);
-    if(client->user == NULL)
+    if(client->user == NULL){
+        V(&client->mutex);
         return NULL;
+    }
     if(no_ref == 0)
         user_ref(client->user, "refrenced by client_get_user()");
     V(&client->mutex);
@@ -117,8 +125,10 @@ USER *client_get_user(CLIENT *client, int no_ref){
 
 MAILBOX *client_get_mailbox(CLIENT *client, int no_ref){
     P(&client->mutex);
-    if(client->mailbox == NULL)
+    if(client->mailbox == NULL){
+        V(&client->mutex);
         return NULL;
+    }
     if(no_ref == 0)
         mb_ref(client->mailbox, "referenced by client_get_mainbox()");
     V(&client->mutex);
@@ -134,6 +144,7 @@ int client_send_packet(CLIENT *user, CHLA_PACKET_HEADER *pkt, void *data){
     P(&network_mutex);
     if(proto_send_packet(user->fd, pkt, data) == -1){
         debug("Client_send_packet() failed to send to client %d", user->fd);
+        V(&network_mutex);
         return -1;
     }
     V(&network_mutex);
@@ -146,9 +157,14 @@ int client_send_ack(CLIENT *client, uint32_t msgid, void *data, size_t datalen){
     header->type = CHLA_ACK_PKT;
     header->payload_length = ntohl(datalen);
     header->msgid = ntohl(msgid);
+    struct timespec timestamp;
+    clock_gettime(CLOCK_REALTIME, &timestamp);
+    header->timestamp_sec = timestamp.tv_sec;
+    header->timestamp_nsec = timestamp.tv_nsec;
     debug("Send ACK packet (clientfd = %d)", client->fd);
     if(proto_send_packet(client->fd, header, data) == -1){
         debug("Client_send_ack() failed to send to client %d", client->fd);
+        V(&network_mutex);
         return -1;
     }
     free(header);
@@ -163,6 +179,7 @@ int client_send_nack(CLIENT *client, uint32_t msgid){
     header->msgid = ntohl(msgid);
     if(proto_send_packet(client->fd, header, NULL) == -1){
         debug("Client_send_nack() failed to send to client %d", client->fd);
+        V(&network_mutex);
         return -1;
     }
     free(header);

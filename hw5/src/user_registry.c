@@ -27,17 +27,22 @@ void ureg_fini(USER_REGISTRY* ureg){
     USER_REG_NODE* loc = ureg->next;
     USER_REG_NODE* temp;
     while(loc != NULL){
+        
         temp = loc;
         loc = temp->next; 
         while(temp->user->ref_count > 1)
             user_unref(temp->user, "being removed from the now-logged-out client");   
         user_unref(temp->user, "being removed from the now-logged-out client");
+        sem_destroy(&temp->mutex);
+        free(temp);
     }
+    sem_destroy(&temp->mutex);
     free(ureg);
 }
 
 USER* ureg_register(USER_REGISTRY* ureg, char* handle){
     // fprintf(stderr, "register user\n");
+    USER_REG_NODE* prev_loc;
     USER_REG_NODE* loc = ureg->next;
     // lock 
     P(&ureg->mutex);
@@ -45,18 +50,23 @@ USER* ureg_register(USER_REGISTRY* ureg, char* handle){
         P(&loc->mutex);
         loc = loc->next;
     }
+    prev_loc = NULL;
     loc = ureg->next;
     while(loc != NULL){
         if(strcmp(handle, loc->user->handle) == 0){
             user_ref(loc->user, "reference found in user_registry");
             return loc->user;
         }
+        prev_loc = loc;
         loc = loc->next;
     }
     debug("User with handle \'%s\' does not yet exist", handle);
     USER* new_user = user_create(handle); 
     USER_REG_NODE* new_node = malloc(sizeof(USER_REG_NODE));
-    loc = new_node;
+    if(prev_loc == NULL)
+        ureg->next = new_node;
+    else
+        prev_loc->next = new_node;
     new_node->user = new_user;
     new_node->next = NULL;
     Sem_init(&new_node->mutex, 0, 1);

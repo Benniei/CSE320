@@ -46,7 +46,6 @@ USER* user_ref(USER* user, char* why){
 }
 
 void user_unref(USER* user, char* why){
-	P(&user->mutex);
 	if(user->ref_count == 0){
 		debug("Unref error: User %p [%s] has reference count of 0", user, user->handle);
 		V(&user->mutex);
@@ -56,10 +55,11 @@ void user_unref(USER* user, char* why){
 		user->ref_count, user->ref_count - 1, why);
 	user->ref_count = user->ref_count - 1;
 	if(user->ref_count == 0){
+		sem_destroy(&user->mutex);
 		free(user->handle);
 		free(user);
 	}
-	V(&user->mutex);
+	
 }
 
 char* user_get_handle(USER* user){

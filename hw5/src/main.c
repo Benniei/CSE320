@@ -16,10 +16,9 @@
 
 
 static void terminate(int);
-volatile sig_atomic_t flag;
 void handler(int sig){
     // Clean termination of the server
-    flag = 1;
+    terminate(EXIT_SUCCESS);
 }
 /*
  * "Charla" chat server.
@@ -71,11 +70,11 @@ int main(int argc, char* argv[]){
     int listenfd;
 
     Signal(SIGHUP, handler);
-    
+    Signal(SIGINT, handler);
     if((listenfd = Open_listenfd(port)) < 0){
         terminate(EXIT_FAILURE);
     }
-    while(!flag){
+    while(1){
         clientlen = sizeof(struct sockaddr_storage);
         connfdp = malloc(sizeof(int));
         *connfdp = Accept(listenfd, (SA*) &clientaddr, &clientlen);
@@ -99,6 +98,8 @@ static void terminate(int status) {
     creg_fini(client_registry);
     ureg_fini(user_registry);
 
+    // pthread_exit(NULL);
+    
     debug("%ld: Server terminating", pthread_self());
     exit(status);
 }
