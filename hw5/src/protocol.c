@@ -24,7 +24,7 @@ int proto_send_packet(int fd, CHLA_PACKET_HEADER *hdr, void *payload){
 	if(hdr->payload_length != 0){
 		size_t hbo = htonl(hdr->payload_length);
 		if(rio_writen(fd, payload, hbo) < 0){
-			fprintf(stderr, "payload length [send]: %d", hdr->payload_length);
+			debug("payload length [send]: %d\n", hdr->payload_length);
 			debug("Send Packet Failed [payload]\n");
 			return -1;
 		}  

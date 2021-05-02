@@ -48,6 +48,7 @@ USER* ureg_register(USER_REGISTRY* ureg, char* handle){
     loc = ureg->next;
     while(loc != NULL){
         if(strcmp(handle, loc->user->handle) == 0){
+            user_ref(loc->user, "reference found in user_registry");
             return loc->user;
         }
         loc = loc->next;

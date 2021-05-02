@@ -44,6 +44,7 @@ typedef struct client{
 	int fd;
 	int ref_count;
 	char state; // state of the client 0-> logout 1->login
+	int msgid;
 	USER* user;
 	MAILBOX* mailbox;
 	sem_t mutex;
