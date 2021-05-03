@@ -57,17 +57,20 @@ void client_unref(CLIENT *client, char *why){
     debug("Decrease reference count on client %p (%d -> %d) for %s", client, 
 		client->ref_count, client->ref_count - 1, why);
     client->ref_count = client->ref_count - 1;
+    V(&client->mutex);
     if(client->ref_count == 0){
         // freeing things 
         // not sure if need to free mailbox 
-        if(client->user != NULL)
+        if(client->state == 1){
+            while(client->user->ref_count > 1)
+                user_unref(client->user, "reference being removed from now-logged-out client");
             user_unref(client->user, "reference being removed from now-logged-out client");
-        if(client->mailbox != NULL)
-            mb_unref(client->mailbox, "reference being removed from now-logged-out client");
-        mb_shutdown(client->mailbox);
+        }
+        //creg_unregister(client_registry, client);
+        debug("Free client %p", client);
         free(client);
     }
-    V(&client->mutex);
+    ;
 }
 
 int client_login(CLIENT *client, char *handle){
@@ -99,16 +102,21 @@ int client_login(CLIENT *client, char *handle){
 
 int client_logout(CLIENT *client){
     P(&client_mutex);
+    debug("Logout client %p", client);
     if(client->state == 0){
         client_send_nack(client, client->msgid++);
         V(&client_mutex);
         return -1;
     }
-    while(client->ref_count > 1)
-        client_unref(client, "reference being discarded");
-    client_unref(client, "reference being discarded");
+    mb_shutdown(client->mailbox);
+    debug("Free mailbox %p", client->mailbox);
+    free(client->mailbox);
+    client->mailbox = NULL;
+    client->user = NULL;
+    client->state = 0;
+    free(client->user);
     V(&client_mutex);
-    return -1;
+    return 0;
 }
 
 USER *client_get_user(CLIENT *client, int no_ref){
@@ -118,7 +126,7 @@ USER *client_get_user(CLIENT *client, int no_ref){
         return NULL;
     }
     if(no_ref == 0)
-        user_ref(client->user, "refrenced by client_get_user()");
+        user_ref(client->user, "refernced by client_get_user()");
     V(&client->mutex);
     return client->user;
 }
@@ -130,7 +138,7 @@ MAILBOX *client_get_mailbox(CLIENT *client, int no_ref){
         return NULL;
     }
     if(no_ref == 0)
-        mb_ref(client->mailbox, "referenced by client_get_mainbox()");
+        mb_ref(client->mailbox, "referenced by client_get_mailbox()");
     V(&client->mutex);
     return client->mailbox;
 }
@@ -140,8 +148,8 @@ int client_get_fd(CLIENT *client){
 }
 
 int client_send_packet(CLIENT *user, CHLA_PACKET_HEADER *pkt, void *data){
-    fprintf(stderr, "send message\n");
     P(&network_mutex);
+    debug("payload length [client_send_packet]: %d\n", pkt->payload_length);
     if(proto_send_packet(user->fd, pkt, data) == -1){
         debug("Client_send_packet() failed to send to client %d", user->fd);
         V(&network_mutex);
