@@ -30,6 +30,7 @@ typedef struct user_reg_node USER_REG_NODE;
 
 typedef struct user_registry{
 	USER_REG_NODE* next;
+	int num_users;
 	sem_t mutex;
 }USER_REGISTRY;
 
@@ -43,6 +44,7 @@ typedef struct user_reg_node{
 typedef struct client{
 	int fd;
 	int ref_count;
+	char log;
 	char state; // state of the client 0-> logout 1->login
 	int msgid;
 	USER* user;
@@ -51,11 +53,16 @@ typedef struct client{
 }CLIENT;
 
 /* Client Registry Struct */
-// typedef struct client_registry{
-	
-// }CLIENT_REGISTRY;
+typedef struct client_registry{
+	int used;
+	int fill;
+	CLIENT* clients[MAX_CLIENTS];
+	sem_t mutex;
+	sem_t slots;
+	sem_t items; 
+}CLIENT_REGISTRY;
 
 /* Mailbox Struct */
-// typedef struct mailbox{
-// 	sem_t mutex;
-// } MAILBOX;
+typedef struct mailbox{
+	sem_t mutex;
+} MAILBOX;

@@ -16,9 +16,10 @@
 
 
 static void terminate(int);
+volatile sig_atomic_t flag;
 void handler(int sig){
     // Clean termination of the server
-    terminate(EXIT_SUCCESS);
+    flag = 1;
 }
 /*
  * "Charla" chat server.
@@ -68,22 +69,28 @@ int main(int argc, char* argv[]){
     struct sockaddr_storage clientaddr;
     pthread_t tid;
     int listenfd;
+    struct sigaction sact;
+    sact.sa_handler = handler;
+    sigemptyset(&sact.sa_mask);
+    sact.sa_flags = 0;
 
-    Signal(SIGHUP, handler);
-    Signal(SIGINT, handler);
+    sigaction(SIGHUP, &sact, NULL); 
+    /* FOR TESTING*/
+    sigaction(SIGINT, &sact, NULL);
     if((listenfd = Open_listenfd(port)) < 0){
         terminate(EXIT_FAILURE);
     }
-    while(1){
+    while(!flag){
         clientlen = sizeof(struct sockaddr_storage);
         connfdp = malloc(sizeof(int));
-        *connfdp = Accept(listenfd, (SA*) &clientaddr, &clientlen);
+        if((*connfdp = accept(listenfd, (SA*) &clientaddr, &clientlen)) < 0){
+            terminate(EXIT_SUCCESS);
+        }
         Pthread_create(&tid, NULL, chla_client_service, connfdp);
     }
     // fprintf(stderr, "You have to finish implementing main() "
 	//  "before the server will function.\n");
-
-    terminate(EXIT_FAILURE);
+    terminate(EXIT_SUCCESS);
 }
 
 /*
@@ -92,14 +99,15 @@ int main(int argc, char* argv[]){
 static void terminate(int status) {
     // Shut down all existing client connections.
     // This will trigger the eventual termination of service threads.
+    fprintf(stderr, "-------------------------------------------\n");
     creg_shutdown_all(client_registry);
-
+    fprintf(stderr, "-------------------------------------------\n");
     // Finalize modules.
     creg_fini(client_registry);
     ureg_fini(user_registry);
 
     // pthread_exit(NULL);
-    
+    pthread_detach(pthread_self());
     debug("%ld: Server terminating", pthread_self());
     exit(status);
 }

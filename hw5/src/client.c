@@ -36,6 +36,7 @@ CLIENT *client_create(CLIENT_REGISTRY *creg, int fd){
     client->user = NULL;
     client->mailbox = NULL;
     client->msgid = 1;
+    client->log = 1;
     Sem_init(&client->mutex, 0, 1);
     Sem_init(&client_mutex, 0, 1);
     Sem_init(&network_mutex, 0, 1);
@@ -82,13 +83,11 @@ int client_login(CLIENT *client, char *handle){
     USER* user;
     if((user = ureg_register(user_registry, handle)) == NULL){
         debug("CLIENT LOGIN ERORR from client_login()");
-        client_send_nack(client, client->msgid++);
         V(&client_mutex);
         return -1;
     }
     if(user->ref_count != 2){
         debug("Client already logged in from client_login()");
-        client_send_nack(client, client->msgid++);
         V(&client_mutex);
         return -1;
     }
@@ -112,9 +111,9 @@ int client_logout(CLIENT *client){
     debug("Free mailbox %p", client->mailbox);
     free(client->mailbox);
     client->mailbox = NULL;
-    client->user = NULL;
     client->state = 0;
-    free(client->user);
+    client->log = 0;
+    user_unref(client->user, "reference being removed from now logged out client");
     V(&client_mutex);
     return 0;
 }
@@ -185,6 +184,10 @@ int client_send_nack(CLIENT *client, uint32_t msgid){
     CHLA_PACKET_HEADER* header = malloc(sizeof(CHLA_PACKET_HEADER));
     header->type = CHLA_NACK_PKT;
     header->msgid = ntohl(msgid);
+    struct timespec timestamp;
+    clock_gettime(CLOCK_REALTIME, &timestamp);
+    header->timestamp_sec = timestamp.tv_sec;
+    header->timestamp_nsec = timestamp.tv_nsec;
     if(proto_send_packet(client->fd, header, NULL) == -1){
         debug("Client_send_nack() failed to send to client %d", client->fd);
         V(&network_mutex);

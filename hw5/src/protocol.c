@@ -18,7 +18,7 @@ int proto_send_packet(int fd, CHLA_PACKET_HEADER *hdr, void *payload){
 	// fprintf(stderr, "send packet\n");
 	if(rio_writen(fd, hdr, sizeof(CHLA_PACKET_HEADER)) < 0){
 		debug("Send Packet Failed [header]\n");
-		fprintf(stderr, "Oh dear, something went wrong with read()! %s\n", strerror(errno));
+		// fprintf(stderr, "Oh dear, something went wrong with read()! %s\n", strerror(errno));
 		return -1;
 	}
 	if(hdr->payload_length != 0){

@@ -19,6 +19,7 @@ USER_REGISTRY* ureg_init(void){
     debug("Initialize User Registry");
     USER_REGISTRY* head = malloc(sizeof(USER_REGISTRY));
     head->next = NULL;
+    head->num_users = 0;
     Sem_init(&head->mutex, 0, 1);
     return head;
 }
@@ -46,15 +47,12 @@ USER* ureg_register(USER_REGISTRY* ureg, char* handle){
     USER_REG_NODE* loc = ureg->next;
     // lock 
     P(&ureg->mutex);
-    while(loc != NULL){
-        P(&loc->mutex);
-        loc = loc->next;
-    }
     prev_loc = NULL;
     loc = ureg->next;
     while(loc != NULL){
         if(strcmp(handle, loc->user->handle) == 0){
             user_ref(loc->user, "reference found in user_registry");
+            V(&ureg->mutex);
             return loc->user;
         }
         prev_loc = loc;
@@ -69,14 +67,11 @@ USER* ureg_register(USER_REGISTRY* ureg, char* handle){
         prev_loc->next = new_node;
     new_node->user = new_user;
     new_node->next = NULL;
+    ureg->num_users++;
     Sem_init(&new_node->mutex, 0, 1);
     user_ref(new_user, "reference being retained by user registry");
     // unlock
     loc = ureg->next;
-    while(loc != NULL){
-        V(&loc->mutex);
-        loc = loc->next;
-    }
     V(&ureg->mutex);
     return new_user;
 }
@@ -99,6 +94,7 @@ void ureg_unregister(USER_REGISTRY* ureg, char* handle){
             else
                 prev->next = loc->next;
             user_unref(loc->user, "reference being unregistered in user registry");
+            ureg->num_users--;
             break;
         }
         prev = loc;
