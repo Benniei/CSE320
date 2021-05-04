@@ -12,15 +12,13 @@
 
 #include "debug.h"
 #include "protocol.h"
-#include "mailbox.h"
-#include "csapp.h"
 #include "help.h"
 
 MAILBOX* mb_init(char* handle){
     return NULL;
 }
 
-void mb_set_discard_hoot(MAILBOX* mb, MAILBOX_DISCARD_HOOK* hook){
+void mb_set_discard_hook(MAILBOX* mb, MAILBOX_DISCARD_HOOK* hook){
 
 }
 
