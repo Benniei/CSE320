@@ -35,7 +35,7 @@ CLIENT *client_create(CLIENT_REGISTRY *creg, int fd){
     client->state = 0;
     client->user = NULL;
     client->mailbox = NULL;
-    client->msgid = 1;
+    client->msgid = 0;
     client->log = 1;
     Sem_init(&client->mutex, 0, 1);
     Sem_init(&client_mutex, 0, 1);
@@ -75,7 +75,6 @@ void client_unref(CLIENT *client, char *why){
 }
 
 int client_login(CLIENT *client, char *handle){
-    // TODO: CHECK IF USER IS LOGGED IN
     P(&client_mutex);
     if(client->state == 1){
         return -1;
@@ -103,7 +102,6 @@ int client_logout(CLIENT *client){
     P(&client_mutex);
     debug("Logout client %p", client);
     if(client->state == 0){
-        client_send_nack(client, client->msgid++);
         V(&client_mutex);
         return -1;
     }
@@ -112,15 +110,15 @@ int client_logout(CLIENT *client){
     free(client->mailbox);
     client->mailbox = NULL;
     client->state = 0;
-    client->log = 0;
     user_unref(client->user, "reference being removed from now logged out client");
+    client->user = NULL;
     V(&client_mutex);
     return 0;
 }
 
 USER *client_get_user(CLIENT *client, int no_ref){
     P(&client->mutex);
-    if(client->user == NULL){
+    if(client->user == NULL && client->state == 0){
         V(&client->mutex);
         return NULL;
     }
@@ -132,7 +130,7 @@ USER *client_get_user(CLIENT *client, int no_ref){
 
 MAILBOX *client_get_mailbox(CLIENT *client, int no_ref){
     P(&client->mutex);
-    if(client->mailbox == NULL){
+    if(client->mailbox == NULL && client->state == 0){
         V(&client->mutex);
         return NULL;
     }
@@ -143,6 +141,8 @@ MAILBOX *client_get_mailbox(CLIENT *client, int no_ref){
 }
 
 int client_get_fd(CLIENT *client){
+    if(client == NULL)
+        return -1;
     return client->fd;
 }
 
@@ -168,7 +168,7 @@ int client_send_ack(CLIENT *client, uint32_t msgid, void *data, size_t datalen){
     clock_gettime(CLOCK_REALTIME, &timestamp);
     header->timestamp_sec = timestamp.tv_sec;
     header->timestamp_nsec = timestamp.tv_nsec;
-    debug("Send ACK packet (clientfd = %d)", client->fd);
+    debug("Send ACK packet (clientfd = %d, msgid = %d)", client->fd,msgid);
     if(proto_send_packet(client->fd, header, data) == -1){
         debug("Client_send_ack() failed to send to client %d", client->fd);
         V(&network_mutex);
@@ -184,10 +184,12 @@ int client_send_nack(CLIENT *client, uint32_t msgid){
     CHLA_PACKET_HEADER* header = malloc(sizeof(CHLA_PACKET_HEADER));
     header->type = CHLA_NACK_PKT;
     header->msgid = ntohl(msgid);
+    header->payload_length = ntohl(0);
     struct timespec timestamp;
     clock_gettime(CLOCK_REALTIME, &timestamp);
     header->timestamp_sec = timestamp.tv_sec;
     header->timestamp_nsec = timestamp.tv_nsec;
+    debug("Send NACK packet (clientfd = %d, msgid = %d)", client->fd,msgid);
     if(proto_send_packet(client->fd, header, NULL) == -1){
         debug("Client_send_nack() failed to send to client %d", client->fd);
         V(&network_mutex);

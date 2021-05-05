@@ -78,6 +78,7 @@ int creg_unregister(CLIENT_REGISTRY* cr, CLIENT* client){
     if(loc == cr->fill - 1)
         cr->fill--;
     cr->used--;
+    client->log = 0;
     cr->clients[loc]->log = 0;
     V(&cr->mutex);
     V(&cr->slots);
@@ -102,6 +103,7 @@ CLIENT** creg_all_clients(CLIENT_REGISTRY *cr){
 }
 
 void creg_shutdown_all(CLIENT_REGISTRY* cr){
+    P(&cr->mutex);
     printf("fill: %d\n", cr->fill);
     for(int i = 0; i < cr->fill; i++){
         if(cr->clients[i] == NULL)
@@ -112,4 +114,5 @@ void creg_shutdown_all(CLIENT_REGISTRY* cr){
             // not sending EOF
         }
     }
+    V(&cr->mutex);
 }

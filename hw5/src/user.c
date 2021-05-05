@@ -63,5 +63,7 @@ void user_unref(USER* user, char* why){
 }
 
 char* user_get_handle(USER* user){
+	if(user == NULL)
+		return NULL;
 	return user->handle;
 }

@@ -81,11 +81,6 @@ void ureg_unregister(USER_REGISTRY* ureg, char* handle){
     USER_REG_NODE* prev;
     // lock
     P(&ureg->mutex);
-    while(loc != NULL){
-        P(&loc->mutex);
-        loc = loc->next;
-    }
-
     loc = ureg->next;
     while(loc != NULL){
         if(strcmp(handle, loc->user->handle) == 0){
@@ -105,9 +100,5 @@ void ureg_unregister(USER_REGISTRY* ureg, char* handle){
     }
     // unlock
     loc = ureg->next;
-    while(loc != NULL){
-        V(&loc->mutex);
-        loc = loc->next;
-    }
     V(&ureg->mutex);
 }
