@@ -26,7 +26,7 @@ MAILBOX* mb_init(char* handle){
         debug("mb_init malloc fail [p_handle]\n");
 		return NULL;
     }
-    pthread_mutex_init(&mailbox->lock, NULL);
+    Sem_init(&mailbox->lock, 0, 1);
     mailbox->ref_count = 0;
     mb_ref(mailbox, "newly created mailbox");
     mailbox->hook = NULL;
@@ -39,11 +39,19 @@ void mb_set_discard_hook(MAILBOX* mb, MAILBOX_DISCARD_HOOK* hook){
 }
 
 void mb_ref(MAILBOX* mb, char* why){
-
+    P(&mb->lock);
+    debug("Increase reference count on mailbox %p (%d -> %d) for %s", mb,
+		mb->ref_count, mb->ref_count + 1, why);
+    mb->ref_count++;
+    V(&mb->lock);
 }
 
 void mb_unref(MAILBOX* mb, char* why){
-
+     P(&mb->lock);
+    debug("Decrease reference count on mailbox %p (%d -> %d) for %s", mb,
+		mb->ref_count, mb->ref_count - 1, why);
+    mb->ref_count--;
+    V(&mb->lock);
 }
 
 void mb_shutdown(MAILBOX* mb){
@@ -51,7 +59,9 @@ void mb_shutdown(MAILBOX* mb){
 }
 
 char* mb_get_handle(MAILBOX* mb){
-    return NULL;
+    if(mb == NULL)
+        return NULL;
+    return mb->handle;
 }
 
 void mb_add_message(MAILBOX* mb, int msgid, MAILBOX* from, void* body, int length){

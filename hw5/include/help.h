@@ -68,7 +68,7 @@ typedef struct mb_node MB_NODE;
 typedef struct mailbox{
 	char* handle;
 	int ref_count;
-	pthread_mutex_t lock;
+	sem_t lock;
 	MAILBOX_DISCARD_HOOK* hook;
 	MB_NODE* next;
 } MAILBOX;
