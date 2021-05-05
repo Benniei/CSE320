@@ -51,7 +51,7 @@ int main(int argc, char* argv[]){
         printf("USAGE: -p <port> (required)\n");
         exit(EXIT_FAILURE);
     }
-
+    debug("PID: %ld", (long)getpid());
     // Perform required initializations of the client_registry and
     // player_registry.
     user_registry = ureg_init();

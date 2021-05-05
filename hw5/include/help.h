@@ -63,6 +63,16 @@ typedef struct client_registry{
 }CLIENT_REGISTRY;
 
 /* Mailbox Struct */
+typedef struct mb_node MB_NODE;
+
 typedef struct mailbox{
-	sem_t mutex;
+	char* handle;
+	int ref_count;
+	pthread_mutex_t lock;
+	MAILBOX_DISCARD_HOOK* hook;
+	MB_NODE* next;
 } MAILBOX;
+
+typedef struct mb_node{
+	MB_NODE* next;
+}MB_NODE;

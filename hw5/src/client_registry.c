@@ -104,14 +104,12 @@ CLIENT** creg_all_clients(CLIENT_REGISTRY *cr){
 
 void creg_shutdown_all(CLIENT_REGISTRY* cr){
     P(&cr->mutex);
-    printf("fill: %d\n", cr->fill);
     for(int i = 0; i < cr->fill; i++){
         if(cr->clients[i] == NULL)
             continue;
         if(cr->clients[i]->log == 1){
             debug("Shutting down client %d", cr->clients[i]->fd);
             shutdown(cr->clients[i]->fd, SHUT_WR);
-            // not sending EOF
         }
     }
     V(&cr->mutex);
