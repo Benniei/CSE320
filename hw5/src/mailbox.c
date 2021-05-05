@@ -15,11 +15,27 @@
 #include "help.h"
 
 MAILBOX* mb_init(char* handle){
-    return NULL;
+    MAILBOX* mailbox = malloc(sizeof(MAILBOX));
+    if(mailbox == NULL){
+        debug("mb_init malloc fail [mailbox]\n");
+		return NULL;
+    }
+    char* p_handle = malloc(strlen(handle) + 1);
+    strcpy(p_handle, handle);
+    if(p_handle == NULL){
+        debug("mb_init malloc fail [p_handle]\n");
+		return NULL;
+    }
+    pthread_mutex_init(&mailbox->lock, NULL);
+    mailbox->ref_count = 0;
+    mb_ref(mailbox, "newly created mailbox");
+    mailbox->hook = NULL;
+    mailbox->next = NULL;
+    return mailbox;
 }
 
 void mb_set_discard_hook(MAILBOX* mb, MAILBOX_DISCARD_HOOK* hook){
-
+    mb->hook = hook;
 }
 
 void mb_ref(MAILBOX* mb, char* why){
