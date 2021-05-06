@@ -12,6 +12,7 @@
 #include "debug.h"
 #include "server.h"
 #include "globals.h"
+#include "help.h"
 #include "csapp.h"
 
 
@@ -84,9 +85,13 @@ int main(int argc, char* argv[]){
         clientlen = sizeof(struct sockaddr_storage);
         connfdp = malloc(sizeof(int));
         if((*connfdp = accept(listenfd, (SA*) &clientaddr, &clientlen)) < 0){
+            free(connfdp);
             terminate(EXIT_SUCCESS);
         }
-        Pthread_create(&tid, NULL, chla_client_service, connfdp);
+        if(pthread_create(&tid, NULL, chla_client_service, connfdp)){
+            terminate(EXIT_FAILURE);
+        }
+        pthread_detach(tid);
     }
     // fprintf(stderr, "You have to finish implementing main() "
 	//  "before the server will function.\n");
@@ -101,13 +106,11 @@ static void terminate(int status) {
     // This will trigger the eventual termination of service threads.
     fprintf(stderr, "-------------------------------------------\n");
     creg_shutdown_all(client_registry);
-    fprintf(stderr, "-------------------------------------------\n");
+    
+    fprintf(stderr, "---------------------used: %d----------------------\n", client_registry->used);
     // Finalize modules.
     creg_fini(client_registry);
     ureg_fini(user_registry);
-
-    // pthread_exit(NULL);
-    pthread_detach(pthread_self());
     debug("%ld: Server terminating", pthread_self());
     exit(status);
 }

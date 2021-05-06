@@ -41,12 +41,16 @@ typedef struct user_reg_node{
 }USER_REG_NODE;
 
 /* Client Struct */
+sem_t client_mutex;
+sem_t network_mutex;
+
 typedef struct client{
 	int fd;
 	int ref_count;
 	char log;
 	char state; // state of the client 0-> logout 1->login
 	int msgid;
+	pthread_t tid;
 	USER* user;
 	MAILBOX* mailbox;
 	sem_t mutex;
@@ -58,8 +62,6 @@ typedef struct client_registry{
 	int fill;
 	CLIENT* clients[MAX_CLIENTS];
 	sem_t mutex;
-	sem_t slots;
-	sem_t items; 
 }CLIENT_REGISTRY;
 
 /* Mailbox Struct */
@@ -68,11 +70,16 @@ typedef struct mb_node MB_NODE;
 typedef struct mailbox{
 	char* handle;
 	int ref_count;
+	char defunct;
 	sem_t lock;
+	sem_t send;
+	sem_t items;
 	MAILBOX_DISCARD_HOOK* hook;
 	MB_NODE* next;
+	MB_NODE* last;
 } MAILBOX;
 
 typedef struct mb_node{
+	MAILBOX_ENTRY* entry;
 	MB_NODE* next;
 }MB_NODE;

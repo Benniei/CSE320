@@ -18,14 +18,15 @@
 #include "csapp.h"
 #include "help.h"
 
+static sem_t cr_mutex;
+
 CLIENT_REGISTRY* creg_init(){
     debug("Initialize client registry");
     CLIENT_REGISTRY* creg = malloc(sizeof(CLIENT_REGISTRY));
     creg->fill = 0;
     creg->used = 0;
     Sem_init(&creg->mutex, 0, 1);
-    Sem_init(&creg->slots, 0, MAX_CLIENTS);
-    Sem_init(&creg->items, 0, 0);
+    Sem_init(&cr_mutex, 0, 1);
     return creg;
 }
 
@@ -35,7 +36,6 @@ void creg_fini(CLIENT_REGISTRY* cr){
 
 CLIENT* creg_register(CLIENT_REGISTRY* cr, int fd){
     //debug("Starting client service for fd %d", fd);
-    P(&cr->slots);
     P(&cr->mutex);
     int loc;
     if(cr->fill == cr->used){
@@ -56,15 +56,13 @@ CLIENT* creg_register(CLIENT_REGISTRY* cr, int fd){
     cr->clients[loc] = client_create(cr, fd);
     client_ref(cr->clients[loc], "client being returned by creg_register()");
     V(&cr->mutex);
-    V(&cr->items);
     return cr->clients[loc];
 }
 
 int creg_unregister(CLIENT_REGISTRY* cr, CLIENT* client){
-    P(&cr->items);
     P(&cr->mutex);
     int loc = -1;
-    for(int i = 0; i < cr->used; i++){
+    for(int i = 0; i < cr->fill; i++){
         if(cr->clients[i] == client){
             loc = i;
             break;
@@ -78,10 +76,7 @@ int creg_unregister(CLIENT_REGISTRY* cr, CLIENT* client){
     if(loc == cr->fill - 1)
         cr->fill--;
     cr->used--;
-    client->log = 0;
-    cr->clients[loc]->log = 0;
     V(&cr->mutex);
-    V(&cr->slots);
     return 0;
 }
 
@@ -103,14 +98,18 @@ CLIENT** creg_all_clients(CLIENT_REGISTRY *cr){
 }
 
 void creg_shutdown_all(CLIENT_REGISTRY* cr){
-    P(&cr->mutex);
+    // int counter = 0;
+    // pthread_t tid[cr->used];
+    //CLIENT* clients[cr->used];
+    P(&cr_mutex);
     for(int i = 0; i < cr->fill; i++){
         if(cr->clients[i] == NULL)
             continue;
         if(cr->clients[i]->log == 1){
-            debug("Shutting down client %d", cr->clients[i]->fd);
-            shutdown(cr->clients[i]->fd, SHUT_WR);
+            debug("Shutting down client %d with tid %ld", cr->clients[i]->fd, cr->clients[i]->tid);
+            shutdown(cr->clients[i]->fd, SHUT_RDWR);
         }
     }
-    V(&cr->mutex);
+    sleep(1);
+    V(&cr_mutex);
 }

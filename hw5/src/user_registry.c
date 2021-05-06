@@ -1,13 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
-#include <string.h>
 #include <unistd.h>
-#include <pthread.h>
 #include <errno.h>
-#include <signal.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <sys/socket.h>
 
 #include "debug.h"
 #include "server.h"
@@ -43,6 +37,7 @@ void ureg_fini(USER_REGISTRY* ureg){
 
 USER* ureg_register(USER_REGISTRY* ureg, char* handle){
     // fprintf(stderr, "register user\n");
+    debug("ureg_register()");
     USER_REG_NODE* prev_loc;
     USER_REG_NODE* loc = ureg->next;
     // lock 

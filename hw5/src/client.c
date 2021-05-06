@@ -1,13 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
-#include <string.h>
 #include <unistd.h>
-#include <pthread.h>
 #include <errno.h>
-#include <signal.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
-#include <sys/socket.h>
 #include <time.h>
 
 #include "debug.h"
@@ -20,11 +14,9 @@
 #include "help.h"
 
 
-static sem_t client_mutex;
-sem_t network_mutex;
 
 CLIENT *client_create(CLIENT_REGISTRY *creg, int fd){
-    CLIENT* client = malloc(sizeof(CLIENT));
+    CLIENT* client = calloc(1, sizeof(CLIENT));
     if(client == NULL){
         debug("client create malloc fail");
         return NULL;
@@ -37,6 +29,7 @@ CLIENT *client_create(CLIENT_REGISTRY *creg, int fd){
     client->mailbox = NULL;
     client->msgid = 0;
     client->log = 1;
+    client->tid = pthread_self();
     Sem_init(&client->mutex, 0, 1);
     Sem_init(&client_mutex, 0, 1);
     Sem_init(&network_mutex, 0, 1);
@@ -46,7 +39,7 @@ CLIENT *client_create(CLIENT_REGISTRY *creg, int fd){
 
 CLIENT *client_ref(CLIENT *client, char *why){
     P(&client->mutex);
-    debug("Increase reference count on client %p (%d -> %d) for %s", client, 
+    debug("Increase reference count on client(%d) %p (%d -> %d) for %s",client->fd, client, 
 		client->ref_count, client->ref_count + 1, why);
     client->ref_count = client->ref_count + 1;
     V(&client->mutex);
@@ -55,7 +48,7 @@ CLIENT *client_ref(CLIENT *client, char *why){
 
 void client_unref(CLIENT *client, char *why){
     P(&client->mutex);
-    debug("Decrease reference count on client %p (%d -> %d) for %s", client, 
+    debug("Decrease reference count on client(%d) %p (%d -> %d) for %s", client->fd, client, 
 		client->ref_count, client->ref_count - 1, why);
     client->ref_count = client->ref_count - 1;
     V(&client->mutex);
@@ -69,9 +62,9 @@ void client_unref(CLIENT *client, char *why){
         }
         //creg_unregister(client_registry, client);
         debug("Free client %p", client);
+        sem_destroy(&client->mutex);
         free(client);
     }
-    ;
 }
 
 int client_login(CLIENT *client, char *handle){
@@ -99,19 +92,19 @@ int client_login(CLIENT *client, char *handle){
 }
 
 int client_logout(CLIENT *client){
-    P(&client_mutex);
     debug("Logout client %p", client);
+    P(&client_mutex);
     if(client->state == 0){
         V(&client_mutex);
         return -1;
     }
     mb_shutdown(client->mailbox);
-    debug("Free mailbox %p", client->mailbox);
-    free(client->mailbox);
-    client->mailbox = NULL;
+    
     client->state = 0;
-    user_unref(client->user, "reference being removed from now logged out client");
+    user_unref(client->user, "reference being discared by terminating client service thread");
+    mb_unref(client->mailbox, "refernce being discarded by terminating mailbox service thread");
     client->user = NULL;
+    client->mailbox = NULL;
     V(&client_mutex);
     return 0;
 }
@@ -148,7 +141,7 @@ int client_get_fd(CLIENT *client){
 
 int client_send_packet(CLIENT *user, CHLA_PACKET_HEADER *pkt, void *data){
     P(&network_mutex);
-    debug("payload length [client_send_packet]: %d\n", pkt->payload_length);
+    debug("client_send_packet (%d): %d\n", pkt->type, (pkt->payload_length));
     if(proto_send_packet(user->fd, pkt, data) == -1){
         debug("Client_send_packet() failed to send to client %d", user->fd);
         V(&network_mutex);
@@ -160,7 +153,7 @@ int client_send_packet(CLIENT *user, CHLA_PACKET_HEADER *pkt, void *data){
 
 int client_send_ack(CLIENT *client, uint32_t msgid, void *data, size_t datalen){
     P(&network_mutex);
-    CHLA_PACKET_HEADER* header = malloc(sizeof(CHLA_PACKET_HEADER));
+    CHLA_PACKET_HEADER* header = calloc(1, sizeof(CHLA_PACKET_HEADER));
     header->type = CHLA_ACK_PKT;
     header->payload_length = ntohl(datalen);
     header->msgid = ntohl(msgid);
@@ -180,8 +173,8 @@ int client_send_ack(CLIENT *client, uint32_t msgid, void *data, size_t datalen){
 }
 
 int client_send_nack(CLIENT *client, uint32_t msgid){
-     P(&network_mutex);
-    CHLA_PACKET_HEADER* header = malloc(sizeof(CHLA_PACKET_HEADER));
+    P(&network_mutex);
+    CHLA_PACKET_HEADER* header = calloc(1, sizeof(CHLA_PACKET_HEADER));
     header->type = CHLA_NACK_PKT;
     header->msgid = ntohl(msgid);
     header->payload_length = ntohl(0);
