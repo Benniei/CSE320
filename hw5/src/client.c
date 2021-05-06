@@ -58,7 +58,7 @@ void client_unref(CLIENT *client, char *why){
         if(client->state == 1){
             while(client->user->ref_count > 1)
                 user_unref(client->user, "reference being removed from now-logged-out client");
-            user_unref(client->user, "reference being removed from now-logged-out client");
+            user_unref(client->user, "referernce being removed from now-logged-out client");
         }
         //creg_unregister(client_registry, client);
         debug("Free client %p", client);
@@ -68,6 +68,7 @@ void client_unref(CLIENT *client, char *why){
 }
 
 int client_login(CLIENT *client, char *handle){
+    debug("client_login()");
     P(&client_mutex);
     if(client->state == 1){
         return -1;
@@ -84,6 +85,7 @@ int client_login(CLIENT *client, char *handle){
         return -1;
     }
     client->user = user;
+    debug("client login() -> mb_init() [handle: %s]", handle);
     client->mailbox = mb_init(handle); 
     client->state = 1;
     debug("Log in client %p as user %p [%s] with mailbox %p", client, client->user, handle, client->mailbox);
@@ -99,19 +101,19 @@ int client_logout(CLIENT *client){
         return -1;
     }
     mb_shutdown(client->mailbox);
-    
     client->state = 0;
     user_unref(client->user, "reference being discared by terminating client service thread");
-    mb_unref(client->mailbox, "refernce being discarded by terminating mailbox service thread");
+    mb_unref(client->mailbox, "--reference being discarded by terminating mailbox service thread");
     client->user = NULL;
     client->mailbox = NULL;
+    debug("End client_logout()");
     V(&client_mutex);
     return 0;
 }
 
 USER *client_get_user(CLIENT *client, int no_ref){
     P(&client->mutex);
-    if(client->user == NULL && client->state == 0){
+    if(client->state == 0){
         V(&client->mutex);
         return NULL;
     }
@@ -123,7 +125,7 @@ USER *client_get_user(CLIENT *client, int no_ref){
 
 MAILBOX *client_get_mailbox(CLIENT *client, int no_ref){
     P(&client->mutex);
-    if(client->mailbox == NULL && client->state == 0){
+    if(client->state == 0){
         V(&client->mutex);
         return NULL;
     }

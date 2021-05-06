@@ -36,6 +36,8 @@ void creg_fini(CLIENT_REGISTRY* cr){
 
 CLIENT* creg_register(CLIENT_REGISTRY* cr, int fd){
     //debug("Starting client service for fd %d", fd);
+    if(cr->used == MAX_CLIENTS)
+        return NULL;
     P(&cr->mutex);
     int loc;
     if(cr->fill == cr->used){

@@ -12,6 +12,7 @@
 
 USER* user_create(char* handle){
 	//fprintf(stderr,"\n\n\nyessir\n\n");
+	debug("user_create");
 	USER* new_user = malloc(sizeof(USER));
 	if(new_user == NULL){
 		debug("user_create malloc fail [new_user]\n");
@@ -58,7 +59,8 @@ void user_unref(USER* user, char* why){
 }
 
 char* user_get_handle(USER* user){
-	if(user == NULL)
-		return NULL;
+	debug("user_get_handle");
+	// if(user == NULL)
+	// 	return NULL;
 	return user->handle;
 }

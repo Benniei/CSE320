@@ -10,6 +10,7 @@
 #include "help.h"
 
 MAILBOX* mb_init(char* handle){
+    debug("mb_init()");
     debug("stating mailbox service for: %s", handle);
     MAILBOX* mailbox = malloc(sizeof(MAILBOX));
     if(mailbox == NULL){
@@ -67,8 +68,8 @@ void mb_unref(MAILBOX* mb, char* why){
         }
         V(&(mb->lock));
         sem_destroy(&mb->lock);
-        sem_destroy(&mb->items);
         sem_destroy(&mb->send);
+        sem_destroy(&mb->items);
         free(mb->handle);
         free(mb);
         return;
@@ -83,6 +84,7 @@ void mb_shutdown(MAILBOX* mb){
 }
 
 char* mb_get_handle(MAILBOX* mb){
+    debug("mb_get_handle()");
     if(mb == NULL)
         return NULL;
     return mb->handle;
@@ -115,7 +117,7 @@ void mb_add_message(MAILBOX* mb, int msgid, MAILBOX* from, void* body, int lengt
 }
 
 void mb_add_notice(MAILBOX* mb, NOTICE_TYPE ntype, int msgid){
-    debug("mb_add_message()");
+    debug("mb_add_notice()");
     P(&mb->send);
     MAILBOX_ENTRY* mb_entry = malloc(sizeof(MAILBOX_ENTRY));
     if(mb_entry == NULL)
