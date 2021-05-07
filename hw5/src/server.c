@@ -32,8 +32,7 @@ void* chla_mailbox_service(void* arg){
         if(mailbox->defunct == 1)
                 break;
         if(entry->type == MESSAGE_ENTRY_TYPE){
-            char*fm_handle = entry->content.message.from->handle;
-            debug("Process message (msgid: %d, from= \'%s\'", entry->content.message.msgid, fm_handle);
+            debug("Process message (msgid: %d, from= \'%s\'", entry->content.message.msgid,entry->content.message.from->handle);
             CHLA_PACKET_HEADER* header = calloc(1, sizeof(CHLA_PACKET_HEADER));
             header->type = CHLA_MESG_PKT;
             header->payload_length = ntohl(entry->content.message.length);
