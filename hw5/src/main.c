@@ -50,7 +50,7 @@ int main(int argc, char* argv[]){
     }
     else{
         printf("USAGE: -p <port> (required)\n");
-        exit(EXIT_FAILURE);
+        exit(EXIT_SUCCESS);
     }
     debug("PID: %ld", (long)getpid());
     // Perform required initializations of the client_registry and
@@ -84,6 +84,11 @@ int main(int argc, char* argv[]){
     while(!flag){
         clientlen = sizeof(struct sockaddr_storage);
         connfdp = malloc(sizeof(int));
+         if(client_registry->used == MAX_CLIENTS){
+            free(connfdp);
+            debug("Client registry is now full");
+            continue;
+        }
         if((*connfdp = accept(listenfd, (SA*) &clientaddr, &clientlen)) < 0){
             free(connfdp);
             terminate(EXIT_FAILURE);
@@ -112,5 +117,6 @@ static void terminate(int status) {
     creg_fini(client_registry);
     ureg_fini(user_registry);
     debug("%ld: Server terminating", pthread_self());
+    pthread_exit(NULL);
     exit(status);
 }
