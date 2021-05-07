@@ -35,7 +35,7 @@ int main(int argc, char* argv[]){
     char* port;
     if(argc != 3){
         printf("USAGE: -p <port> (required)\n");
-        exit(EXIT_FAILURE);
+        exit(EXIT_SUCCESS);
     }
     if(strcmp(*(argv + counter), "-p") == 0){
         counter++;
