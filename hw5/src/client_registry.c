@@ -35,7 +35,7 @@ void creg_fini(CLIENT_REGISTRY* cr){
 }
 
 CLIENT* creg_register(CLIENT_REGISTRY* cr, int fd){
-    //debug("Starting client service for fd %d", fd);
+    debug("creg_register()");
     if(cr->used == MAX_CLIENTS)
         return NULL;
     P(&cr->mutex);
@@ -62,6 +62,7 @@ CLIENT* creg_register(CLIENT_REGISTRY* cr, int fd){
 }
 
 int creg_unregister(CLIENT_REGISTRY* cr, CLIENT* client){
+    debug("creg_unregister()");
     P(&cr->mutex);
     int loc = -1;
     for(int i = 0; i < cr->fill; i++){
@@ -83,9 +84,10 @@ int creg_unregister(CLIENT_REGISTRY* cr, CLIENT* client){
 }
 
 CLIENT** creg_all_clients(CLIENT_REGISTRY *cr){
+    debug("creg_all_clients()");
     CLIENT** clients = malloc((cr->used + 1) * sizeof(CLIENT*));
     int counter = 0;
-    debug("amount %d", cr->used);
+    // debug("amount %d", cr->used);
     for(int i = 0; i < cr->fill; i++){
         if(cr->clients[i] == NULL)
             continue;

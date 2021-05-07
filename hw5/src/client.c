@@ -16,6 +16,7 @@
 
 
 CLIENT *client_create(CLIENT_REGISTRY *creg, int fd){
+    debug("client_create()");
     CLIENT* client = calloc(1, sizeof(CLIENT));
     if(client == NULL){
         debug("client create malloc fail");
@@ -68,7 +69,7 @@ void client_unref(CLIENT *client, char *why){
 }
 
 int client_login(CLIENT *client, char *handle){
-    debug("client_login()");
+    debug("client_login() %ld", strlen(handle));
     P(&client_mutex);
     if(client->state == 1){
         return -1;
@@ -85,7 +86,7 @@ int client_login(CLIENT *client, char *handle){
         return -1;
     }
     client->user = user;
-    debug("client login() -> mb_init() [handle: %s]", handle);
+    debug("client login() -> mb_init() handle: %s", handle);
     client->mailbox = mb_init(handle); 
     client->state = 1;
     debug("Log in client %p as user %p [%s] with mailbox %p", client, client->user, handle, client->mailbox);
@@ -94,6 +95,7 @@ int client_login(CLIENT *client, char *handle){
 }
 
 int client_logout(CLIENT *client){
+    debug("client_logout()");
     debug("Logout client %p", client);
     P(&client_mutex);
     if(client->state == 0){
@@ -112,6 +114,7 @@ int client_logout(CLIENT *client){
 }
 
 USER *client_get_user(CLIENT *client, int no_ref){
+    debug("client_get_user()");
     P(&client->mutex);
     if(client->state == 0){
         V(&client->mutex);
@@ -124,6 +127,7 @@ USER *client_get_user(CLIENT *client, int no_ref){
 }
 
 MAILBOX *client_get_mailbox(CLIENT *client, int no_ref){
+    debug("client_get_mailbox()");
     P(&client->mutex);
     if(client->state == 0){
         V(&client->mutex);
@@ -136,6 +140,7 @@ MAILBOX *client_get_mailbox(CLIENT *client, int no_ref){
 }
 
 int client_get_fd(CLIENT *client){
+    debug("client->get_fd()");
     if(client == NULL)
         return -1;
     return client->fd;

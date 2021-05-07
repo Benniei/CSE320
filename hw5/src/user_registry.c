@@ -36,7 +36,6 @@ void ureg_fini(USER_REGISTRY* ureg){
 }
 
 USER* ureg_register(USER_REGISTRY* ureg, char* handle){
-    // fprintf(stderr, "register user\n");
     debug("ureg_register()");
     USER_REG_NODE* prev_loc;
     USER_REG_NODE* loc = ureg->next;

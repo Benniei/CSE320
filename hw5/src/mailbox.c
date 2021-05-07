@@ -37,6 +37,7 @@ MAILBOX* mb_init(char* handle){
 }
 
 void mb_set_discard_hook(MAILBOX* mb, MAILBOX_DISCARD_HOOK* hook){
+    debug("mb_set_discard_hook()");
     mb->hook = hook;
 }
 
@@ -78,6 +79,7 @@ void mb_unref(MAILBOX* mb, char* why){
 }
 
 void mb_shutdown(MAILBOX* mb){
+    debug("mb_shutdown()");
     debug("Shut down mailbox: %s", mb->handle);
     mb->defunct = 1;
     V(&mb->items);
