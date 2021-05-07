@@ -92,7 +92,6 @@ int main(int argc, char* argv[]){
             free(connfdp);
             terminate(EXIT_FAILURE);
         }
-        pthread_detach(tid);
     }
     // fprintf(stderr, "You have to finish implementing main() "
 	//  "before the server will function.\n");

@@ -15,6 +15,7 @@ void* chla_mailbox_service(void* arg){
 
 void* chla_client_service(void* arg){
     int fd = *(int *)arg;
+    pthread_detach(pthread_self());
     debug("Startiing Client Service for fd: %d", fd);
     CLIENT* client = creg_register(client_registry, fd);
     char* payload;
@@ -31,11 +32,14 @@ void* chla_client_service(void* arg){
                 }
                 else
                     client_send_nack(client, header.msgid);
+                if(payload != NULL)
+                    free(payload);
             }
             else if(header.type == CHLA_USERS_PKT){
                 debug("USERS");
                 CLIENT** active = creg_all_clients(client_registry);
                 if(*active == NULL){
+                    free(active);
                     client_send_ack(client, header.msgid, NULL, 0);
                     continue;
                 }
@@ -55,11 +59,20 @@ void* chla_client_service(void* arg){
 
                 temp = active;
                 char* ending = "\r\n";
+                char cd = 0;
                 while(*temp != NULL){
                     if((user = client_get_user(*temp, 1)) != NULL){
                         debug("-------> user_get_handle(user)");
-                        strcat(handle_all, user_get_handle(user));
-                        strcat(handle_all, ending);
+                        char* u_handle = user_get_handle(user);
+                        if(cd == 0){
+                            strcpy(handle_all, u_handle);
+                            strcat(handle_all, ending);
+                            cd++;
+                        }
+                        else{
+                            strcat(handle_all, u_handle);
+                            strcat(handle_all, ending);
+                        }
                     }
                     client_unref(*temp, "reference being discarded for client being unregistered");
                     temp++;
@@ -104,6 +117,8 @@ void* chla_client_service(void* arg){
                 
                 mb_add_message(to, header.msgid, cmb, payload, strlen(payload));
                 free(active);
+                if(payload != NULL)
+                    free(payload);
             }
             else if(header.type == CHLA_LOGOUT_PKT){
                 debug("LOGOUT");
@@ -116,8 +131,6 @@ void* chla_client_service(void* arg){
                     client_send_nack(client, header.msgid);
                 }
             }
-            if(payload != NULL)
-                free(payload);
         }
         else{
             debug("LOGOUT ENTIRE CLIENT");
