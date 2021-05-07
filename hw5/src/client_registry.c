@@ -91,7 +91,7 @@ CLIENT** creg_all_clients(CLIENT_REGISTRY *cr){
         if(cr->clients[i]->state == 1){
             *(clients + counter) = cr->clients[i];
             counter++;
-            client_ref(cr->clients[i], "ferenced by creg_all_clients()");
+            client_ref(cr->clients[i], "referenced by creg_all_clients()");
         }
     }
     *(clients + counter) = NULL;

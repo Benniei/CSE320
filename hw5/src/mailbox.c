@@ -37,7 +37,7 @@ MAILBOX* mb_init(char* handle){
 }
 
 void mb_set_discard_hook(MAILBOX* mb, MAILBOX_DISCARD_HOOK* hook){
-    debug("mb_set_discard_hook()");
+    debug("mb_set_discard_hook() %s // %p", mb->handle, hook);
     mb->hook = hook;
 }
 
@@ -59,6 +59,8 @@ void mb_unref(MAILBOX* mb, char* why){
         if(loc != NULL)
             mb->next = loc->next;
         while(loc != NULL){
+            if(mb->hook != NULL)
+                mb->hook(loc->entry);
             if(loc->entry->type == MESSAGE_ENTRY_TYPE)
                 free(loc->entry->content.message.body);
             free(loc->entry);
@@ -148,6 +150,7 @@ MAILBOX_ENTRY* mb_next_entry(MAILBOX* mb){
     if(mb->defunct == 1)
         return NULL;
     P(&mb->send);
+    debug("mb_next_entry(unlock)");
     MAILBOX_ENTRY* temp = mb->next->entry;
     MB_NODE* node = mb->next;
     mb->next = mb->next->next;

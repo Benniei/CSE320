@@ -28,7 +28,6 @@ CLIENT *client_create(CLIENT_REGISTRY *creg, int fd){
     client->state = 0;
     client->user = NULL;
     client->mailbox = NULL;
-    client->msgid = 0;
     client->log = 1;
     client->tid = pthread_self();
     Sem_init(&client->mutex, 0, 1);
@@ -105,9 +104,7 @@ int client_logout(CLIENT *client){
     mb_shutdown(client->mailbox);
     client->state = 0;
     user_unref(client->user, "reference being discared by terminating client service thread");
-    mb_unref(client->mailbox, "--reference being discarded by terminating mailbox service thread");
-    client->user = NULL;
-    client->mailbox = NULL;
+    mb_unref(client->mailbox, "reference being discarded by terminating mailbox service thread");
     debug("End client_logout()");
     V(&client_mutex);
     return 0;
@@ -148,7 +145,7 @@ int client_get_fd(CLIENT *client){
 
 int client_send_packet(CLIENT *user, CHLA_PACKET_HEADER *pkt, void *data){
     P(&network_mutex);
-    debug("client_send_packet (%d): %d\n", pkt->type, (pkt->payload_length));
+    debug("client_send_packet (to: %s): %d\n", user->user->handle, (pkt->payload_length));
     if(proto_send_packet(user->fd, pkt, data) == -1){
         debug("Client_send_packet() failed to send to client %d", user->fd);
         V(&network_mutex);
@@ -166,8 +163,8 @@ int client_send_ack(CLIENT *client, uint32_t msgid, void *data, size_t datalen){
     header->msgid = ntohl(msgid);
     struct timespec timestamp;
     clock_gettime(CLOCK_REALTIME, &timestamp);
-    header->timestamp_sec = timestamp.tv_sec;
-    header->timestamp_nsec = timestamp.tv_nsec;
+    header->timestamp_sec = ntohl(timestamp.tv_sec);
+    header->timestamp_nsec = ntohl(timestamp.tv_nsec);
     debug("Send ACK packet (clientfd = %d, msgid = %d)", client->fd,msgid);
     if(proto_send_packet(client->fd, header, data) == -1){
         debug("Client_send_ack() failed to send to client %d", client->fd);

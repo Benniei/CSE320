@@ -49,7 +49,6 @@ typedef struct client{
 	int ref_count;
 	char log;
 	char state; // state of the client 0-> logout 1->login
-	int msgid;
 	pthread_t tid;
 	USER* user;
 	MAILBOX* mailbox;

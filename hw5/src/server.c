@@ -3,14 +3,81 @@
 #include <string.h>
 #include <unistd.h>
 #include <errno.h>
+#include <signal.h>
 
 #include "debug.h"
 #include "protocol.h"
 #include "client_registry.h"
+#include "mailbox.h"
 #include "help.h"
 
-void* chla_mailbox_service(void* arg){
-    return NULL;
+void bounce(MAILBOX_ENTRY* entry){
+    debug("bounce()");
+    if(entry->type == NOTICE_ENTRY_TYPE)
+        return;
+    MAILBOX* from = entry->content.message.from;
+    mb_add_notice(from, BOUNCE_NOTICE_TYPE, entry->content.message.msgid);
+    mb_unref(from, "derefernence for not being used after bounce is sent");
+}
+
+void* chla_mailbox_service(void* arg){  
+    CLIENT* client = (CLIENT*)arg;
+    debug("Starting mailbox services for: %s (fd = %d)", client->user->handle, client->fd);
+    client_ref(client, "reference being retained by mailbox service thread");
+    MAILBOX* mailbox = client_get_mailbox(client, 0);
+    while(1){
+        if(mailbox->defunct == 1)
+            break;
+        MAILBOX_ENTRY* entry = mb_next_entry(mailbox);
+        if(mailbox->defunct == 1)
+                break;
+        if(entry->type == MESSAGE_ENTRY_TYPE){
+            char*fm_handle = entry->content.message.from->handle;
+            debug("Process message (msgid: %d, from= \'%s\'", entry->content.message.msgid, fm_handle);
+            CHLA_PACKET_HEADER* header = calloc(1, sizeof(CHLA_PACKET_HEADER));
+            header->type = CHLA_MESG_PKT;
+            header->payload_length = ntohl(entry->content.message.length);
+            header->msgid = ntohl(entry->content.message.msgid);
+            struct timespec timestamp;
+            clock_gettime(CLOCK_REALTIME, &timestamp);
+            header->timestamp_sec = ntohl(timestamp.tv_sec);
+            header->timestamp_nsec = ntohl(timestamp.tv_nsec);
+            if(client_send_packet(client, header, entry->content.message.body) == 0)
+                mb_add_notice(mailbox, RRCPT_NOTICE_TYPE, entry->content.message.msgid);
+            else   
+                mb_add_notice(mailbox, BOUNCE_NOTICE_TYPE, entry->content.message.msgid);
+            free(header);
+        }
+        else if(entry->type == NOTICE_ENTRY_TYPE){
+            debug("Process message (msgid: %d, type= \'%d\'", entry->content.message.msgid, entry->content.notice.type);
+            CHLA_PACKET_HEADER* header = calloc(1, sizeof(CHLA_PACKET_HEADER));
+            if(entry->content.notice.type == NO_NOTICE_TYPE){
+                header->type = CHLA_NO_PKT;
+            }
+            else if(entry->content.notice.type == BOUNCE_NOTICE_TYPE){
+                header->type = CHLA_BOUNCE_PKT;
+            }
+            else if(entry->content.notice.type == RRCPT_NOTICE_TYPE){
+                header->type = CHLA_RCVD_PKT;
+            }
+            header->payload_length = ntohl(entry->content.message.length);
+            header->msgid = ntohl(entry->content.message.msgid);
+            struct timespec timestamp;
+            clock_gettime(CLOCK_REALTIME, &timestamp);
+            header->timestamp_sec = ntohl(timestamp.tv_sec);
+            header->timestamp_nsec = ntohl(timestamp.tv_nsec);
+            if(client_send_packet(client, header, entry->content.message.body) == 0)
+                continue;
+            else
+                debug("Unable to send notice");
+            free(entry->content.message.body);
+            free(header);
+        }
+    }
+    debug("Ending mailbox services for: %s (fd = %d)", client->user->handle, client->fd);
+    mb_unref(mailbox, "reference being discarded by terminating mailbox service");
+    client_unref(client, "reference being discarded by terminating mailbox service thread");
+    pthread_exit(NULL);
 }
 
 void* chla_client_service(void* arg){
@@ -20,6 +87,7 @@ void* chla_client_service(void* arg){
     CLIENT* client = creg_register(client_registry, fd);
     char* payload;
     CHLA_PACKET_HEADER header;
+    pthread_t tid;
     while(1){
         if(proto_recv_packet(fd, &header, (void **)&payload) == 0){
             header.msgid = ntohl(header.msgid);
@@ -28,7 +96,12 @@ void* chla_client_service(void* arg){
                 debug("LOGIN");
                 payload[ntohl(header.payload_length) - 2] = '\0';
                 if(client_login(client, payload) == 0){
+                    mb_set_discard_hook(client_get_mailbox(client, 1), bounce);
                     client_send_ack(client, header.msgid, NULL, 0);
+                    
+                    if(pthread_create(&tid, NULL, chla_mailbox_service, client)){
+                        goto fail;
+                    }
                 }
                 else
                     client_send_nack(client, header.msgid);
@@ -102,6 +175,7 @@ void* chla_client_service(void* arg){
                     to = client_get_mailbox(*temp, 0);
                     if(strcmp(mb_get_handle(to), recipient) == 0){
                         flag = 1;
+                       
                         client_unref(*temp, "reference in clients list being discarded");
                         break;
                     }
@@ -110,11 +184,20 @@ void* chla_client_service(void* arg){
                     temp++;
                     
                 }
-                if(flag == 0)
+                if(flag == 0){
+                    debug("user %s not found", recipient);
+                    free(active);
+                    free(payload_cpy);
+                    if(payload != NULL)
+                        free(payload);
                     client_send_nack(client, header.msgid);
-                free(payload_cpy);
+                    continue;
+                }
+                strcpy(payload_cpy, payload);
                 
-                mb_add_message(to, header.msgid, cmb, payload, strlen(payload));
+                mb_add_message(to, header.msgid, cmb, payload_cpy, strlen(payload));
+                mb_unref(to, "message has been added to recipient's mailbox");
+                client_send_ack(client, header.msgid, NULL, 0);
                 free(active);
                 if(payload != NULL)
                     free(payload);
@@ -125,17 +208,23 @@ void* chla_client_service(void* arg){
                 if(client_logout(client) == 0){
                     client_logout(client);
                     client_send_ack(client, header.msgid, NULL, 0);
+                    debug("Waiting for mailbox service thread (%ld) to terminate", tid);
                 }
                 else{
                     client_send_nack(client, header.msgid);
                 }
             }
+            else{
+                continue;
+            }
         }
         else{
+            fail:
             debug("LOGOUT ENTIRE CLIENT");
-            if(client_get_user(client, 1) != NULL)
+            if(client->state == 1){
                 client_logout(client);
-            // wait for mailbox thread to termiante
+                debug("Waiting for mailbox service thread (%ld) to terminate", tid);
+            }
             client_unref(client, "reference being discarded by termianting client service thread");
             creg_unregister(client_registry, client);
             debug("Ending client service for fd: %d", fd);
