@@ -89,8 +89,7 @@ void* chla_client_service(void* arg){
                 strcpy(payload_cpy, payload);
 
                 char* recipient = strtok(payload_cpy, "\r\n");
-                char* message = strtok(NULL, "\r\n");
-                debug("Recipient: \'%s\' (message: %s)", recipient, message);
+                debug("Recipient: \'%s\'", recipient);
                 CLIENT** active = creg_all_clients(client_registry);
                 if(*active == NULL){
                     client_send_nack(client, header.msgid);
