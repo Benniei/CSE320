@@ -86,9 +86,10 @@ int main(int argc, char* argv[]){
         connfdp = malloc(sizeof(int));
         if((*connfdp = accept(listenfd, (SA*) &clientaddr, &clientlen)) < 0){
             free(connfdp);
-            terminate(EXIT_SUCCESS);
+            terminate(EXIT_FAILURE);
         }
         if(pthread_create(&tid, NULL, chla_client_service, connfdp)){
+            free(connfdp);
             terminate(EXIT_FAILURE);
         }
         pthread_detach(tid);

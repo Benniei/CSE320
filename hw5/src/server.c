@@ -9,7 +9,7 @@
 #include "client_registry.h"
 #include "help.h"
 
-void* chla_mailbox_service(void* args){
+void* chla_mailbox_service(void* arg){
     return NULL;
 }
 
@@ -66,6 +66,7 @@ void* chla_client_service(void* arg){
                 }
                 client_send_ack(client, header.msgid, handle_all, size);
                 free(handle_all);
+                free(active);
             }
             else if(header.type == CHLA_SEND_PKT){
                 debug("SEND");
@@ -102,6 +103,7 @@ void* chla_client_service(void* arg){
                 free(payload_cpy);
                 
                 mb_add_message(to, header.msgid, cmb, payload, strlen(payload));
+                free(active);
             }
             else if(header.type == CHLA_LOGOUT_PKT){
                 debug("LOGOUT");
@@ -125,6 +127,7 @@ void* chla_client_service(void* arg){
             client_unref(client, "reference being discarded by termianting client service thread");
             creg_unregister(client_registry, client);
             debug("Ending client service for fd: %d", fd);
+            free(arg);
             close(fd);
             pthread_exit(NULL);
         }

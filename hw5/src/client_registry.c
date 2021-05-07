@@ -18,15 +18,12 @@
 #include "csapp.h"
 #include "help.h"
 
-static sem_t cr_mutex;
-
 CLIENT_REGISTRY* creg_init(){
     debug("Initialize client registry");
     CLIENT_REGISTRY* creg = malloc(sizeof(CLIENT_REGISTRY));
     creg->fill = 0;
     creg->used = 0;
     Sem_init(&creg->mutex, 0, 1);
-    Sem_init(&cr_mutex, 0, 1);
     return creg;
 }
 
@@ -105,7 +102,6 @@ void creg_shutdown_all(CLIENT_REGISTRY* cr){
     // int counter = 0;
     // pthread_t tid[cr->used];
     //CLIENT* clients[cr->used];
-    P(&cr_mutex);
     for(int i = 0; i < cr->fill; i++){
         if(cr->clients[i] == NULL)
             continue;
@@ -114,6 +110,5 @@ void creg_shutdown_all(CLIENT_REGISTRY* cr){
             shutdown(cr->clients[i]->fd, SHUT_RDWR);
         }
     }
-    sleep(1);
-    V(&cr_mutex);
+    while(cr->used > 0);
 }
