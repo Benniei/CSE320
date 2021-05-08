@@ -1,0 +1,65 @@
+#include <stdlib.h>
+#include <stdio.h>
+#include <string.h>
+#include <unistd.h>
+#include <errno.h>
+
+#include "debug.h"
+#include "server.h"
+#include "help.h"
+#include "globals.h"
+#include "csapp.h"
+
+USER* user_create(char* handle){
+	debug("user_create()");
+	USER* new_user = malloc(sizeof(USER));
+	if(new_user == NULL){
+		debug("user_create malloc fail [new_user]\n");
+		return NULL;
+	}
+	char* p_handle = malloc(strlen(handle) + 1);
+	if(p_handle == NULL){
+		debug("user_create malloc fail [p_handle]\n");
+		return NULL;
+	}
+	strcpy(p_handle, handle);
+	new_user->handle = p_handle;
+	Sem_init(&new_user->mutex, 0, 1); /* Binary semaphore for locking ref_count*/
+	new_user->ref_count = 0; 
+	// printf("before debug\n");
+	user_ref(new_user, "newly created user");
+	return new_user;
+}
+
+USER* user_ref(USER* user, char* why){
+	P(&user->mutex);
+	debug("Increase reference count on user %p [%s] (%d -> %d) for %s", user, user->handle,
+		user->ref_count, user->ref_count + 1, why);
+	user->ref_count = user->ref_count + 1;
+	V(&user->mutex);
+	return user;
+}
+
+void user_unref(USER* user, char* why){
+	if(user->ref_count == 0){
+		debug("Unref error: User %p [%s] has reference count of 0", user, user->handle);
+		V(&user->mutex);
+		return;
+	}
+	debug("Decrease reference count on user %p [%s] (%d -> %d) for %s", user, user->handle,
+		user->ref_count, user->ref_count - 1, why);
+	user->ref_count = user->ref_count - 1;
+	if(user->ref_count == 0){
+		sem_destroy(&user->mutex);
+		free(user->handle);
+		free(user);
+	}
+	
+}
+
+char* user_get_handle(USER* user){
+	debug("user_get_handle()");
+	// if(user == NULL)
+	// 	return NULL;
+	return user->handle;
+}

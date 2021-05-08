@@ -1,0 +1,25 @@
+type pdf
+type c
+type aaa
+type bbb
+type ccc
+type ddd
+type eee
+type fff
+conversion bbb ccc util/convert bbb ccc
+conversion ccc ddd util/convert ccc ddd
+conversion ddd eee util/convert ddd eee
+printer testa aaa
+printer testd ddd
+printer testb bbb
+printer teste eee
+printer testf fff
+printer testc ccc
+enable testa
+enable testc
+enable testd
+enable teste
+enable testf
+print test_output/test.bbb
+print test_output/test.ddd
+quit
