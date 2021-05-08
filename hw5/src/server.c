@@ -208,7 +208,7 @@ void* chla_client_service(void* arg){
                 }
                 free(payload_cpy);
   
-                mb_add_message(to, header.msgid, cmb, payload, cmd_size-1);
+                mb_add_message(to, header.msgid, cmb, payload, cmd_size);
                 mb_unref(to, "message has been added to recipient's mailbox");
                 client_send_ack(client, header.msgid, NULL, 0);
                 free(active);
