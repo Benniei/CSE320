@@ -74,10 +74,10 @@ int main(int argc, char* argv[]){
     sact.sa_handler = handler;
     sigemptyset(&sact.sa_mask);
     sact.sa_flags = 0;
-
+    sem_init(&able_mutex, 0, 0);
     sigaction(SIGHUP, &sact, NULL); 
     /* FOR TESTING*/
-    sigaction(SIGINT, &sact, NULL);
+    //sigaction(SIGINT, &sact, NULL);
     if((listenfd = Open_listenfd(port)) < 0){
         terminate(EXIT_FAILURE);
     }

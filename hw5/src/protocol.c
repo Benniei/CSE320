@@ -42,7 +42,7 @@ int proto_recv_packet(int fd, CHLA_PACKET_HEADER *hdr, void **payload){
 	if(new.payload_length != 0){
 		//uint32_t temp = hdr->payload_length;
 		size_t hbo = ntohl(new.payload_length);
-		char* pl = malloc(hbo + 1);
+		char* pl = calloc(1, hbo + 1);
 		if(rio_readn(fd, pl, hbo) < 0){
 			debug("Recieve Packet Failed [payload]\n");
 			free(pl);

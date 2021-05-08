@@ -18,6 +18,8 @@
 #include "mailbox.h"
 #include "client_registry.h"
 
+sem_t able_mutex;
+
 /* User Struct */
 typedef struct user {
 	char* handle;
@@ -70,7 +72,7 @@ typedef struct mailbox{
 	char* handle;
 	int ref_count;
 	char defunct;
-	sem_t lock;
+	pthread_mutex_t lock;
 	sem_t send;
 	sem_t items;
 	MAILBOX_DISCARD_HOOK* hook;

@@ -23,7 +23,7 @@ MAILBOX* mb_init(char* handle){
         debug("mb_init malloc fail [p_handle]\n");
 		return NULL;
     }
-    Sem_init(&mailbox->lock, 0, 1);
+    pthread_mutex_init(&mailbox->lock, NULL);
     Sem_init(&mailbox->send, 0, 1);
     Sem_init(&mailbox->items, 0, 0);
     mailbox->handle = p_handle;
@@ -42,15 +42,19 @@ void mb_set_discard_hook(MAILBOX* mb, MAILBOX_DISCARD_HOOK* hook){
 }
 
 void mb_ref(MAILBOX* mb, char* why){
-    P(&(mb->lock));
+    if(mb == NULL)
+        return;
+    pthread_mutex_lock(&(mb->lock));
     debug("Increase reference count on mailbox (%s) %p (%d -> %d) for %s", mb->handle, mb,
 		mb->ref_count, mb->ref_count + 1, why);
     mb->ref_count++;
-    V(&(mb->lock));
+    pthread_mutex_unlock(&(mb->lock));
 }
 
 void mb_unref(MAILBOX* mb, char* why){
-    P(&(mb->lock));
+    if(mb == NULL)
+        return;
+    pthread_mutex_lock(&(mb->lock));
     debug("Decrease reference count on mailbox (%s) %p (%d -> %d) for %s", mb->handle, mb,
 		mb->ref_count, mb->ref_count - 1, why);
     mb->ref_count--;
@@ -59,8 +63,10 @@ void mb_unref(MAILBOX* mb, char* why){
         if(loc != NULL)
             mb->next = loc->next;
         while(loc != NULL){
-            if(mb->hook != NULL)
-                mb->hook(loc->entry);
+            if(loc->entry->content.message.from != NULL){
+                if(mb->hook != NULL && loc->entry->content.message.from->defunct == 0)
+                    mb->hook(loc->entry);
+            }
             if(loc->entry->type == MESSAGE_ENTRY_TYPE)
                 free(loc->entry->content.message.body);
             free(loc->entry);
@@ -69,15 +75,15 @@ void mb_unref(MAILBOX* mb, char* why){
             if(loc == NULL)
                 mb->next = NULL;
         }
-        V(&(mb->lock));
-        sem_destroy(&mb->lock);
+        pthread_mutex_unlock(&(mb->lock));
+        pthread_mutex_destroy(&mb->lock);
         sem_destroy(&mb->send);
         sem_destroy(&mb->items);
         free(mb->handle);
         free(mb);
         return;
     }
-    V(&mb->lock);
+    pthread_mutex_unlock(&mb->lock);
 }
 
 void mb_shutdown(MAILBOX* mb){
@@ -123,7 +129,7 @@ void mb_add_message(MAILBOX* mb, int msgid, MAILBOX* from, void* body, int lengt
 void mb_add_notice(MAILBOX* mb, NOTICE_TYPE ntype, int msgid){
     debug("mb_add_notice()");
     P(&mb->send);
-    MAILBOX_ENTRY* mb_entry = malloc(sizeof(MAILBOX_ENTRY));
+    MAILBOX_ENTRY* mb_entry = calloc(1, sizeof(MAILBOX_ENTRY));
     if(mb_entry == NULL)
         return;
     mb_entry->type = NOTICE_ENTRY_TYPE;

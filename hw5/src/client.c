@@ -145,7 +145,7 @@ int client_get_fd(CLIENT *client){
 
 int client_send_packet(CLIENT *user, CHLA_PACKET_HEADER *pkt, void *data){
     P(&network_mutex);
-    debug("client_send_packet (to: %s): %d\n", user->user->handle, (pkt->payload_length));
+    debug("client_send_packet (to: %s)\n", user->user->handle);
     if(proto_send_packet(user->fd, pkt, data) == -1){
         debug("Client_send_packet() failed to send to client %d", user->fd);
         V(&network_mutex);

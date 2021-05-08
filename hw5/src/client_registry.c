@@ -99,9 +99,6 @@ CLIENT** creg_all_clients(CLIENT_REGISTRY *cr){
 }
 
 void creg_shutdown_all(CLIENT_REGISTRY* cr){
-    // int counter = 0;
-    // pthread_t tid[cr->used];
-    //CLIENT* clients[cr->used];
     for(int i = 0; i < cr->fill; i++){
         if(cr->clients[i] == NULL)
             continue;
@@ -111,4 +108,5 @@ void creg_shutdown_all(CLIENT_REGISTRY* cr){
         }
     }
     while(cr->used > 0);
+    sleep(1);
 }
