@@ -109,10 +109,10 @@ int main(int argc, char* argv[]){
 static void terminate(int status) {
     // Shut down all existing client connections.
     // This will trigger the eventual termination of service threads.
-    fprintf(stderr, "-------------------------------------------\n");
+    //fprintf(stderr, "-------------------------------------------\n");
     creg_shutdown_all(client_registry);
     
-    fprintf(stderr, "---------------------used: %d----------------------\n", client_registry->used);
+    //fprintf(stderr, "---------------------used: %d----------------------\n", client_registry->used);
     // Finalize modules.
     creg_fini(client_registry);
     ureg_fini(user_registry);
