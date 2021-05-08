@@ -70,6 +70,7 @@ int creg_unregister(CLIENT_REGISTRY* cr, CLIENT* client){
     }
     if(loc == -1){
         debug("Client %p not found", client);
+        V(&cr->mutex);
         return -1;
     }
     client_unref(client, "reference being discarded for client being unregistered");

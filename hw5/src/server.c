@@ -15,6 +15,7 @@ void bounce(MAILBOX_ENTRY* entry){
     debug("bounce()");
     if(entry->type == NOTICE_ENTRY_TYPE)
         return;
+
     MAILBOX* from = entry->content.message.from;
     mb_add_notice(from, BOUNCE_NOTICE_TYPE, entry->content.message.msgid);
     mb_unref(from, "derefernence for not being used after bounce is sent");
@@ -183,14 +184,17 @@ void* chla_client_service(void* arg){
                 }
                 CLIENT** temp = active;
                 MAILBOX* to;
+                MAILBOX* found;
                 char flag = 0;
                 while(*temp != NULL){
                     to = client_get_mailbox(*temp, 0);
                     if(strcmp(mb_get_handle(to), recipient) == 0){
+                        if(flag == 0)
+                            found = client_get_mailbox(*temp, 1);
                         flag = 1;
-                       
                         client_unref(*temp, "reference in clients list being discarded");
-                        break;
+                        temp++;
+                        continue;
                     }
                     mb_unref(to, "unneeded mailbox reference");
                     client_unref(*temp, "reference in clients list being discarded");
@@ -208,8 +212,8 @@ void* chla_client_service(void* arg){
                 }
                 free(payload_cpy);
   
-                mb_add_message(to, header.msgid, cmb, payload, cmd_size);
-                mb_unref(to, "message has been added to recipient's mailbox");
+                mb_add_message(found, header.msgid, cmb, payload, cmd_size);
+                mb_unref(found, "message has been added to recipient's mailbox");
                 client_send_ack(client, header.msgid, NULL, 0);
                 free(active);
             }
