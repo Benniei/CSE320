@@ -169,13 +169,21 @@ void* chla_client_service(void* arg){
                 MAILBOX* cmb = client_get_mailbox(client, 1);
                 char* payload_cpy;
                 int cmd_size = ntohl(header.payload_length);  
-                if(payload != NULL){
-                    payload_cpy = malloc(cmd_size + 1) ;
-                    strcpy(payload_cpy, payload);
-                }
                 char* recipient;
-                if(payload_cpy != NULL)
-                    recipient = strtok(payload_cpy, "\r\n");
+                char* message;
+                int newsize;
+                if(payload != NULL){
+                    newsize = strlen(client->user->handle) + cmd_size;
+                    recipient = strtok(payload, "\r\n");
+                    newsize -= strlen(recipient);
+                    payload_cpy = malloc(newsize + 1) ;
+                    strcpy(payload_cpy, client->user->handle);
+                    strcat(payload_cpy, "\r\n");
+                    message = strtok(NULL, "\r\n");
+                    strcat(payload_cpy, message);
+                    debug("size: %d", newsize);
+                }
+                  
                 debug("Recipient: \'%s\'", recipient);
                 CLIENT** active = creg_all_clients(client_registry);
                 if(*active == NULL){
@@ -204,15 +212,15 @@ void* chla_client_service(void* arg){
                 if(flag == 0){
                     debug("user %s not found", recipient);
                     free(active);
-                    free(payload_cpy);
+                    free(payload);
                     if(payload != NULL)
                         free(payload);
                     client_send_nack(client, header.msgid);
                     continue;
                 }
-                free(payload_cpy);
+                free(payload);
   
-                mb_add_message(found, header.msgid, cmb, payload, cmd_size);
+                mb_add_message(found, header.msgid, cmb, payload_cpy, newsize);
                 mb_unref(found, "message has been added to recipient's mailbox");
                 client_send_ack(client, header.msgid, NULL, 0);
                 free(active);
