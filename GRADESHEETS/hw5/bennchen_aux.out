@@ -1,0 +1,92 @@
+[----] Criterion v2.3.3
+[====] Running 5 tests from blackbox_suite:
+[RUN ] blackbox_suite::00_start_server
+[RUN ] blackbox_suite::01_connect
+[RUN ] blackbox_suite::02_connect_alice
+[RUN ] blackbox_suite::03_connect_bob
+server_suite/00_start_server
+[RUN ] blackbox_suite::04_connect_carol
+Starting server...pid = 435629
+Charla test client.
+Commands are:
+	login <handle>
+	logout
+	users
+	send <handle> <msg>
+Connected to server localhost:9999
+> server_suite/01_connect
+Charla test client.
+Commands are:
+	login <handle>
+	logout
+	users
+	send <handle> <msg>
+Connected to server localhost:9999
+> Connected to server localhost:9999
+[PASS] blackbox_suite::01_connect: (0.01s)
+Charla test client.
+Commands are:
+	login <handle>
+	logout
+	users
+	send <handle> <msg>
+Connected to server localhost:9999
+> OK
+> OK
+> OK
+> Message from bob: hello
+> Message from carol: hello
+> OK
+> [PASS] blackbox_suite::03_connect_bob: (2.01s)
+[PASS] blackbox_suite::04_connect_carol: (2.00s)
+[FAIL] blackbox_suite::02_connect_alice: Timed out. (10.00s)
+Sending SIGHUP to server pid 435629
+proto_recv_packet: Input/output error
+Server wait() returned = 0x9
+Server terminated with signal 9
+==435629== Memcheck, a memory error detector
+==435629== Copyright (C) 2002-2017, and GNU GPL'd, by Julian Seward et al.
+==435629== Using Valgrind-3.15.0 and LibVEX; rerun with -h for copyright info
+==435629== Command: bin/charla -p 9999
+==435629== Parent PID: 435602
+==435629== 
+==435629== Invalid read of size 1
+==435629==    at 0x10C0A4: creg_shutdown_all (in /home/gene/grader-s19/hw5/repos/bennchen/hw5/bin/charla)
+==435629==    by 0x10AFBF: terminate (in /home/gene/grader-s19/hw5/repos/bennchen/hw5/bin/charla)
+==435629==    by 0x10AF2C: main (in /home/gene/grader-s19/hw5/repos/bennchen/hw5/bin/charla)
+==435629==  Address 0x4a83138 is 8 bytes inside a block of size 72 free'd
+==435629==    at 0x483CA3F: free (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
+==435629==    by 0x10C2D5: client_unref (in /home/gene/grader-s19/hw5/repos/bennchen/hw5/bin/charla)
+==435629==    by 0x10E7B2: chla_mailbox_service (in /home/gene/grader-s19/hw5/repos/bennchen/hw5/bin/charla)
+==435629==    by 0x4871608: start_thread (pthread_create.c:477)
+==435629==    by 0x49AD292: clone (clone.S:95)
+==435629==  Block was alloc'd at
+==435629==    at 0x483DD99: calloc (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
+==435629==    by 0x10C115: client_create (in /home/gene/grader-s19/hw5/repos/bennchen/hw5/bin/charla)
+==435629==    by 0x10BE53: creg_register (in /home/gene/grader-s19/hw5/repos/bennchen/hw5/bin/charla)
+==435629==    by 0x10E821: chla_client_service (in /home/gene/grader-s19/hw5/repos/bennchen/hw5/bin/charla)
+==435629==    by 0x4871608: start_thread (pthread_create.c:477)
+==435629==    by 0x49AD292: clone (clone.S:95)
+==435629== 
+==435629== Invalid read of size 4
+==435629==    at 0x10C0BB: creg_shutdown_all (in /home/gene/grader-s19/hw5/repos/bennchen/hw5/bin/charla)
+==435629==    by 0x10AFBF: terminate (in /home/gene/grader-s19/hw5/repos/bennchen/hw5/bin/charla)
+==435629==    by 0x10AF2C: main (in /home/gene/grader-s19/hw5/repos/bennchen/hw5/bin/charla)
+==435629==  Address 0x4a83130 is 0 bytes inside a block of size 72 free'd
+==435629==    at 0x483CA3F: free (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
+==435629==    by 0x10C2D5: client_unref (in /home/gene/grader-s19/hw5/repos/bennchen/hw5/bin/charla)
+==435629==    by 0x10E7B2: chla_mailbox_service (in /home/gene/grader-s19/hw5/repos/bennchen/hw5/bin/charla)
+==435629==    by 0x4871608: start_thread (pthread_create.c:477)
+==435629==    by 0x49AD292: clone (clone.S:95)
+==435629==  Block was alloc'd at
+==435629==    at 0x483DD99: calloc (in /usr/lib/x86_64-linux-gnu/valgrind/vgpreload_memcheck-amd64-linux.so)
+==435629==    by 0x10C115: client_create (in /home/gene/grader-s19/hw5/repos/bennchen/hw5/bin/charla)
+==435629==    by 0x10BE53: creg_register (in /home/gene/grader-s19/hw5/repos/bennchen/hw5/bin/charla)
+==435629==    by 0x10E821: chla_client_service (in /home/gene/grader-s19/hw5/repos/bennchen/hw5/bin/charla)
+==435629==    by 0x4871608: start_thread (pthread_create.c:477)
+==435629==    by 0x49AD292: clone (clone.S:95)
+==435629== 
+[----] tests/charla_tests.c:64: Assertion failed: Server did not terminate after SIGHUP
+[FAIL] blackbox_suite::00_start_server: (15.04s)
+[----] Writing xml report in `crit.xml`.
+[====] Synthesis: Tested: 5 | Passing: 3 | Failing: 2 | Crashing: 0 
